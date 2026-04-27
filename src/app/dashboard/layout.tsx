@@ -18,7 +18,7 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
   return (
-    <div className="flex min-h-screen min-h-[100dvh] overflow-x-hidden bg-slate-100/90 dark:bg-slate-950">
+    <div className="flex h-[100dvh] overflow-hidden bg-slate-100/90 dark:bg-slate-950">
       <DashboardNav
         user={{
           email: user.email,

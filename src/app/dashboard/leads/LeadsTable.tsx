@@ -13,6 +13,14 @@ import type { Lead, Business, LeadBadge } from "@prisma/client";
 
 type LeadWithBusiness = Lead & { business: Business };
 
+function googleMapsUrlForBusiness(b: Business): string | null {
+  if (b.googleMapsUrl) return b.googleMapsUrl;
+  if (b.placeId && !b.placeId.startsWith("manual-")) {
+    return `https://www.google.com/maps/place/?q=place_id:${b.placeId}`;
+  }
+  return null;
+}
+
 const BADGE_COLORS: Record<LeadBadge, string> = {
   HOT: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   WARM: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
@@ -111,9 +119,21 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
           >
             <div className="flex flex-col gap-3 min-w-0">
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">
-                  {lead.business.name}
-                </p>
+                {googleMapsUrlForBusiness(lead.business) ? (
+                  <a
+                    href={googleMapsUrlForBusiness(lead.business) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-slate-900 hover:text-indigo-700 hover:underline dark:text-white dark:hover:text-indigo-300"
+                    title="Open Google listing"
+                  >
+                    {lead.business.name}
+                  </a>
+                ) : (
+                  <p className="font-medium text-slate-900 dark:text-white">
+                    {lead.business.name}
+                  </p>
+                )}
                 <p className="text-sm text-slate-500">
                   {lead.business.city}, {lead.business.state}
                 </p>
@@ -201,9 +221,21 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
                 >
                   <td className="px-4 py-3">
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-white">
-                        {lead.business.name}
-                      </p>
+                      {googleMapsUrlForBusiness(lead.business) ? (
+                        <a
+                          href={googleMapsUrlForBusiness(lead.business) ?? "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-slate-900 hover:text-indigo-700 hover:underline dark:text-white dark:hover:text-indigo-300"
+                          title="Open Google listing"
+                        >
+                          {lead.business.name}
+                        </a>
+                      ) : (
+                        <p className="font-medium text-slate-900 dark:text-white">
+                          {lead.business.name}
+                        </p>
+                      )}
                       <p className="text-sm text-slate-500">
                         {lead.business.city}, {lead.business.state}
                       </p>

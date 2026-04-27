@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, signOut } from "next-auth/react";
+import { getSession, signIn, signOut } from "next-auth/react";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -70,9 +70,12 @@ export function GoogleSignInButton({
             setError(null);
             setLoading(true);
             try {
-              // Clear any stale session so OAuth isn’t treated as “link while signed in as another user”
-              // (that conflict surfaces as OAuthAccountNotLinked).
-              await signOut({ redirect: false });
+              // Only sign out when a session exists. Unconditional signOut adds a slow extra round-trip
+              // before every Google sign-in (feels like a hang on slow networks).
+              const session = await getSession();
+              if (session?.user) {
+                await signOut({ redirect: false });
+              }
               // redirect: true navigates to Google OAuth; if anything throws (bad JSON, network),
               // we recover instead of leaving the button stuck on "…"
               await signIn("google", {

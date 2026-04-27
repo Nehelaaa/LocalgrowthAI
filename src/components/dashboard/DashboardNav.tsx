@@ -119,7 +119,7 @@ function NavList({
   items: typeof nav;
 }) {
   return (
-    <nav className="flex-1 space-y-1.5 p-3" aria-label="Dashboard">
+    <nav className="space-y-1.5 p-3" aria-label="Dashboard">
       {items.map((item) => {
         const isOwner = item.href === "/owner";
         const active =
@@ -194,14 +194,12 @@ function BrandBlock({ small }: { small?: boolean }) {
 }
 
 function FooterHome({
-  onClick,
   user,
 }: {
-  onClick?: () => void;
   user?: { email: string; name?: string | null; isPro: boolean };
 }) {
   return (
-    <div className="mt-auto space-y-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="sticky bottom-0 z-10 shrink-0 space-y-2 border-t border-slate-200/80 bg-white/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/60">
       {user && (
         <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
           <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -217,18 +215,10 @@ function FooterHome({
         </div>
       )}
       <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
-        <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Need a break?</p>
-        <Link
-          href="/"
-          onClick={onClick}
-          className="mt-1.5 flex min-h-[44px] items-center gap-2 text-sm font-medium text-indigo-600 transition hover:text-indigo-500 active:opacity-80 dark:text-indigo-400 dark:hover:text-indigo-300 touch-manipulation"
-        >
-          <span aria-hidden>←</span> Back to home
-        </Link>
         <button
           type="button"
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="mt-2 w-full min-h-[44px] rounded-lg text-left text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+          className="w-full min-h-[44px] rounded-lg text-left text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
         >
           Sign out
         </button>
@@ -335,8 +325,10 @@ export function DashboardNav({
                 <XIcon className="h-6 w-6" />
               </button>
             </div>
-            <NavList pathname={pathname} onNavigate={close} compact items={navItems} />
-            <FooterHome onClick={close} user={user} />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <NavList pathname={pathname} onNavigate={close} compact items={navItems} />
+            </div>
+            <FooterHome user={user} />
           </aside>
         </div>
       )}
@@ -345,7 +337,9 @@ export function DashboardNav({
         <div className="border-b border-slate-200/80 px-5 py-6 dark:border-slate-800/80">
           <BrandBlock />
         </div>
-        <NavList pathname={pathname} items={navItems} />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <NavList pathname={pathname} items={navItems} />
+        </div>
         <FooterHome user={user} />
       </aside>
     </div>

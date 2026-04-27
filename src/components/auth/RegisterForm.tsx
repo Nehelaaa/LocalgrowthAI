@@ -11,7 +11,6 @@ const professionOrder = (Object.keys(PROFESSIONS) as ProfessionId[]).sort(
   (a, b) => PROFESSIONS[a].order - PROFESSIONS[b].order
 );
 import { GoogleSignInButton } from "./GoogleSignInButton";
-import { GoogleOAuthTroubleshoot } from "./GoogleOAuthTroubleshoot";
 import { GoogleSetupHint } from "./GoogleSetupHint";
 
 const init: RegisterState = {};
@@ -161,7 +160,6 @@ export function RegisterForm({ hasGoogle }: { hasGoogle: boolean }) {
           </div>
           <GoogleSignInButton callbackUrl="/onboarding" label="Sign up with Google" />
           <p className="text-center text-xs text-slate-500">Fastest way to get started.</p>
-          <GoogleOAuthTroubleshoot />
         </>
       )}
     </div>

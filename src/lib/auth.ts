@@ -1,3 +1,4 @@
+import "@/lib/clear-auth-url-in-dev";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";

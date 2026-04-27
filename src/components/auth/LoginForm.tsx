@@ -4,7 +4,6 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { GoogleSignInButton } from "./GoogleSignInButton";
-import { GoogleOAuthTroubleshoot } from "./GoogleOAuthTroubleshoot";
 import { GoogleSetupHint } from "./GoogleSetupHint";
 
 function oauthUrlErrorMessage(code: string | null | undefined): string | null {
@@ -148,7 +147,6 @@ export function LoginForm({
           <p className="text-center text-xs text-slate-500 dark:text-slate-500">
             Recommended: one click, no password to remember.
           </p>
-          <GoogleOAuthTroubleshoot />
         </>
       )}
     </div>
