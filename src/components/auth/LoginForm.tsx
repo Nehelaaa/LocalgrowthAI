@@ -100,12 +100,20 @@ export function LoginForm({
           />
         </div>
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-          >
-            Password
-          </label>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+            >
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="shrink-0 text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <input
             id="password"
             name="password"

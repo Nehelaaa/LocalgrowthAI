@@ -5,6 +5,7 @@ type Search = Promise<{
   callbackUrl?: string;
   registered?: string;
   error?: string;
+  reset?: string;
 }>;
 
 export default async function LoginPage({ searchParams }: { searchParams: Search }) {
@@ -32,6 +33,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         {q.registered === "1" && (
           <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
             Account created — sign in below.
+          </p>
+        )}
+        {q.reset === "1" && (
+          <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
+            Password updated — you can sign in with your new password.
           </p>
         )}
         <LoginForm
