@@ -1,65 +1,271 @@
+import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
+import { FAQSection } from "@/components/marketing/FAQSection";
+import { HowItWorksSection } from "@/components/marketing/HowItWorksSection";
+import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { ProductMockup } from "@/components/marketing/ProductMockup";
+import { SolutionsSection } from "@/components/marketing/SolutionsSection";
+import { StatsStrip } from "@/components/marketing/StatsStrip";
+import { marketingFaqs } from "@/lib/marketing/faq";
+import { faqJsonLd, homeJsonLd, homeMetadata } from "@/lib/seo/jsonld";
 
-export default function Home() {
+export const metadata: Metadata = homeMetadata;
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd()) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(marketingFaqs)) }}
+      />
+      <MarketingShell>
+          <section
+            className="relative z-0 mx-auto grid max-w-6xl items-center gap-10 px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-2 lg:gap-12 lg:pt-16"
+            aria-labelledby="hero-heading"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
+                Lead gen + pipeline for local B2B
+              </p>
+              <h1
+                id="hero-heading"
+                className="mt-3 text-3xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl lg:text-[2.75rem] lg:leading-[1.12]"
+              >
+                Find prospects, qualify fast, and close more local deals.
+              </h1>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
+                An all-in-one workspace for anyone selling to local businesses: Google Places search,
+                signal-based scoring, a real CRM pipeline, and{" "}
+                <strong className="font-semibold text-slate-800 dark:text-slate-200">
+                  AI outreach on Pro
+                </strong>{" "}
+                — built to keep outreach simple and consistent.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href="/register"
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-violet-500 hover:to-indigo-500"
+                >
+                  Get started free
+                </Link>
+                <a
+                  href="#how-it-works"
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-slate-200/90 bg-white/80 px-6 py-3.5 text-base font-medium text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50/80 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:border-indigo-500/40"
+                >
+                  How it works
+                </a>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                {["Freelancers", "Agencies", "Sales teams", "Realtors"].map((x) => (
+                  <span
+                    key={x}
+                    className="rounded-full border border-slate-200/80 bg-white/70 px-3 py-1 dark:border-slate-700/70 dark:bg-slate-900/30"
+                  >
+                    {x}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="relative flex justify-center lg:justify-end" id="product-tour">
+              <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-tr from-indigo-500/15 via-violet-500/10 to-transparent blur-2xl" aria-hidden />
+              <ProductMockup />
+            </div>
+          </section>
+
+          <section
+            className="border-y border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white py-10 dark:border-slate-800/80 dark:from-slate-950/80 dark:to-slate-900/40"
+            aria-label="Key metrics"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <div className="mx-auto max-w-5xl px-4 sm:px-6">
+              <StatsStrip />
+            </div>
+          </section>
+
+          <HowItWorksSection />
+
+          <SolutionsSection />
+
+          <section
+            className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20"
+            id="value-prop"
+            aria-labelledby="value-heading"
+          >
+            <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-200 shadow-lg dark:border-slate-700/50">
+                <Image
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1000&q=80&auto=format&fit=crop"
+                  alt="Agency team collaborating on a web project with laptops"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              </div>
+              <div>
+                <h2
+                  id="value-heading"
+                  className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
+                >
+                  Built for how real outreach actually happens
+                </h2>
+                <p className="mt-3 text-slate-600 dark:text-slate-400">
+                  You need speed, context, and a clear next step for every lead — not a raw spreadsheet
+                  export. LocalGrowth ties search, scoring, and follow-up into one system you can run
+                  daily.
+                </p>
+                <ul className="mt-5 space-y-2.5 text-sm text-slate-700 dark:text-slate-300">
+                  <li className="flex gap-2">
+                    <span className="mt-0.5 text-emerald-600" aria-hidden>
+                      ✓
+                    </span>
+                    Secure accounts with Stripe billing when you upgrade to Pro.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="mt-0.5 text-emerald-600" aria-hidden>
+                      ✓
+                    </span>
+                    Per-lead history: status, notes, follow-ups, and website quote fields.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="mt-0.5 text-emerald-600" aria-hidden>
+                      ✓
+                    </span>
+                    Optional AI copy when you add your own OpenAI key (server-side only).
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="features"
+            className="mx-auto max-w-6xl scroll-mt-20 px-4 py-12 sm:px-6 sm:py-20"
+            aria-labelledby="features-heading"
+          >
+            <h2
+              id="features-heading"
+              className="text-center text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white"
+            >
+              Everything in one product
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600 dark:text-slate-400">
+              From map search to export — organized so you can scale outreach without losing context.
+            </p>
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+              {[
+                {
+                  t: "Places-powered search",
+                  d: 'Target city, state, radius, and trade. See who has no real site or "social only".',
+                  icon: "🗺️",
+                },
+                {
+                  t: "Scoring & pipeline",
+                  d: "HOT / WARM / COLD, CRM stages, and a dashboard you can read in five seconds.",
+                  icon: "📊",
+                },
+                {
+                  t: "AI outreach (Pro)",
+                  d: "Email, call, DM, and Loom-style scripts when you connect OpenAI on the server.",
+                  icon: "✨",
+                },
+                {
+                  t: "Client demo pages",
+                  d: "Share a one-click HTML preview to help prospects see what a site could be.",
+                  icon: "🖥️",
+                },
+                {
+                  t: "Your data, your account",
+                  d: "Leads are scoped to your login — ready for real client work, not a shared list.",
+                  icon: "🔐",
+                },
+                {
+                  t: "Exports (Pro)",
+                  d: "CSV and JSON for Sheets, Airtable, and automation (Zapier, Make, webhooks).",
+                  icon: "⬇️",
+                },
+              ].map((f) => (
+                <li
+                  key={f.t}
+                  className="group flex flex-col rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800/80 dark:bg-slate-900/50"
+                >
+                  <span className="text-2xl" role="img" aria-hidden>
+                    {f.icon}
+                  </span>
+                  <strong className="mt-2 text-slate-900 dark:text-white">{f.t}</strong>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                    {f.d}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section
+            id="pricing"
+            className="scroll-mt-20 bg-slate-100/50 py-16 dark:bg-slate-900/30 sm:py-20"
+            aria-labelledby="pricing-heading"
+          >
+            <div className="mx-auto max-w-5xl px-4 sm:px-6">
+              <h2
+                id="pricing-heading"
+                className="text-center text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white"
+              >
+                Simple pricing
+              </h2>
+              <p className="mt-2 text-center text-slate-600 dark:text-slate-400">
+                Start free. Upgrade in-app when you are ready for AI, exports, and unlimited leads.
+              </p>
+              <div className="mt-10 grid gap-6 sm:grid-cols-2">
+                <div className="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-8 dark:border-slate-700/80 dark:bg-slate-900/60">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Free</h3>
+                  <p className="mt-2 text-3xl font-bold text-slate-800 dark:text-slate-100">$0</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">For trying the workflow</p>
+                  <ul className="mt-6 flex-1 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                    <li>Up to 10 saved leads</li>
+                    <li>Search, CRM, pipeline</li>
+                    <li>Upgrade for AI &amp; exports</li>
+                  </ul>
+                  <Link
+                    href="/register"
+                    className="mt-6 block text-center rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
+                  >
+                    Start for free
+                  </Link>
+                </div>
+                <div className="relative flex flex-col rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-b from-indigo-50/90 to-white p-8 dark:from-indigo-950/40 dark:to-slate-900/80">
+                  <div className="absolute right-4 top-4 rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">
+                    Pro
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Pro</h3>
+                  <p className="mt-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
+                    Billed in Stripe
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Unlimited leads, AI, exports, demos, portal
+                  </p>
+                  <ul className="mt-6 flex-1 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                    <li>Unlimited lead saves</li>
+                    <li>AI insights &amp; multi-channel copy</li>
+                    <li>CSV / JSON export &amp; demo pages</li>
+                    <li>Customer billing portal</li>
+                  </ul>
+                  <Link
+                    href="/register"
+                    className="mt-6 block text-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-indigo-500"
+                  >
+                    Create account — upgrade inside app
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <FAQSection />
+      </MarketingShell>
+    </>
   );
 }

@@ -1,0 +1,266 @@
+"use client";
+
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { saveBusinessAsLead } from "@/actions/leads";
+
+type Place = {
+  placeId: string;
+  name: string;
+  address: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  website?: string;
+  rating?: number;
+  reviewCount: number;
+  googleMapsUrl: string;
+  businessType?: string;
+  hasSocialOnly: boolean;
+  noWebsite: boolean;
+  photoUrl?: string;
+};
+
+function placeToPayload(place: Place) {
+  return {
+    placeId: place.placeId,
+    name: place.name,
+    address: place.address,
+    city: place.city,
+    state: place.state,
+    phone: place.phone,
+    website: place.website,
+    rating: place.rating,
+    reviewCount: place.reviewCount,
+    googleMapsUrl: place.googleMapsUrl,
+    businessType: place.businessType,
+    hasSocialOnly: place.hasSocialOnly,
+    noWebsite: place.noWebsite,
+    photoUrl: place.photoUrl,
+  };
+}
+
+export function PlaceResults({
+  places,
+  noWebsiteOnly = false,
+}: {
+  places: Place[];
+  noWebsiteOnly?: boolean;
+}) {
+  const router = useRouter();
+  const [saving, setSaving] = useState<string | null>(null);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  const filtered = noWebsiteOnly ? places.filter((p) => p.noWebsite) : places;
+
+  const placeKey = useMemo(
+    () => places.map((p) => p.placeId).sort().join(","),
+    [places]
+  );
+
+  useEffect(() => {
+    setSelected(new Set());
+  }, [placeKey]);
+
+  const allVisibleSelected =
+    filtered.length > 0 && filtered.every((p) => selected.has(p.placeId));
+  const someVisibleSelected = filtered.some((p) => selected.has(p.placeId));
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate =
+        someVisibleSelected && !allVisibleSelected;
+    }
+  }, [someVisibleSelected, allVisibleSelected]);
+
+  if (places.length === 0) return null;
+
+  const toggle = (placeId: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(placeId)) next.delete(placeId);
+      else next.add(placeId);
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        filtered.forEach((p) => next.delete(p.placeId));
+      } else {
+        filtered.forEach((p) => next.add(p.placeId));
+      }
+      return next;
+    });
+  };
+
+  const handleAdd = async (place: Place) => {
+    setSaving(place.placeId);
+    const r = await saveBusinessAsLead(placeToPayload(place));
+    if (!r.ok) {
+      if (r.code === "LEAD_LIMIT") {
+        window.alert(
+          "You have reached the Free plan lead limit (10 leads). Upgrade to Pro in Billing for unlimited leads."
+        );
+      } else {
+        window.alert(
+          "This business is already a lead in the system (another account)."
+        );
+      }
+      setSaving(null);
+      return;
+    }
+    router.push("/dashboard/leads");
+    setSaving(null);
+  };
+
+  const handleBulkAdd = async () => {
+    const toAdd = filtered.filter((p) => selected.has(p.placeId));
+    if (toAdd.length === 0) return;
+    setBulkSaving(true);
+    try {
+      let saved = 0;
+      for (const place of toAdd) {
+        const r = await saveBusinessAsLead(placeToPayload(place));
+        if (!r.ok) {
+          if (r.code === "LEAD_LIMIT") {
+            window.alert(
+              saved > 0
+                ? `Added ${saved} lead(s), then hit the Free plan limit (10 total). Upgrade to Pro for unlimited leads.`
+                : "You have reached the Free plan lead limit (10 leads). Upgrade to Pro for unlimited leads."
+            );
+          } else {
+            window.alert(
+              `Skipped "${place.name}" — already another account's lead.`
+            );
+          }
+          break;
+        }
+        saved += 1;
+      }
+      if (saved > 0) {
+        setSelected(new Set());
+        router.push("/dashboard/leads");
+      }
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  const selectedCount = filtered.filter((p) => selected.has(p.placeId)).length;
+  const busy = saving !== null || bulkSaving;
+
+  return (
+    <div className="mt-8 space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          Results ({filtered.length}
+          {noWebsiteOnly && filtered.length !== places.length
+            ? ` of ${places.length}`
+            : ""}
+          )
+        </h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+            <input
+              ref={selectAllRef}
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleSelectAllVisible}
+              disabled={busy || filtered.length === 0}
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            Select all visible
+          </label>
+          <button
+            type="button"
+            onClick={() => void handleBulkAdd()}
+            disabled={busy || selectedCount === 0}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {bulkSaving
+              ? "Adding…"
+              : `Add ${selectedCount} selected to leads`}
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {filtered.map((place) => (
+          <div
+            key={place.placeId}
+            className="flex flex-col sm:flex-row gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
+          >
+            <div className="flex items-start gap-3 sm:items-center">
+              <input
+                type="checkbox"
+                checked={selected.has(place.placeId)}
+                onChange={() => toggle(place.placeId)}
+                disabled={busy}
+                className="mt-1 sm:mt-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                aria-label={`Select ${place.name}`}
+              />
+              {place.photoUrl && (
+                <Image
+                  src={place.photoUrl}
+                  alt=""
+                  width={96}
+                  height={96}
+                  className="w-24 h-24 object-cover rounded-lg shrink-0"
+                />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-slate-900 dark:text-white">
+                {place.name}
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {place.address}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {place.rating != null && (
+                  <span className="text-sm text-slate-500">
+                    ★ {place.rating} ({place.reviewCount} reviews)
+                  </span>
+                )}
+                {place.noWebsite && (
+                  <span className="rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-xs px-2 py-0.5">
+                    No website
+                  </span>
+                )}
+                {place.hasSocialOnly && (
+                  <span className="rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2 py-0.5">
+                    Social only
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:items-end">
+              <a
+                href={place.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                View on Maps
+              </a>
+              <button
+                type="button"
+                onClick={() => void handleAdd(place)}
+                disabled={busy}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+              >
+                {saving === place.placeId ? "Adding…" : "Add to leads"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

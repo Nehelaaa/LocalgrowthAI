@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "LocalGrowth AI",
+  "version": "0.1.0",
+  "description": "Add businesses from Google Maps to LocalGrowth AI",
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://www.google.com/maps/*"],
+  "action": {
+    "default_title": "Add to LocalGrowth AI",
+    "default_icon": "icon48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.google.com/maps/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "48": "icon48.png"
+  }
+}

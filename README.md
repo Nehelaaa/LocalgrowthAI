@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LocalGrowth AI
 
-## Getting Started
+Full-stack SaaS to find local businesses without websites, score them, and manage outreach to convert them into web development clients.
 
-First, run the development server:
+## Tech stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **TailwindCSS**
+- **Prisma 6** + **SQLite** (local `prisma/dev.db`, no Neon required)
+- **Server Actions** + **API routes**
+- **NextAuth v5** (Google OAuth + JWT)
+- **Google Places API** (New)
+- **OpenAI API**
+
+## Features
+
+- **Business search** – City, state, radius, business type → Google Places results; auto-flag no website / social-only.
+- **Lead scoring** – 0–100 score and HOT / WARM / COLD badge from rating, review count, and website status.
+- **AI opportunity insights** – Per-lead “why they need a site” and revenue opportunity (OpenAI).
+- **One-click demo** – Generate hero + services + contact CTA (Tailwind) and store in DB; view at `/demo/[slug]`.
+- **Outreach generator** – Cold email, call script, Instagram DM, 60s Loom script (OpenAI).
+- **CRM** – Table with status, notes, follow-up date, tags; filters and search.
+- **Metrics** – Total leads, no-website count, contacts made, conversion rate, pipeline.
+- **Export** – CSV download and JSON API for Google Sheets / webhooks.
+
+## Setup
+
+1. **Clone and install**
+
+   ```bash
+   cd localgrowth-app
+   npm install
+   npm install @auth/prisma-adapter
+   ```
+
+2. **Environment**
+
+   Copy `.env.example` to `.env` and set:
+
+   - `DATABASE_URL` – SQLite file (default: `file:./dev.db`); no external DB needed.
+   - `AUTH_SECRET` – e.g. `openssl rand -base64 32`.
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` – Google OAuth (NextAuth).
+   - `GOOGLE_PLACES_API_KEY` – Places API (New) key.
+   - `OPENAI_API_KEY` – OpenAI API key.
+
+3. **Database**
+
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+4. **Admin user**
+
+   Sign in once with Google. Then in the DB set your user’s `role` to `ADMIN`:
+
+   ```sql
+   UPDATE "User" SET role = 'ADMIN' WHERE email = 'your@email.com';
+   ```
+
+5. **Run**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000). Sign in → Dashboard (admin only).
+
+## Project structure
+
+```
+src/
+  app/
+    api/           # auth, places/search, export/csv, export/leads
+    dashboard/     # overview, search, leads, export
+    demo/[slug]/   # public demo page viewer
+    login/
+  actions/         # leads, demo, metrics, leads-list
+  lib/             # auth, db, rate-limit, google-places, lead-score, openai
+prisma/
+  schema.prisma    # User, Business, Lead, Outreach, DemoPage, ActivityLog
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Security
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- API keys used only server-side (Places, OpenAI).
+- Rate limiting on `/api/places/search`.
+- Dashboard and export routes require admin role (NextAuth session).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy (Vercel)
 
-## Learn More
+1. Connect repo to Vercel.
+2. Set env vars in Vercel (same as `.env`).
+3. For production you can switch to PostgreSQL (e.g. Neon) by changing the Prisma datasource and setting `DATABASE_URL`; locally SQLite is enough.
+4. Run `npx prisma db push` or migrations in CI/deploy.
+5. Build: `npm run build`.
 
-To learn more about Next.js, take a look at the following resources:
+## Optional
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Chrome extension** – Placeholder for “Add to LocalGrowth AI” from Google Maps in `chrome-extension/`; implement parsing and API as needed.
+- **Webhook** – Set `WEBHOOK_URL` and call it when a new lead is saved (hook point exists in actions).
+- **Google Sheets sync** – Use `/api/export/leads` JSON with Zapier/Make to sync to Sheets.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

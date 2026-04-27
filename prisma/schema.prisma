@@ -1,0 +1,291 @@
+// LocalGrowth AI - Prisma Schema
+// SQLite (local file DB, no Neon/external DB required)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ContactStatus {
+  NOT_CONTACTED
+  CONTACTED
+  INTERESTED
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum LeadBadge {
+  HOT
+  WARM
+  COLD
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(USER)
+  /// Owner can disable accounts from the SaaS.
+  disabled      Boolean   @default(false)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  // SaaS: grandfathered = existing accounts at deploy keep full Pro access; new signups start on Free
+  grandfatheredPro Boolean  @default(false)
+  /// free | pro (Stripe; grandfatheredPro also unlocks pro features)
+  plan            String   @default("free")
+  subscriptionStatus String? // trialing, active, past_due, canceled, unpaid, incomplete, incomplete_expired, paused
+  subscriptionPeriodEnd DateTime?
+  stripeCustomerId   String? @unique
+  stripeSubscriptionId String? @unique
+  onboardingComplete Boolean @default(true)
+  /// web_agency | real_estate | trades | sales | freelance | agency | other
+  profession     String?
+  accounts      Account[]
+  sessions      Session[]
+  activityLogs  ActivityLog[]
+  leads         Lead[]
+  searchDayUsages   SearchDayUsage[]
+  aiDayUsages       AiDayUsage[]
+  tradesCustomers   TradesCustomer[]
+  tradesJobs        TradesJob[]
+  featureFlagOverrides FeatureFlagOverride[]
+  ownerBillingEvents OwnerBillingEvent[]
+}
+
+/// Owner-visible billing / risk events (fed primarily by Stripe webhooks).
+model OwnerBillingEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  /// payment_failed | payment_succeeded | refund | dispute | subscription_canceled | subscription_updated | other
+  kind      String
+  /// info | warning | critical
+  severity  String   @default("info")
+  title     String
+  body      String?
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  stripeInvoiceId String?
+  stripeChargeId  String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  metadata  Json?
+
+  @@index([createdAt])
+  @@index([kind])
+  @@index([userId])
+}
+
+/// Per-user daily count of AI calls (rough quota & cost estimation).
+model AiDayUsage {
+  id     String   @id @default(cuid())
+  userId String
+  day    String
+  count  Int      @default(0)
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@index([day])
+}
+
+/// Feature flags by plan + optional per-user override.
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  freeEnabled Boolean @default(false)
+  proEnabled  Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  overrides FeatureFlagOverride[]
+}
+
+model FeatureFlagOverride {
+  id        String   @id @default(cuid())
+  featureId String
+  userId    String
+  enabled   Boolean
+  feature   FeatureFlag @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([featureId, userId])
+  @@index([userId])
+}
+
+/// Google Places text-search results cached to reduce API spend (TTL in app logic).
+model PlaceSearchCache {
+  id        String   @id @default(cuid())
+  cacheKey  String   @unique
+  payload   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Per-user daily count of server-side Google Places API calls (not cache hits).
+model SearchDayUsage {
+  id     String   @id @default(cuid())
+  userId String
+  day    String
+  count  Int      @default(0)
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@index([day])
+}
+
+/// Trades / field service: homeowner & small commercial customers.
+model TradesCustomer {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String
+  notes     String?
+  issues    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  jobs      TradesJob[]
+
+  @@index([userId])
+}
+
+/// A scheduled or logged job (e.g. “Leak in kitchen” → Scheduled).
+model TradesJob {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    TradesCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  jobType     String
+  /// new_call | scheduled | in_progress | done | cancelled
+  status      String   @default("new_call")
+  priceCents  Int      @default(0)
+  paid        Boolean  @default(false)
+  scheduledAt DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([scheduledAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Business {
+  id            String   @id @default(cuid())
+  placeId       String   @unique
+  name          String
+  address       String?
+  city          String?
+  state         String?
+  phone         String?
+  website       String?
+  rating        Float?
+  reviewCount   Int      @default(0)
+  googleMapsUrl String?
+  businessType  String?
+  lat           Float?
+  lng           Float?
+  hasSocialOnly Boolean  @default(false)
+  photoUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lead          Lead?
+}
+
+model Lead {
+  id                   String        @id @default(cuid())
+  userId               String?
+  user                 User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId           String        @unique
+  business             Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  leadScore            Int           // 0-100
+  badge                LeadBadge
+  contactStatus        ContactStatus @default(NOT_CONTACTED)
+  notes                String?
+  followUpDate         DateTime?
+  tags                 String?       // JSON array string, e.g. ["tag1","tag2"]
+  opportunityInsights  String?
+  revenueEstimate       String?
+  websiteQuote         String?       // Price you're charging for the website (freeform, e.g. "3200" or "$3,200")
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  outreachs            Outreach[]
+  demoPages            DemoPage[]
+
+  @@index([userId])
+}
+
+model Outreach {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type        String   // email | call_script | instagram_dm | loom_script
+  content     String
+  generatedAt DateTime @default(now())
+}
+
+model DemoPage {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  slug        String   @unique
+  htmlContent String
+  createdAt   DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
