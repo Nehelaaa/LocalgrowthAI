@@ -51,6 +51,14 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
    npx prisma db push
    ```
 
+   If you have an old **SQLite** `prisma/dev.db` and want to copy it into Neon (wipes existing Neon app data first):
+
+   ```bash
+   npm run db:migrate-from-sqlite -- --force
+   ```
+
+   Use `--dry-run` to count rows only. Set `SQLITE_PATH` if your `.db` is elsewhere.
+
 4. **Admin user**
 
    Sign in once with Google. Then in the DB set your user’s `role` to `ADMIN`:

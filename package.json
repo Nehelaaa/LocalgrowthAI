@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:backfill": "node ./scripts/saas-backfill.cjs",
-    "auth:set-password": "node ./scripts/set-dev-password.cjs"
+    "auth:set-password": "node ./scripts/set-dev-password.cjs",
+    "db:migrate-from-sqlite": "node ./scripts/migrate-sqlite-to-neon.cjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -25,6 +26,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.4.7",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
