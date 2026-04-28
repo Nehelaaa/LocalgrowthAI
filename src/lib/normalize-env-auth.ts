@@ -2,7 +2,10 @@
  * Makes Auth.js / Google OAuth use a single canonical origin for redirect_uri.
  * Fixes common Vercel mistakes: trailing slash, extra path on AUTH_URL, http on https sites.
  * If AUTH_URL is not set on Vercel, derives it from the deployment (see Vercel env docs).
- * Import this before @/lib/clear-auth-url-in-dev in auth.ts.
+ *
+ * In development, clears AUTH_URL / NEXTAUTH_URL at the end so every module that imports this
+ * file (not only auth.ts) cannot leave a pinned .env port — fixes Google redirect_uri_mismatch
+ * when Next uses 3001 but .env says localhost:3000. Set AUTH_KEEP_URL=1 to disable.
  */
 
 const isVercel = process.env.VERCEL === "1";
@@ -61,4 +64,10 @@ for (const key of ["AUTH_URL", "NEXTAUTH_URL"] as const) {
   } catch {
     // leave invalid values to fail loudly elsewhere
   }
+}
+
+// Must run after the loop above: drop fixed origins in dev so OAuth uses the request Host (port).
+if (process.env.NODE_ENV === "development" && process.env.AUTH_KEEP_URL !== "1") {
+  delete process.env.AUTH_URL;
+  delete process.env.NEXTAUTH_URL;
 }

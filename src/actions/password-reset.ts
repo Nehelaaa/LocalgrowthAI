@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { getAppOrigin } from "@/lib/app-origin";
+import { getAppOriginForRequest } from "@/lib/app-origin";
 import { sendPasswordResetEmail } from "@/lib/send-password-reset-email";
 
 const emailSchema = z.object({
@@ -68,7 +68,7 @@ export async function requestPasswordReset(
     },
   });
 
-  const origin = getAppOrigin();
+  const origin = await getAppOriginForRequest();
   const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(rawToken)}`;
 
   const sent = await sendPasswordResetEmail(parsed.data.email, resetUrl);
