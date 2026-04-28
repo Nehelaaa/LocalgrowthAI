@@ -1,12 +1,12 @@
 // LocalGrowth AI - Prisma Schema
-// SQLite (local file DB, no Neon/external DB required)
+// Production: PostgreSQL (Neon). Set DATABASE_URL in .env / Vercel.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

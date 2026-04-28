@@ -7,7 +7,7 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
 - **Next.js 16** (App Router)
 - **TypeScript**
 - **TailwindCSS**
-- **Prisma 6** + **SQLite** (local `prisma/dev.db`, no Neon required)
+- **Prisma 6** + **PostgreSQL** (e.g. [Neon](https://neon.tech); `DATABASE_URL` in `.env`)
 - **Server Actions** + **API routes**
 - **NextAuth v5** (Google OAuth + JWT)
 - **Google Places API** (New)
@@ -38,7 +38,7 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
 
    Copy `.env.example` to `.env` and set:
 
-   - `DATABASE_URL` – SQLite file (default: `file:./dev.db`); no external DB needed.
+   - `DATABASE_URL` – Neon PostgreSQL URL (pooled connection + `pgbouncer=true`; see `.env.example`).
    - `AUTH_SECRET` – e.g. `openssl rand -base64 32`.
    - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` – Google OAuth (NextAuth).
    - `GOOGLE_PLACES_API_KEY` – Places API (New) key.
