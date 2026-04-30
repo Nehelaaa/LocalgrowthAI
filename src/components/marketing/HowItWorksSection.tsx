@@ -221,7 +221,7 @@ function VisualSearch() {
             Austin, TX
           </span>
           <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            10 mi
+            10 mi radius
           </span>
           <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
             Plumbers
@@ -230,32 +230,153 @@ function VisualSearch() {
             No website
           </span>
         </div>
-        <div className="grid gap-2">
-          {[
-            { n: "Apex Plumbing Co.", tag: "No site", hot: true },
-            { n: "QuickFix Drains", tag: "Social only", hot: false },
-            { n: "City Rooter LLC", tag: "No site", hot: true },
-          ].map((r) => (
+
+        <div className="grid gap-3 lg:grid-cols-[1.05fr_1fr]">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/60 p-3 dark:border-slate-700/50 dark:from-slate-900/30 dark:to-slate-900/10 sm:p-4">
             <div
-              key={r.n}
-              className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-sm dark:border-slate-700/50 dark:bg-slate-900/30"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-slate-900 dark:text-white">{r.n}</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">{r.tag}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {r.hot && (
-                  <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
-                    HOT
-                  </span>
-                )}
-                <span className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-extrabold text-white">
-                  + Save
+              className="pointer-events-none absolute inset-0 opacity-70 [mask-image:radial-gradient(circle_at_40%_40%,black,transparent_70%)]"
+              aria-hidden
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, rgba(148,163,184,0.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.22) 1px, transparent 1px)",
+                backgroundSize: "22px 22px",
+              }}
+            />
+
+            <div className="relative">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Territory
+                </p>
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  Center + radius
                 </span>
               </div>
+
+              <div className="mt-3 aspect-[16/10] w-full overflow-hidden rounded-xl border border-slate-200/70 bg-white/70 dark:border-slate-800/70 dark:bg-slate-950/20">
+                <svg
+                  viewBox="0 0 320 200"
+                  className="h-full w-full"
+                  role="img"
+                  aria-label="Interactive territory preview"
+                >
+                  <defs>
+                    <linearGradient id="llg" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stopColor="#7c3aed" stopOpacity="0.18" />
+                      <stop offset="1" stopColor="#2563eb" stopOpacity="0.12" />
+                    </linearGradient>
+                    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="5" />
+                    </filter>
+                  </defs>
+
+                  {/* soft background */}
+                  <rect x="0" y="0" width="320" height="200" fill="url(#llg)" />
+
+                  {/* subtle "roads" */}
+                  <g opacity="0.55" stroke="#94a3b8" strokeWidth="1">
+                    <path d="M-10 140 C 80 110, 130 120, 210 70 S 340 40, 350 30" fill="none" />
+                    <path d="M-10 85 C 60 60, 140 90, 210 115 S 320 170, 360 190" fill="none" />
+                    <path d="M35 -10 C 70 60, 140 55, 200 20 S 300 0, 340 30" fill="none" />
+                  </g>
+
+                  {/* radius ring */}
+                  <circle cx="160" cy="102" r="58" fill="#4f46e5" opacity="0.08" />
+                  <circle cx="160" cy="102" r="58" fill="none" stroke="#4f46e5" opacity="0.35" strokeWidth="2" />
+
+                  {/* pulse ring */}
+                  <circle cx="160" cy="102" r="22" fill="#4f46e5" opacity="0.10">
+                    <animate attributeName="r" values="18;28;18" dur="2.6s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.16;0.04;0.16" dur="2.6s" repeatCount="indefinite" />
+                  </circle>
+
+                  {/* center pin */}
+                  <g>
+                    <circle cx="160" cy="102" r="7.5" fill="#4f46e5" />
+                    <circle cx="160" cy="102" r="3.3" fill="#ffffff" opacity="0.95" />
+                  </g>
+
+                  {/* result pins */}
+                  {[
+                    { x: 124, y: 72, hot: true },
+                    { x: 205, y: 84, hot: false },
+                    { x: 186, y: 138, hot: true },
+                    { x: 112, y: 126, hot: false },
+                  ].map((p, i) => (
+                    <g key={i}>
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={10}
+                        fill={p.hot ? "#f59e0b" : "#22c55e"}
+                        opacity="0.16"
+                        filter="url(#soft)"
+                      />
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={4.5}
+                        fill={p.hot ? "#f59e0b" : "#22c55e"}
+                        opacity="0.9"
+                      />
+                      <circle cx={p.x} cy={p.y} r={2.2} fill="#ffffff" opacity="0.9" />
+                    </g>
+                  ))}
+                </svg>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {[
+                  { k: "Results", v: "20" },
+                  { k: "No site", v: "11" },
+                  { k: "HOT", v: "4" },
+                ].map((x) => (
+                  <div
+                    key={x.k}
+                    className="rounded-xl border border-slate-200/70 bg-white/70 p-2 text-center dark:border-slate-800/70 dark:bg-slate-950/20"
+                  >
+                    <p className="text-[11px] font-extrabold tabular-nums text-slate-900 dark:text-white">
+                      {x.v}
+                    </p>
+                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                      {x.k}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          </div>
+
+          <div className="grid gap-2">
+            {[
+              { n: "Apex Plumbing Co.", tag: "No site", hot: true },
+              { n: "QuickFix Drains", tag: "Social only", hot: false },
+              { n: "City Rooter LLC", tag: "No site", hot: true },
+            ].map((r) => (
+              <div
+                key={r.n}
+                className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-sm dark:border-slate-700/50 dark:bg-slate-900/30"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-900 dark:text-white">{r.n}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{r.tag}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {r.hot && (
+                    <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
+                      HOT
+                    </span>
+                  )}
+                  <span className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-extrabold text-white">
+                    + Save
+                  </span>
+                </div>
+              </div>
+            ))}
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-2 text-[11px] text-slate-600 dark:border-slate-700/50 dark:bg-slate-900/20 dark:text-slate-300">
+              Tip: refine by rating/reviews and “no website” to find high-intent prospects faster.
+            </div>
+          </div>
         </div>
       </div>
     </Frame>
