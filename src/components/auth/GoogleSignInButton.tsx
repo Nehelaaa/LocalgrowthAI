@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getSession, signIn, signOut } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -76,15 +76,10 @@ export function GoogleSignInButton({
               if (session?.user) {
                 await signOut({ redirect: false });
               }
-              // redirect: true navigates to Google OAuth; if anything throws (bad JSON, network),
-              // we recover instead of leaving the button stuck on "…"
-              await signIn("google", {
-                redirect: true,
-                redirectTo,
-                callbackUrl: redirectTo,
-              });
-              // If we’re still on this page (sign-in didn’t navigate away), stop the spinner.
-              setLoading(false);
+              // Use a hard navigation to the server sign-in endpoint. This avoids rare cases where
+              // client-side signIn() can stall (extensions, blocked storage, weird browser state).
+              const next = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(redirectTo)}`;
+              window.location.assign(next);
             } catch (e) {
               console.error("Google sign-in failed:", e);
               setError(
