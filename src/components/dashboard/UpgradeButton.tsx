@@ -21,9 +21,13 @@ export function UpgradeButton({ className = "", label = "Upgrade" }: Props) {
             method: "POST",
             credentials: "same-origin",
           });
-          const j = await readResponseJson<{ url?: string; error?: string }>(r);
+          const j = await readResponseJson<{ url?: string; portalUrl?: string | null; error?: string }>(r);
           if (j?.url) {
             window.location.href = j.url;
+            return;
+          }
+          if (j?.portalUrl) {
+            window.location.href = j.portalUrl;
             return;
           }
           if (j?.error) {

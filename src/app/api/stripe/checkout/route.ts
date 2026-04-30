@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasActiveStripeSubscription } from "@/lib/entitlements";
 import { getStripe, isStripeConfigured, proPriceId } from "@/lib/stripe";
+import { subscriptionToUserData } from "@/lib/stripe-subscription-sync";
 import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
 
 export const runtime = "nodejs";
@@ -13,6 +14,30 @@ function appOrigin(request: NextRequest) {
     process.env.AUTH_URL?.replace(/\/$/, "") ||
     request.nextUrl.origin ||
     "http://localhost:3000"
+  );
+}
+
+async function portalUrlForCustomer(stripeCustomerId: string, request: NextRequest): Promise<string | null> {
+  try {
+    const stripe = getStripe();
+    const origin = appOrigin(request);
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: stripeCustomerId,
+      return_url: `${origin}/dashboard/plan?portal=return`,
+    });
+    return portal.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function isBlockingSubscriptionStatus(status: string | null | undefined): boolean {
+  // If a subscription exists in any of these states, the customer should not start a new checkout.
+  // They should complete/repair the existing subscription via Stripe.
+  return Boolean(
+    status &&
+      status !== "canceled" &&
+      status !== "incomplete_expired"
   );
 }
 
@@ -38,16 +63,6 @@ export async function POST(request: NextRequest) {
     const u = await prisma.user.findUnique({ where: { id: session.user.id } });
     if (!u) {
       return NextResponse.json({ error: "User not found" }, { status: 400 });
-    }
-
-    if (hasActiveStripeSubscription(u)) {
-      return NextResponse.json(
-        {
-          error:
-            "You already have a subscription. Use Manage billing to update payment, change plan, or cancel.",
-        },
-        { status: 409 }
-      );
     }
 
     const origin = appOrigin(request);
@@ -87,6 +102,55 @@ export async function POST(request: NextRequest) {
         where: { id: u.id },
         data: { stripeCustomerId: customerId },
       });
+    }
+
+    // Server-side safeguard: check Stripe directly so users can't accidentally pay twice
+    // due to stale DB state or webhook lag.
+    if (u.stripeSubscriptionId) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(u.stripeSubscriptionId);
+        if (isBlockingSubscriptionStatus(sub.status)) {
+          await prisma.user.update({ where: { id: u.id }, data: subscriptionToUserData(sub) });
+          const portalUrl = await portalUrlForCustomer(customerId, request);
+          return NextResponse.json(
+            {
+              error: "You already have an existing subscription. Open billing portal to manage it.",
+              portalUrl,
+            },
+            { status: 409 }
+          );
+        }
+      } catch {
+        // ignore and fall through to list
+      }
+    }
+
+    // If any subscription exists for this customer, do NOT start a new checkout session.
+    const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
+    const existing = subs.data.find((s) => isBlockingSubscriptionStatus(s.status));
+    if (existing) {
+      await prisma.user.update({ where: { id: u.id }, data: subscriptionToUserData(existing) });
+      const portalUrl = await portalUrlForCustomer(customerId, request);
+      return NextResponse.json(
+        {
+          error: "You already have an existing subscription. Open billing portal to manage it.",
+          portalUrl,
+        },
+        { status: 409 }
+      );
+    }
+
+    // DB-level fast path (kept after Stripe check for user-friendly messaging).
+    if (hasActiveStripeSubscription(u)) {
+      const portalUrl = await portalUrlForCustomer(customerId, request);
+      return NextResponse.json(
+        {
+          error:
+            "You already have a subscription. Use the billing portal to update payment, change plan, or cancel.",
+          portalUrl,
+        },
+        { status: 409 }
+      );
     }
 
     const price = proPriceId();
