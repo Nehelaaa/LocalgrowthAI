@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { GoogleSetupHint } from "./GoogleSetupHint";
 
@@ -39,8 +40,30 @@ export function LoginForm({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const oauthMsg = oauthUrlErrorMessage(authError);
+
+  // If NextAuth/Auth.js bounces back with ?error=..., clear it so the message doesn't
+  // get stuck in the URL across refreshes or manual navigation.
+  useEffect(() => {
+    if (!authError) return;
+    const sp = new URLSearchParams(searchParams?.toString());
+    if (!sp.has("error")) return;
+    sp.delete("error");
+    const qs = sp.toString();
+    // Replace the full URL (path + query) to avoid leaving a dangling "?" which can
+    // keep app-router navigation in a weird intermediate state in some browsers.
+    const nextUrl =
+      typeof window !== "undefined"
+        ? `${window.location.pathname}${qs ? `?${qs}` : ""}`
+        : qs
+          ? `?${qs}`
+          : "/login";
+    router.replace(nextUrl, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authError]);
 
   return (
     <div className="mt-6 space-y-5">

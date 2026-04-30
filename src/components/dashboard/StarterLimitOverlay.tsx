@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react";
 
 type Props = {
   isPro: boolean;
@@ -26,9 +27,28 @@ export function StarterLimitOverlay({
   searchesLimit,
 }: Props) {
   const pathname = usePathname();
+  const [localDismissed, setLocalDismissed] = useState(false);
+
+  const dismissKey = useMemo(() => {
+    const kind = atLeadCap && atSearchCap ? "both" : atLeadCap ? "leads" : "search";
+    // Include counters so if usage changes (e.g., upgrade) the overlay can re-evaluate.
+    return `starter_limit_overlay_dismissed:${kind}:${leadsUsed}/${leadsLimit}:${searchesUsed}/${searchesLimit}:${searchQuotaMode}`;
+  }, [atLeadCap, atSearchCap, leadsLimit, leadsUsed, searchesLimit, searchesUsed, searchQuotaMode]);
+
+  const dismissed =
+    localDismissed ||
+    (typeof window !== "undefined" &&
+      (() => {
+        try {
+          return sessionStorage.getItem(dismissKey) === "1";
+        } catch {
+          return false;
+        }
+      })());
 
   if (isPro) return null;
   if (!atLeadCap && !atSearchCap) return null;
+  if (dismissed) return null;
 
   // Allow access to the plan page so the user can upgrade.
   if (pathname?.startsWith("/dashboard/plan")) return null;
@@ -82,12 +102,18 @@ export function StarterLimitOverlay({
             >
               View plans
             </Link>
-            {/* Force a real navigation (Next <Link> can no-op when already on /dashboard). */}
+            {/* If we're already inside /dashboard, navigating "back" just reloads and shows the same overlay.
+               Dismiss it for this tab so the user can continue browsing read-only pages. */}
             <a
               href="/dashboard"
               onClick={(e) => {
                 e.preventDefault();
-                window.location.assign("/dashboard");
+                try {
+                  sessionStorage.setItem(dismissKey, "1");
+                } catch {
+                  // ignore
+                }
+                setLocalDismissed(true);
               }}
               className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white/90 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/25"
             >

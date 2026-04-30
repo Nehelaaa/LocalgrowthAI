@@ -18,6 +18,7 @@ import { requireDashboardUser } from "@/lib/session-user";
 import { getSearchUsageState } from "@/lib/search-usage";
 import {
   getStripePlanPresentment,
+  getProCheckoutPricePresentment,
   listInvoicesForCustomer,
   type SafeInvoiceRow,
 } from "@/lib/stripe-customer-billing";
@@ -75,11 +76,13 @@ export default async function PlanPage({ searchParams }: Props) {
   const isPro = hasProEntitlement(user);
   const hasStripeSub = hasActiveStripeSubscription(user);
 
-  const [liveSub, presentment, invoices, searchUsage] = await Promise.all([
+  const [liveSub, presentment, proCheckoutPresentment, invoices, searchUsage] =
+    await Promise.all([
     user.stripeSubscriptionId != null
       ? getSubscriptionDisplayInfo(user.stripeSubscriptionId)
       : Promise.resolve(null),
     getStripePlanPresentment(user),
+    getProCheckoutPricePresentment(),
     user.stripeCustomerId
       ? listInvoicesForCustomer(user.stripeCustomerId, 30)
       : Promise.resolve([] as SafeInvoiceRow[]),
@@ -150,10 +153,10 @@ export default async function PlanPage({ searchParams }: Props) {
     ? subscriptionStatusSummary(user.subscriptionStatus)
     : "";
 
-  const proPriceForGrid =
-    hasStripeSub && presentment
-      ? `${presentment.priceFormatted} ${presentment.intervalLabel}`
-      : null;
+  const proPriceSource = presentment ?? proCheckoutPresentment;
+  const proPriceForGrid = proPriceSource
+    ? `${proPriceSource.priceFormatted} ${proPriceSource.intervalLabel}`
+    : null;
 
   const metaBlock = (
     <>

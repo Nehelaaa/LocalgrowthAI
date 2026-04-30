@@ -13,6 +13,17 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    const isDev = process.env.NODE_ENV === "development";
+    const scriptSrc = [
+      "script-src 'self'",
+      "'unsafe-inline'",
+      ...(isDev ? ["'unsafe-eval'"] : []),
+      "https://js.stripe.com",
+      "https://cdn.tailwindcss.com",
+      "https://accounts.google.com",
+      "https://apis.google.com",
+    ].join(" ");
+
     const csp = [
       "default-src 'self'",
       "base-uri 'self'",
@@ -21,7 +32,7 @@ const nextConfig: NextConfig = {
       "img-src 'self' https: data:",
       "font-src 'self' https: data:",
       // Next renders JSON-LD via inline <script>, and the demo page includes the Tailwind CDN script.
-      "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.tailwindcss.com https://accounts.google.com https://apis.google.com",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline' https:",
       "connect-src 'self' https://api.stripe.com https://*.stripe.com https://places.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com",
       "frame-src https://js.stripe.com https://accounts.google.com",

@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
 import type { User } from "@prisma/client";
-import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import { getStripe, isStripeConfigured, proPriceId } from "@/lib/stripe";
 
 export type StripePlanPresentment = {
   productName: string;
@@ -28,6 +28,39 @@ function intervalLabel(interval: string | null | undefined): string {
   return interval;
 }
 
+function formatStripePrice(price: Stripe.Price): Pick<
+  StripePlanPresentment,
+  "priceFormatted" | "intervalLabel" | "currency"
+> {
+  const amount = price.unit_amount;
+  const currency = (price.currency ?? "usd").toUpperCase();
+  const priceFormatted =
+    amount != null
+      ? (amount / 100).toLocaleString(undefined, {
+          style: "currency",
+          currency,
+        })
+      : "—";
+  return {
+    priceFormatted,
+    intervalLabel: intervalLabel(price.recurring?.interval),
+    currency,
+  };
+}
+
+function productNameFromPrice(price: Stripe.Price): string {
+  const product = price.product;
+  return typeof product === "object" &&
+    product &&
+    "deleted" in product &&
+    !product.deleted &&
+    "name" in product
+    ? String((product as Stripe.Product).name)
+    : typeof product === "string"
+      ? "Subscription"
+      : "Pro";
+}
+
 /** Live Stripe subscription → product name + recurring price for billing UI. */
 export async function getStripePlanPresentment(
   user: Pick<User, "stripeSubscriptionId">
@@ -41,28 +74,38 @@ export async function getStripePlanPresentment(
     const item = sub.items.data[0];
     const price = item?.price;
     if (!price) return null;
-    const product = price.product;
-    const productName =
-      typeof product === "object" && product && "deleted" in product && !product.deleted && "name" in product
-        ? String((product as Stripe.Product).name)
-        : typeof product === "string"
-          ? "Subscription"
-          : "Pro";
-    const amount = price.unit_amount;
-    const currency = (price.currency ?? "usd").toUpperCase();
-    const priceFormatted =
-      amount != null
-        ? (amount / 100).toLocaleString(undefined, {
-            style: "currency",
-            currency,
-          })
-        : "—";
+    const productName = productNameFromPrice(price);
+    const { priceFormatted, intervalLabel: intervalLabelOut, currency } = formatStripePrice(price);
     return {
       productName,
       priceFormatted,
-      intervalLabel: intervalLabel(price.recurring?.interval),
+      intervalLabel: intervalLabelOut,
       currency,
     };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Pro checkout price presentment (does not require an existing subscription).
+ * Uses STRIPE_PRICE_ID_PRO to display "X per month" on the plan page.
+ */
+export async function getProCheckoutPricePresentment(): Promise<StripePlanPresentment | null> {
+  if (!isStripeConfigured()) return null;
+  let priceId: string;
+  try {
+    priceId = proPriceId();
+  } catch {
+    return null;
+  }
+  try {
+    const stripe = getStripe();
+    const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
+    if (!price) return null;
+    const productName = productNameFromPrice(price);
+    const { priceFormatted, intervalLabel: intervalLabelOut, currency } = formatStripePrice(price);
+    return { productName, priceFormatted, intervalLabel: intervalLabelOut, currency };
   } catch {
     return null;
   }
