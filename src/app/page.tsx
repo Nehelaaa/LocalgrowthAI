@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FAQSection } from "@/components/marketing/FAQSection";
 import { HowItWorksSection } from "@/components/marketing/HowItWorksSection";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { PricingSection } from "@/components/marketing/PricingSection";
 import { ProductMockup } from "@/components/marketing/ProductMockup";
 import { SolutionsSection } from "@/components/marketing/SolutionsSection";
 import { StatsStrip } from "@/components/marketing/StatsStrip";
@@ -204,65 +205,7 @@ export default function HomePage() {
             </ul>
           </section>
 
-          <section
-            id="pricing"
-            className="scroll-mt-20 bg-slate-100/50 py-16 dark:bg-slate-900/30 sm:py-20"
-            aria-labelledby="pricing-heading"
-          >
-            <div className="mx-auto max-w-5xl px-4 sm:px-6">
-              <h2
-                id="pricing-heading"
-                className="text-center text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white"
-              >
-                Simple pricing
-              </h2>
-              <p className="mt-2 text-center text-slate-600 dark:text-slate-400">
-                Start free. Upgrade in-app when you are ready for AI, exports, and unlimited leads.
-              </p>
-              <div className="mt-10 grid gap-6 sm:grid-cols-2">
-                <div className="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-8 dark:border-slate-700/80 dark:bg-slate-900/60">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Free</h3>
-                  <p className="mt-2 text-3xl font-bold text-slate-800 dark:text-slate-100">$0</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">For trying the workflow</p>
-                  <ul className="mt-6 flex-1 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                    <li>Up to 10 saved leads</li>
-                    <li>Search, CRM, pipeline</li>
-                    <li>Upgrade for AI &amp; exports</li>
-                  </ul>
-                  <Link
-                    href="/register"
-                    className="mt-6 block text-center rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
-                  >
-                    Start for free
-                  </Link>
-                </div>
-                <div className="relative flex flex-col rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-b from-indigo-50/90 to-white p-8 dark:from-indigo-950/40 dark:to-slate-900/80">
-                  <div className="absolute right-4 top-4 rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">
-                    Pro
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Pro</h3>
-                  <p className="mt-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
-                    Billed in Stripe
-                  </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Unlimited leads, AI, exports, demos, portal
-                  </p>
-                  <ul className="mt-6 flex-1 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                    <li>Unlimited lead saves</li>
-                    <li>AI insights &amp; multi-channel copy</li>
-                    <li>CSV / JSON export &amp; demo pages</li>
-                    <li>Customer billing portal</li>
-                  </ul>
-                  <Link
-                    href="/register"
-                    className="mt-6 block text-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-indigo-500"
-                  >
-                    Create account — upgrade inside app
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
+          <PricingSection />
 
           <FAQSection />
       </MarketingShell>

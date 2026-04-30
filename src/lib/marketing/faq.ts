@@ -1,3 +1,5 @@
+import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
+
 export const marketingFaqs: { q: string; a: string }[] = [
   {
     q: "Who is LocalGrowth AI for?",
@@ -5,7 +7,7 @@ export const marketingFaqs: { q: string; a: string }[] = [
   },
   {
     q: "What’s included on the Free plan?",
-    a: "You can search, use the CRM, and save up to 10 leads. AI generation, exports, and unlimited leads require Pro (via Stripe in the app).",
+    a: `You can search, use the CRM, and add up to ${FREE_LEAD_LIMIT} new leads over the life of the account (deleting a lead does not free a slot). AI generation, exports, and unlimited saves require Pro (via Stripe in the app).`,
   },
   {
     q: "Do I need a Google or OpenAI key?",

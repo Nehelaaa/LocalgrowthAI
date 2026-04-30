@@ -76,25 +76,60 @@ export async function POST(request: Request) {
           const customerId = typeof s.customer === "string" ? s.customer : s.customer.id;
           const subId = typeof s.subscription === "string" ? s.subscription : s.subscription.id;
           const sub = (await stripe.subscriptions.retrieve(subId)) as unknown as SubWithPeriod;
-          const userId = s.client_reference_id ?? s.metadata?.userId;
-          if (userId) {
-            await prisma.user.update({
-              where: { id: String(userId) },
-              data: {
-                stripeCustomerId: customerId,
-                ...subToData(sub),
-              },
-            });
+          const userIdRaw = s.client_reference_id ?? s.metadata?.userId;
+
+          let mappedUserId: string | null = null;
+
+          if (userIdRaw) {
+            const uid = String(userIdRaw);
+            const dbUser = await prisma.user.findUnique({ where: { id: uid } });
+            const cust = await stripe.customers.retrieve(customerId);
+
+            if (cust.deleted) {
+              console.error("Stripe webhook: checkout references deleted customer", customerId);
+              await prisma.user.updateMany({
+                where: { stripeCustomerId: customerId },
+                data: { ...subToData(sub) },
+              });
+              mappedUserId = await findUserIdByStripeCustomerId(customerId);
+            } else {
+              const metaUserId = cust.metadata?.userId;
+              const metaMismatch = Boolean(metaUserId && metaUserId !== uid);
+
+              if (dbUser && !metaMismatch) {
+                await prisma.user.update({
+                  where: { id: uid },
+                  data: {
+                    stripeCustomerId: customerId,
+                    ...subToData(sub),
+                  },
+                });
+                mappedUserId = uid;
+              } else {
+                if (!dbUser) {
+                  console.error("Stripe webhook: checkout session references unknown user", uid);
+                }
+                if (metaMismatch) {
+                  console.error(
+                    "Stripe webhook: checkout customer metadata mismatch",
+                    customerId
+                  );
+                }
+                await prisma.user.updateMany({
+                  where: { stripeCustomerId: customerId },
+                  data: { ...subToData(sub) },
+                });
+                mappedUserId = await findUserIdByStripeCustomerId(customerId);
+              }
+            }
           } else {
             await prisma.user.updateMany({
               where: { stripeCustomerId: customerId },
               data: { ...subToData(sub) },
             });
+            mappedUserId = await findUserIdByStripeCustomerId(customerId);
           }
 
-          const mappedUserId =
-            (userId ? String(userId) : null) ??
-            (await findUserIdByStripeCustomerId(customerId));
           await createOwnerBillingEvent({
             kind: "subscription_updated",
             severity: "info",
@@ -126,6 +161,21 @@ export async function POST(request: Request) {
             },
           });
 
+          const subEx = sub as SubWithPeriod & {
+            canceled_at?: number | null;
+            cancellation_details?: {
+              reason?: string | null;
+              comment?: string | null;
+              feedback?: string | null;
+            } | null;
+          };
+          const cancelReason = subEx.cancellation_details?.reason ?? null;
+          const cancelComment = subEx.cancellation_details?.comment ?? null;
+          const canceledAtIso =
+            typeof subEx.canceled_at === "number"
+              ? new Date(subEx.canceled_at * 1000).toISOString()
+              : null;
+
           await createOwnerBillingEvent({
             kind: "subscription_canceled",
             severity: "warning",
@@ -133,11 +183,20 @@ export async function POST(request: Request) {
               event.type === "customer.subscription.deleted"
                 ? "Subscription deleted"
                 : "Subscription canceled",
-            body: `Stripe subscription ${sub.id} ended with status ${sub.status}.`,
+            body:
+              cancelReason || cancelComment
+                ? `Stripe subscription ${sub.id} ended (${sub.status}).${cancelReason ? ` Reason: ${cancelReason}.` : ""}${cancelComment ? ` Note: ${cancelComment}` : ""}`
+                : `Stripe subscription ${sub.id} ended with status ${sub.status}.`,
             stripeCustomerId: customerId,
             stripeSubscriptionId: sub.id,
             userId: mappedUserId,
-            metadata: { eventType: event.type },
+            metadata: {
+              eventType: event.type,
+              subscriptionStatus: sub.status,
+              cancellationReason: cancelReason,
+              cancellationComment: cancelComment,
+              canceledAt: canceledAtIso,
+            },
           });
         } else {
           await prisma.user.updateMany({

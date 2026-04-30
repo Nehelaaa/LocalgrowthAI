@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { saveBusinessAsLead } from "@/actions/leads";
+import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
 
 type Place = {
   placeId: string;
@@ -43,10 +44,11 @@ function placeToPayload(place: Place) {
 
 export function PlaceResults({
   places,
-  noWebsiteOnly = false,
+  totalBeforeFilters,
 }: {
   places: Place[];
-  noWebsiteOnly?: boolean;
+  /** When refining, total raw results from search (for “X of Y”). */
+  totalBeforeFilters?: number;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState<string | null>(null);
@@ -54,12 +56,15 @@ export function PlaceResults({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const selectAllRef = useRef<HTMLInputElement>(null);
 
-  const filtered = noWebsiteOnly ? places.filter((p) => p.noWebsite) : places;
+  const filtered = places;
 
   const placeKey = useMemo(
     () => places.map((p) => p.placeId).sort().join(","),
     [places]
   );
+
+  const rawTotal = totalBeforeFilters ?? places.length;
+  const showOfTotal = rawTotal > filtered.length;
 
   useEffect(() => {
     setSelected(new Set());
@@ -76,7 +81,16 @@ export function PlaceResults({
     }
   }, [someVisibleSelected, allVisibleSelected]);
 
-  if (places.length === 0) return null;
+  if (places.length === 0) {
+    if (totalBeforeFilters && totalBeforeFilters > 0) {
+      return (
+        <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-400">
+          No businesses match your filters. Adjust refine options above or clear filters.
+        </div>
+      );
+    }
+    return null;
+  }
 
   const toggle = (placeId: string) => {
     setSelected((prev) => {
@@ -105,7 +119,7 @@ export function PlaceResults({
     if (!r.ok) {
       if (r.code === "LEAD_LIMIT") {
         window.alert(
-          "You have reached the Free plan lead limit (10 leads). Upgrade to Pro in Billing for unlimited leads."
+          `You have used all ${FREE_LEAD_LIMIT} Free-plan lead slots (lifetime total). Deleting leads does not free slots. Upgrade to Pro in Plan & billing for unlimited leads.`
         );
       } else {
         window.alert(
@@ -131,8 +145,8 @@ export function PlaceResults({
           if (r.code === "LEAD_LIMIT") {
             window.alert(
               saved > 0
-                ? `Added ${saved} lead(s), then hit the Free plan limit (10 total). Upgrade to Pro for unlimited leads.`
-                : "You have reached the Free plan lead limit (10 leads). Upgrade to Pro for unlimited leads."
+                ? `Added ${saved} lead(s), then hit the Free plan limit (${FREE_LEAD_LIMIT} lifetime slots). Upgrade to Pro for unlimited leads.`
+                : `You have used all ${FREE_LEAD_LIMIT} Free-plan lead slots (lifetime). Upgrade to Pro for unlimited leads.`
             );
           } else {
             window.alert(
@@ -160,10 +174,7 @@ export function PlaceResults({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           Results ({filtered.length}
-          {noWebsiteOnly && filtered.length !== places.length
-            ? ` of ${places.length}`
-            : ""}
-          )
+          {showOfTotal ? ` of ${rawTotal}` : ""})
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">

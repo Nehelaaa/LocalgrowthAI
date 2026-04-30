@@ -89,9 +89,12 @@ export default async function OwnerOverviewPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <QuickLink href="/owner/revenue" title="Revenue" sub="Stripe + estimates" />
-        <QuickLink href="/owner/usage" title="Usage" sub="Search + AI calls" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <QuickLink href="/owner/revenue" title="Revenue" sub="Stripe MRR + invoices" />
+        <QuickLink href="/owner/churn" title="Churn" sub="Who canceled & when" />
+        <QuickLink href="/owner/billing-playbook" title="Billing playbook" sub="Policies, webhooks, cancel flow" />
+        <QuickLink href="/owner/costs" title="Costs & margin" sub="API $ vs Stripe cash" />
+        <QuickLink href="/owner/usage" title="Usage" sub="Search + AI over time" />
         <QuickLink href="/owner/flags" title="Flags" sub="Feature rollouts" />
       </div>
     </div>

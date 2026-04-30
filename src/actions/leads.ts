@@ -27,6 +27,7 @@ export type SaveBusinessAsLeadResult =
 export async function saveManualCrmLeadForPipeline(input: {
   businessName: string;
   phone?: string;
+  website?: string;
   address?: string;
   city?: string;
   state?: string;
@@ -38,50 +39,66 @@ export async function saveManualCrmLeadForPipeline(input: {
     return { ok: false, code: "INVALID" };
   }
   const user = await requireUserForAction();
-  const count = await prisma.lead.count({ where: { userId: user.id } });
-  if (!canCreateMoreLeads(count, user)) {
-    return { ok: false, code: "LEAD_LIMIT" };
-  }
+
+  const websiteTrim = input.website?.trim() || "";
+  const hasUrl = websiteTrim.length > 0;
 
   const { score, badge } = computeLeadScore({
     rating: null,
     reviewCount: 0,
-    noWebsite: true,
+    noWebsite: !hasUrl,
     hasSocialOnly: false,
   });
 
   const placeId = `manual-${randomUUID()}`;
 
-  const business = await prisma.business.create({
-    data: {
-      placeId,
-      name,
-      address: input.address,
-      city: input.city,
-      state: input.state,
-      phone: input.phone,
-      website: null,
-      rating: null,
-      reviewCount: 0,
-      googleMapsUrl: null,
-      businessType: input.businessTypeLabel ?? "Manual / field",
-      hasSocialOnly: false,
-    },
+  const out = await prisma.$transaction(async (tx) => {
+    const u = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
+    if (!canCreateMoreLeads(u.lifetimeLeadsCreated, u)) {
+      return { ok: false as const, code: "LEAD_LIMIT" as const };
+    }
+
+    const business = await tx.business.create({
+      data: {
+        placeId,
+        name,
+        address: input.address,
+        city: input.city,
+        state: input.state,
+        phone: input.phone,
+        website: hasUrl ? websiteTrim : null,
+        rating: null,
+        reviewCount: 0,
+        googleMapsUrl: null,
+        businessType: input.businessTypeLabel ?? "Manual / field",
+        hasSocialOnly: false,
+      },
+    });
+
+    const lead = await tx.lead.create({
+      data: {
+        userId: u.id,
+        businessId: business.id,
+        leadScore: score,
+        badge,
+        notes: input.notesLine,
+      },
+    });
+
+    await tx.user.update({
+      where: { id: u.id },
+      data: { lifetimeLeadsCreated: { increment: 1 } },
+    });
+
+    return { ok: true as const, leadId: lead.id, isNew: true as const };
   });
 
-  const lead = await prisma.lead.create({
-    data: {
-      userId: user.id,
-      businessId: business.id,
-      leadScore: score,
-      badge,
-      notes: input.notesLine,
-    },
-  });
-
+  if (!out.ok) {
+    return { ok: false, code: "LEAD_LIMIT" };
+  }
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");
-  return { ok: true, leadId: lead.id, isNew: true };
+  return { ok: true, leadId: out.leadId, isNew: true };
 }
 
 export type ManualLeadFormState = { error?: string; success?: boolean };
@@ -107,7 +124,7 @@ export async function addManualCrmLeadForm(
   if (r.code === "LEAD_LIMIT") {
     return {
       error:
-        "You've reached the Free plan lead limit. Upgrade to Pro for unlimited leads.",
+        "You've used all Free-plan lead slots (lifetime total). Upgrade to Pro for unlimited leads.",
     };
   }
   return { error: "Enter a business or contact name for this lead." };
@@ -132,10 +149,6 @@ export async function saveBusinessAsLead(place: {
   photoUrl?: string;
 }): Promise<SaveBusinessAsLeadResult> {
   const user = await requireUserForAction();
-  const count = await prisma.lead.count({ where: { userId: user.id } });
-  if (!canCreateMoreLeads(count, user)) {
-    return { ok: false, code: "LEAD_LIMIT" };
-  }
 
   const existing = await prisma.business.findUnique({
     where: { placeId: place.placeId },
@@ -161,48 +174,66 @@ export async function saveBusinessAsLead(place: {
     hasSocialOnly: place.hasSocialOnly,
   });
 
-  const business = await prisma.business.upsert({
-    where: { placeId: place.placeId },
-    create: {
-      placeId: place.placeId,
-      name: place.name,
-      address: place.address,
-      city: place.city,
-      state: place.state,
-      phone: place.phone,
-      website: place.website,
-      rating: place.rating,
-      reviewCount: place.reviewCount,
-      googleMapsUrl: place.googleMapsUrl,
-      businessType: place.businessType,
-      lat: place.lat,
-      lng: place.lng,
-      hasSocialOnly: place.hasSocialOnly,
-      photoUrl: place.photoUrl,
-    },
-    update: {
-      name: place.name,
-      address: place.address,
-      rating: place.rating,
-      reviewCount: place.reviewCount,
-      website: place.website,
-      hasSocialOnly: place.hasSocialOnly,
-      photoUrl: place.photoUrl,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    const u = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
+    if (!canCreateMoreLeads(u.lifetimeLeadsCreated, u)) {
+      return { ok: false as const, code: "LEAD_LIMIT" as const };
+    }
+
+    const business = await tx.business.upsert({
+      where: { placeId: place.placeId },
+      create: {
+        placeId: place.placeId,
+        name: place.name,
+        address: place.address,
+        city: place.city,
+        state: place.state,
+        phone: place.phone,
+        website: place.website,
+        rating: place.rating,
+        reviewCount: place.reviewCount,
+        googleMapsUrl: place.googleMapsUrl,
+        businessType: place.businessType,
+        lat: place.lat,
+        lng: place.lng,
+        hasSocialOnly: place.hasSocialOnly,
+        photoUrl: place.photoUrl,
+      },
+      update: {
+        name: place.name,
+        address: place.address,
+        rating: place.rating,
+        reviewCount: place.reviewCount,
+        website: place.website,
+        hasSocialOnly: place.hasSocialOnly,
+        photoUrl: place.photoUrl,
+      },
+    });
+
+    const lead = await tx.lead.create({
+      data: {
+        userId: u.id,
+        businessId: business.id,
+        leadScore: score,
+        badge,
+      },
+    });
+
+    await tx.user.update({
+      where: { id: u.id },
+      data: { lifetimeLeadsCreated: { increment: 1 } },
+    });
+
+    return { ok: true as const, leadId: lead.id };
   });
 
-  const lead = await prisma.lead.create({
-    data: {
-      userId: user.id,
-      businessId: business.id,
-      leadScore: score,
-      badge,
-    },
-  });
+  if (!result.ok) {
+    return { ok: false, code: "LEAD_LIMIT" };
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");
-  return { ok: true, leadId: lead.id, isNew: true };
+  return { ok: true, leadId: result.leadId, isNew: true };
 }
 
 const updateLeadSchema = z.object({

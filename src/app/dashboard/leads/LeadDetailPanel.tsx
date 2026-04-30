@@ -4,33 +4,11 @@ import { useState, useEffect, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ContactStatusPicker } from "@/components/ContactStatusPicker";
 import { DeleteLeadDialog } from "@/components/DeleteLeadDialog";
-import {
-  updateLeadStatus,
-  updateLead,
-  generateOpportunityForLead,
-  generateOutreachForLead,
-  deleteLead,
-} from "@/actions/leads";
-import { generateDemoPage } from "@/actions/demo";
+import { updateLeadStatus, updateLead, deleteLead } from "@/actions/leads";
 import { getLeadById } from "@/actions/leads-list";
-import type { Lead, Business, Outreach, DemoPage } from "@prisma/client";
+import type { Lead, Business } from "@prisma/client";
 
-function proOrThrow(e: unknown, feature: string) {
-  const m = e instanceof Error ? e.message : String(e);
-  if (m === "PRO_REQUIRED") {
-    window.alert(
-      `Upgrade to Pro for ${feature}. Use "Upgrade to Pro" in the sidebar or open Pricing from the marketing site.`
-    );
-    return;
-  }
-  window.alert(m || "Something went wrong");
-}
-
-type LeadWithRelations = Lead & {
-  business: Business;
-  outreachs: Outreach[];
-  demoPages: DemoPage[];
-};
+type LeadWithRelations = Lead & { business: Business };
 
 export function LeadDetailPanel({
   leadId,
@@ -45,10 +23,6 @@ export function LeadDetailPanel({
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-  const [opportunityLoading, setOpportunityLoading] = useState(false);
-  const [outreachLoading, setOutreachLoading] = useState<string | null>(null);
-  const [demoLoading, setDemoLoading] = useState(false);
-  const [outreachContent, setOutreachContent] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
   const [websiteQuote, setWebsiteQuote] = useState("");
@@ -106,46 +80,6 @@ export function LeadDetailPanel({
       </div>
     );
   }
-
-  const runOpportunity = async () => {
-    setOpportunityLoading(true);
-    try {
-      await generateOpportunityForLead(leadId);
-      refreshLead();
-    } catch (e) {
-      proOrThrow(e, "pro AI insights");
-    } finally {
-      setOpportunityLoading(false);
-    }
-  };
-
-  const runOutreach = async (
-    type: "email" | "call_script" | "instagram_dm" | "loom_script"
-  ) => {
-    setOutreachLoading(type);
-    try {
-      const { content } = await generateOutreachForLead(leadId, type);
-      setOutreachContent((c) => ({ ...c, [type]: content }));
-      refreshLead();
-    } catch (e) {
-      proOrThrow(e, "outreach");
-    } finally {
-      setOutreachLoading(null);
-    }
-  };
-
-  const runDemo = async () => {
-    setDemoLoading(true);
-    try {
-      const { slug } = await generateDemoPage(leadId);
-      window.open(`/demo/${slug}`, "_blank");
-      refreshLead();
-    } catch (e) {
-      proOrThrow(e, "client demo pages");
-    } finally {
-      setDemoLoading(false);
-    }
-  };
 
   const confirmRemoveFromPanel = async () => {
     setDeleteSubmitting(true);
@@ -325,113 +259,6 @@ export function LeadDetailPanel({
               placeholder="e.g. 3500, $3,500, or $3.5k landing + blog"
               className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white"
             />
-          </section>
-
-          {/* Opportunity Insights */}
-          <section>
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-              Opportunity insights
-            </h3>
-            {lead.opportunityInsights ? (
-              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-4 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                {lead.opportunityInsights}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={runOpportunity}
-                disabled={opportunityLoading}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {opportunityLoading ? "Generating…" : "Generate with AI"}
-              </button>
-            )}
-            {lead.revenueEstimate && (
-              <p className="mt-2 text-sm text-indigo-600 dark:text-indigo-400">
-                {lead.revenueEstimate}
-              </p>
-            )}
-          </section>
-
-          {/* Outreach */}
-          <section>
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-              Outreach
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  "email",
-                  "call_script",
-                  "instagram_dm",
-                  "loom_script",
-                ] as const
-              ).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => runOutreach(type)}
-                  disabled={outreachLoading !== null}
-                  className="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
-                >
-                  {outreachLoading === type ? "…" : type.replace("_", " ")}
-                </button>
-              ))}
-            </div>
-            {(outreachContent.email ||
-              outreachContent.call_script ||
-              outreachContent.instagram_dm ||
-              outreachContent.loom_script) && (
-              <div className="mt-3 space-y-2">
-                {Object.entries(outreachContent).map(
-                  ([type, content]) =>
-                    content && (
-                      <div
-                        key={type}
-                        className="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 text-sm whitespace-pre-wrap"
-                      >
-                        <span className="font-medium text-slate-600 dark:text-slate-400">
-                          {type.replace("_", " ")}
-                        </span>
-                        <p className="mt-1 text-slate-700 dark:text-slate-300">
-                          {content}
-                        </p>
-                      </div>
-                    )
-                )}
-              </div>
-            )}
-          </section>
-
-          {/* Demo */}
-          <section>
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-              Demo page
-            </h3>
-            {lead.demoPages.length > 0 ? (
-              <div className="flex gap-2">
-                {lead.demoPages.map((d) => (
-                  <a
-                    key={d.id}
-                    href={`/demo/${d.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-indigo-600 dark:text-indigo-400 text-sm hover:underline"
-                  >
-                    View demo
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={runDemo}
-                disabled={demoLoading}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {demoLoading ? "Generating…" : "Generate demo"}
-              </button>
-            )}
           </section>
 
           <section>

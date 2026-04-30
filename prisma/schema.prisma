@@ -50,6 +50,8 @@ model User {
   stripeCustomerId   String? @unique
   stripeSubscriptionId String? @unique
   onboardingComplete Boolean @default(true)
+  /// Total CRM leads ever created on this account; not decremented when leads are deleted (Free cap).
+  lifetimeLeadsCreated Int   @default(0)
   /// web_agency | real_estate | trades | sales | freelance | agency | other
   profession     String?
   accounts      Account[]

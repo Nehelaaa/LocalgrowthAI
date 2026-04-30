@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:backfill": "node ./scripts/saas-backfill.cjs",
     "auth:set-password": "node ./scripts/set-dev-password.cjs",
-    "db:migrate-from-sqlite": "node ./scripts/migrate-sqlite-to-neon.cjs"
+    "db:migrate-from-sqlite": "node ./scripts/migrate-sqlite-to-neon.cjs",
+    "db:sync-lifetime": "node ./scripts/sync-lifetime-lead-count.cjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

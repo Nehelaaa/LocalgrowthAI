@@ -7,8 +7,10 @@ const items = [
   { href: "/owner", label: "Overview" },
   { href: "/owner/users", label: "Users" },
   { href: "/owner/revenue", label: "Revenue" },
+  { href: "/owner/churn", label: "Churn" },
+  { href: "/owner/billing-playbook", label: "Billing playbook" },
   { href: "/owner/usage", label: "Usage" },
-  { href: "/owner/costs", label: "API costs" },
+  { href: "/owner/costs", label: "Costs & margin" },
   { href: "/owner/alerts", label: "Alerts" },
   { href: "/owner/flags", label: "Feature flags" },
 ] as const;

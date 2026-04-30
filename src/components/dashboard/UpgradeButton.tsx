@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { readResponseJson } from "@/lib/fetch-json";
 
 type Props = {
   className?: string;
@@ -16,13 +17,24 @@ export function UpgradeButton({ className = "", label = "Upgrade" }: Props) {
       onClick={async () => {
         setLoading(true);
         try {
-          const r = await fetch("/api/stripe/checkout", { method: "POST" });
-          const j = (await r.json()) as { url?: string; error?: string };
-          if (j.url) window.location.href = j.url;
-          else {
-            const msg = j.error ?? "Checkout is not available. Add Stripe keys in .env.";
-            window.alert(msg);
+          const r = await fetch("/api/stripe/checkout", {
+            method: "POST",
+            credentials: "same-origin",
+          });
+          const j = await readResponseJson<{ url?: string; error?: string }>(r);
+          if (j?.url) {
+            window.location.href = j.url;
+            return;
           }
+          if (j?.error) {
+            window.alert(j.error);
+            return;
+          }
+          const hint =
+            r.status === 401
+              ? "Sign in again, then try checkout."
+              : "No response from the server. If you are not signed in, open the app in a normal window (not a private tab) and try again. On the server, set STRIPE_SECRET_KEY and STRIPE_PRICE_ID_PRO in the environment used for this build.";
+          window.alert(hint);
         } finally {
           setLoading(false);
         }

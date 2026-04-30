@@ -1,5 +1,6 @@
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { isGoogleOAuthConfigured } from "@/lib/google-oauth";
+import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -19,8 +20,8 @@ export default function RegisterPage() {
         </div>
         <h1 className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">Create an account</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Free tier includes up to 10 saved leads. Upgrade in-app for AI, exports, and unlimited
-          growth.
+          Free tier includes {FREE_LEAD_LIMIT} new leads total (lifetime; removing a lead does not
+          free a slot). Upgrade in-app for AI, exports, and unlimited saves.
         </p>
         <RegisterForm hasGoogle={hasGoogle} />
         <p className="mt-4 text-center text-xs text-slate-500">

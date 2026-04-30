@@ -1,4 +1,5 @@
 import { getLeads } from "@/actions/leads-list";
+import { AddManualLeadDialog } from "./AddManualLeadDialog";
 import { LeadsTable } from "./LeadsTable";
 import { LeadsFilters } from "./LeadsFilters";
 
@@ -39,9 +40,10 @@ export default async function LeadsPage({
 
   return (
     <div className="w-full min-w-0 max-w-6xl">
-      <h1 className="mb-4 text-xl font-bold text-slate-900 sm:mb-6 sm:text-2xl dark:text-white">
-        CRM Leads
-      </h1>
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">CRM Leads</h1>
+        <AddManualLeadDialog />
+      </div>
       <LeadsFilters />
       <LeadsTable leads={leads} />
     </div>

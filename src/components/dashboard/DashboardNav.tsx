@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import type { FC } from "react";
+import { ManageBillingButton } from "./ManageBillingButton";
 import { UpgradeButton } from "./UpgradeButton";
 
 const nav: {
@@ -20,6 +21,20 @@ const nav: {
     icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/plan",
+    label: "Plan & billing",
+    shortLabel: "Plan",
+    icon: ({ className }) => (
+      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"
+        />
       </svg>
     ),
   },
@@ -209,9 +224,7 @@ function FooterHome({
             {user.isPro ? "Pro" : "Free plan"}
           </p>
           {!user.isPro && <UpgradeButton className="mt-2 w-full" label="Upgrade to Pro" />}
-          {user.isPro && (
-            <OpenBilling className="mt-2 w-full" />
-          )}
+          {user.isPro && <ManageBillingButton className="mt-2 w-full" />}
         </div>
       )}
       <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
@@ -224,33 +237,6 @@ function FooterHome({
         </button>
       </div>
     </div>
-  );
-}
-
-function OpenBilling({ className }: { className?: string }) {
-  const [loading, setLoading] = useState(false);
-  return (
-    <button
-      type="button"
-      disabled={loading}
-      onClick={async () => {
-        setLoading(true);
-        try {
-          const r = await fetch("/api/stripe/portal", { method: "POST" });
-          const j = (await r.json()) as { url?: string; error?: string };
-          if (j.url) window.location.href = j.url;
-          else if (j.error) window.alert(j.error);
-        } finally {
-          setLoading(false);
-        }
-      }}
-      className={
-        (className ?? "") +
-        " rounded-lg border border-slate-200/80 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800/80"
-      }
-    >
-      {loading ? "…" : "Manage billing"}
-    </button>
   );
 }
 

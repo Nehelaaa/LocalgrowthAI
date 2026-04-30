@@ -1,26 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BusinessSearchForm } from "./BusinessSearchForm";
+import { LeadSearchFiltersPanel, type LastSearchMeta } from "./LeadSearchFiltersPanel";
 import { PlaceResults } from "./PlaceResults";
-
-type Place = {
-  placeId: string;
-  name: string;
-  address: string;
-  city?: string;
-  state?: string;
-  phone?: string;
-  website?: string;
-  rating?: number;
-  reviewCount: number;
-  googleMapsUrl: string;
-  businessType?: string;
-  hasSocialOnly: boolean;
-  noWebsite: boolean;
-  photoUrl?: string;
-};
+import {
+  defaultPlaceFilterState,
+  filterAndSortPlaces,
+  type PlaceFilterState,
+  type PlaceRow,
+} from "@/lib/place-search-scoring";
 
 type UsageInfo = {
   used: number;
@@ -30,12 +20,13 @@ type UsageInfo = {
 };
 
 export default function SearchPage() {
-  const [results, setResults] = useState<Place[]>([]);
+  const [results, setResults] = useState<PlaceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [noWebsiteOnly, setNoWebsiteOnly] = useState(false);
   const [fromCache, setFromCache] = useState(false);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [lastSearch, setLastSearch] = useState<LastSearchMeta | null>(null);
+  const [filters, setFilters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
 
   const refreshUsage = useCallback(() => {
     void fetch("/api/places/usage")
@@ -48,6 +39,11 @@ export default function SearchPage() {
   useEffect(() => {
     refreshUsage();
   }, [refreshUsage]);
+
+  const filteredPlaces = useMemo(
+    () => filterAndSortPlaces(results, filters),
+    [results, filters]
+  );
 
   const onSearch = async (params: {
     city: string;
@@ -67,7 +63,7 @@ export default function SearchPage() {
       const data = (await res.json()) as {
         error?: string;
         code?: string;
-        places?: Place[];
+        places?: PlaceRow[];
         fromCache?: boolean;
         usage?: UsageInfo;
       };
@@ -82,6 +78,13 @@ export default function SearchPage() {
         );
       }
       setResults(data.places ?? []);
+      setLastSearch({
+        city: params.city,
+        state: params.state,
+        radiusMiles: params.radiusMiles,
+        businessType: params.businessType,
+      });
+      setFilters(defaultPlaceFilterState());
       setFromCache(!!data.fromCache);
       if (data.usage) {
         setUsage(data.usage);
@@ -124,8 +127,7 @@ export default function SearchPage() {
           {error.includes("quota") && (
             <p className="text-sm opacity-90">
               Tip: run the exact same city, radius, and type again to hit the{" "}
-              <span className="font-medium">7-day cache</span> and avoid another API
-              call.
+              <span className="font-medium">7-day cache</span> and avoid another API call.
             </p>
           )}
         </div>
@@ -136,19 +138,18 @@ export default function SearchPage() {
         </p>
       )}
       {results.length > 0 && (
-        <div className="mt-6 flex items-center gap-4">
-          <label className="flex min-h-[44px] items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer touch-manipulation">
-            <input
-              type="checkbox"
-              checked={noWebsiteOnly}
-              onChange={(e) => setNoWebsiteOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            Only show businesses with no website
-          </label>
-        </div>
+        <LeadSearchFiltersPanel
+          lastSearch={lastSearch}
+          filters={filters}
+          onChange={setFilters}
+          visibleCount={filteredPlaces.length}
+          totalCount={results.length}
+        />
       )}
-      <PlaceResults places={results} noWebsiteOnly={noWebsiteOnly} />
+      <PlaceResults
+        places={filteredPlaces}
+        totalBeforeFilters={results.length > 0 ? results.length : undefined}
+      />
     </div>
   );
 }

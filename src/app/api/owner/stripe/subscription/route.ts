@@ -77,11 +77,15 @@ export async function POST(req: Request) {
     kind: "subscription_canceled",
     severity: "warning",
     title: "Owner action: subscription canceled immediately",
-    body: `Canceled subscription ${sub.id} immediately.`,
+    body: `Canceled subscription ${sub.id} immediately (dashboard owner tool).`,
     stripeCustomerId: u.stripeCustomerId,
     stripeSubscriptionId: sub.id,
     userId: u.id,
-    metadata: { source: "owner_api", mode: parsed.data.mode },
+    metadata: {
+      source: "owner_api",
+      mode: parsed.data.mode,
+      cancellationReason: "owner_forced_cancel",
+    },
   });
 
   return NextResponse.json({ ok: true, subscription: { id: sub.id, status: sub.status } });

@@ -59,8 +59,6 @@ export async function getLeadById(leadId: string) {
     where: { id: leadId, userId: user.id },
     include: {
       business: true,
-      outreachs: true,
-      demoPages: true,
     },
   });
 }
