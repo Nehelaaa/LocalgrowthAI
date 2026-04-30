@@ -52,6 +52,8 @@ model User {
   onboardingComplete Boolean @default(true)
   /// Total CRM leads ever created on this account; not decremented when leads are deleted (Free cap).
   lifetimeLeadsCreated Int   @default(0)
+  /// Total live Google Places API searches used (Starter lifetime cap). Cache hits do not increment.
+  lifetimeGoogleSearches Int @default(0)
   /// web_agency | real_estate | trades | sales | freelance | agency | other
   profession     String?
   accounts      Account[]

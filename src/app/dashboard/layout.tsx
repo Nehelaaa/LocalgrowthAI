@@ -46,6 +46,7 @@ export default async function DashboardLayout({
           isPro={isPro}
           atLeadCap={!canCreateLeads}
           atSearchCap={usage.remaining === 0}
+          searchQuotaMode={usage.mode}
           leadsUsed={user.lifetimeLeadsCreated}
           leadsLimit={FREE_LEAD_LIMIT}
           searchesUsed={usage.used}

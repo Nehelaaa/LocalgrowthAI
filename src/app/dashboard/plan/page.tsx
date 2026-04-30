@@ -7,7 +7,7 @@ import { PlanCurrentSummaryCard } from "@/components/dashboard/plan/PlanCurrentS
 import { PlanUsageCard } from "@/components/dashboard/plan/PlanUsageCard";
 import {
   FREE_LEAD_LIMIT,
-  FREE_SEARCHES_PER_DAY,
+  FREE_SEARCHES_LIFETIME,
   PRO_SEARCHES_PER_DAY,
   canCreateMoreLeads,
   hasActiveStripeSubscription,
@@ -116,7 +116,7 @@ export default async function PlanPage({ searchParams }: Props) {
   const planHeadline = !isPro ? "Starter plan" : `${productTitle} plan`;
 
   const planSubline = !isPro
-    ? "Upgrade anytime for unlimited leads and a higher daily search quota."
+    ? "Upgrade anytime for unlimited leads and a higher search quota."
     : hasStripeSub
       ? "Your subscription is managed in Stripe."
       : user.grandfatheredPro
@@ -125,7 +125,7 @@ export default async function PlanPage({ searchParams }: Props) {
 
   const summaryBullets = !isPro
     ? [
-        `${FREE_SEARCHES_PER_DAY} discovery searches per day`,
+        `${FREE_SEARCHES_LIFETIME} discovery searches total (lifetime)`,
         `Up to ${FREE_LEAD_LIMIT} leads saved total (lifetime)`,
       ]
     : [
@@ -275,6 +275,7 @@ export default async function PlanPage({ searchParams }: Props) {
           searchUsed={searchUsed}
           searchLimit={searchLimit}
           searchRemaining={searchRemaining}
+          searchQuotaMode={searchUsage.mode}
           showNearWarning={showNearLimitBanner}
           showHardWarning={showHardLimitBanner}
           nearLeadCap={nearLeadCap}

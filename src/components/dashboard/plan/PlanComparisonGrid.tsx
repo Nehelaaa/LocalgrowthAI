@@ -2,7 +2,7 @@ import Link from "next/link";
 import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
 import {
   FREE_LEAD_LIMIT,
-  FREE_SEARCHES_PER_DAY,
+  FREE_SEARCHES_LIFETIME,
   PRO_SEARCHES_PER_DAY,
 } from "@/lib/entitlements";
 
@@ -15,7 +15,7 @@ type Props = {
 
 const starterBullets = [
   `${FREE_LEAD_LIMIT} leads total (lifetime)`,
-  `${FREE_SEARCHES_PER_DAY} discovery searches per day`,
+  `${FREE_SEARCHES_LIFETIME} discovery searches total (lifetime)`,
   "CRM & pipeline basics",
   "Limited Pro features",
 ];

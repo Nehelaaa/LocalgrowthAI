@@ -4,7 +4,7 @@ import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-s
 import { searchPlaces } from "@/lib/google-places";
 import { prisma } from "@/lib/db";
 import { getCachedSearchResults, placesSearchCacheKey, setCachedSearchResults } from "@/lib/places-search-cache";
-import { getSearchUsageState, incrementSearchUsageForUser } from "@/lib/search-usage";
+import { getSearchUsageState, incrementGoogleSearchUsage } from "@/lib/search-usage";
 import { z } from "zod";
 
 const schema = z.object({
@@ -47,9 +47,10 @@ export async function POST(request: NextRequest) {
     if (usageBefore.remaining === 0) {
       return NextResponse.json(
         {
-          error: "Daily search limit reached",
+          error: "Search limit reached",
           code: "SEARCH_LIMIT",
           usage: {
+            mode: usageBefore.mode,
             used: usageBefore.used,
             limit: usageBefore.limit,
             remaining: 0,
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
         places: cached,
         fromCache: true,
         usage: {
+          mode: usageBefore.mode,
           used: usageBefore.used,
           limit: usageBefore.limit,
           remaining: usageBefore.remaining,
@@ -76,13 +78,14 @@ export async function POST(request: NextRequest) {
 
     const results = await searchPlaces(params);
     await setCachedSearchResults(cacheKey, results);
-    await incrementSearchUsageForUser(user.id);
+    await incrementGoogleSearchUsage(user.id);
 
     const usage = await getSearchUsageState(user);
     return NextResponse.json({
       places: results,
       fromCache: false,
       usage: {
+        mode: usage.mode,
         used: usage.used,
         limit: usage.limit,
         remaining: usage.remaining,

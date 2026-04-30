@@ -6,12 +6,12 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { registerUser, type RegisterState } from "@/actions/register";
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
+import { GoogleSignInButton } from "./GoogleSignInButton";
+import { GoogleSetupHint } from "./GoogleSetupHint";
 
 const professionOrder = (Object.keys(PROFESSIONS) as ProfessionId[]).sort(
   (a, b) => PROFESSIONS[a].order - PROFESSIONS[b].order
 );
-import { GoogleSignInButton } from "./GoogleSignInButton";
-import { GoogleSetupHint } from "./GoogleSetupHint";
 
 const init: RegisterState = {};
 
@@ -53,6 +53,30 @@ export function RegisterForm({ hasGoogle }: { hasGoogle: boolean }) {
         {state?.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
         <div>
           <label
+            htmlFor="profession"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+          >
+            Profession (optional)
+          </label>
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            Helps us understand your use-case (doesn’t change the dashboard).
+          </p>
+          <select
+            id="profession"
+            name="profession"
+            defaultValue=""
+            className="mt-1 w-full min-h-[48px] appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          >
+            <option value="">Skip for now</option>
+            {professionOrder.map((id) => (
+              <option key={id} value={id}>
+                {PROFESSIONS[id].label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
             htmlFor="name"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
@@ -88,30 +112,6 @@ export function RegisterForm({ hasGoogle }: { hasGoogle: boolean }) {
           {state?.fieldErrors?.email && (
             <p className="mt-0.5 text-xs text-red-500">{state.fieldErrors.email}</p>
           )}
-        </div>
-        <div>
-          <label
-            htmlFor="profession"
-            className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-          >
-            Profession (optional)
-          </label>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            Helps us understand your use-case (doesn’t change the dashboard).
-          </p>
-          <select
-            id="profession"
-            name="profession"
-            defaultValue=""
-            className="mt-1 w-full min-h-[48px] appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-          >
-            <option value="">Skip for now</option>
-            {professionOrder.map((id) => (
-              <option key={id} value={id}>
-                {PROFESSIONS[id].label}
-              </option>
-            ))}
-          </select>
         </div>
         <div>
           <label

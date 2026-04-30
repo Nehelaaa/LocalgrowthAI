@@ -2,8 +2,9 @@ import type { User } from "@prisma/client";
 
 /** Free plan: max new leads ever created (deletes do not free slots). */
 export const FREE_LEAD_LIMIT = 5;
-/** Daily cap on Google Places *API* calls (Text Search), not cached repeats. */
-export const FREE_SEARCHES_PER_DAY = 10;
+/** Starter: lifetime cap on live Google Places searches (cache hits never consume). */
+export const FREE_SEARCHES_LIFETIME = 10;
+/** Pro: daily cap on live Google Places searches. */
 export const PRO_SEARCHES_PER_DAY = 100;
 export const PRO_PLAN = "pro" as const;
 export const FREE_PLAN = "free" as const;
@@ -46,9 +47,18 @@ export function hasActiveStripeSubscription(
   return s === "active" || s === "trialing" || s === "past_due";
 }
 
-export function getDailySearchLimit(u: Pick<User, "plan" | "subscriptionStatus" | "grandfatheredPro">): number {
+/** Live Google search quota: Starter = lifetime total; Pro = per UTC day (enforced via SearchDayUsage). */
+export function getSearchQuotaLimit(
+  u: Pick<User, "plan" | "subscriptionStatus" | "grandfatheredPro">
+): number {
   if (hasProEntitlement(u as User)) return PRO_SEARCHES_PER_DAY;
-  return FREE_SEARCHES_PER_DAY;
+  return FREE_SEARCHES_LIFETIME;
+}
+
+export function isStarterSearchQuotaLifetime(
+  u: Pick<User, "plan" | "subscriptionStatus" | "grandfatheredPro">
+): boolean {
+  return !hasProEntitlement(u as User);
 }
 
 /** Remaining Starter lead slots (0 if at/over cap). Pro / legacy → effectively unlimited for UI. */

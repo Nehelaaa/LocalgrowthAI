@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getTradesDashboardData } from "@/actions/trades";
 import { requireTradesDashboardUser } from "@/lib/trades-access";
 import { hasProEntitlement } from "@/lib/entitlements";
-import { FREE_SEARCHES_PER_DAY, PRO_SEARCHES_PER_DAY } from "@/lib/entitlements";
 import { getSearchUsageState } from "@/lib/search-usage";
 
 const money = (c: number) =>
@@ -15,7 +14,7 @@ export default async function TradesHomePage() {
     getSearchUsageState(u),
   ]);
   const isPro = hasProEntitlement(u);
-  const searchLimit = isPro ? PRO_SEARCHES_PER_DAY : FREE_SEARCHES_PER_DAY;
+  const searchLimit = searchUsage.limit;
 
   return (
     <div className="w-full min-w-0 max-w-4xl space-y-6">
@@ -35,8 +34,9 @@ export default async function TradesHomePage() {
           <span className="font-semibold tabular-nums text-slate-900 dark:text-slate-100">
             {searchUsage.used} / {searchLimit}
           </span>{" "}
-          used today{isPro ? " (Pro plan)" : " (Free; upgrade for more)"}. Cached
-          repeat searches do not add to this count.
+          used {searchUsage.mode === "lifetime" ? "total" : "today"}
+          {isPro ? " (Pro plan)" : " (Starter; upgrade for more)"}. Cached repeat searches do not add to this
+          count.
         </p>
       </header>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

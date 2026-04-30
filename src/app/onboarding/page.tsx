@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import {
   FREE_LEAD_LIMIT,
-  FREE_SEARCHES_PER_DAY,
+  FREE_SEARCHES_LIFETIME,
   PRO_SEARCHES_PER_DAY,
 } from "@/lib/entitlements";
 import { getCurrentUser } from "@/lib/session-user";
@@ -22,8 +22,8 @@ export default async function OnboardingPage() {
         <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-400">
           Free: <span className="font-medium text-slate-800 dark:text-slate-200">{FREE_LEAD_LIMIT}</span>{" "}
           new leads total (lifetime; deletes don&apos;t free slots) and{" "}
-          <span className="font-medium text-slate-800 dark:text-slate-200">{FREE_SEARCHES_PER_DAY}</span>{" "}
-          Google business searches per day (cached repeats don&apos;t count). Pro: unlimited
+          <span className="font-medium text-slate-800 dark:text-slate-200">{FREE_SEARCHES_LIFETIME}</span>{" "}
+          live Google business searches total (cached repeats don&apos;t count). Pro: unlimited
           lead saves, exports, and{" "}
           <span className="font-medium text-slate-800 dark:text-slate-200">{PRO_SEARCHES_PER_DAY}</span>{" "}
           searches per day.

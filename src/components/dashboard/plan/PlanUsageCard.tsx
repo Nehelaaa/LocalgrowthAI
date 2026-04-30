@@ -7,6 +7,7 @@ type Props = {
   searchUsed: number;
   searchLimit: number;
   searchRemaining: number;
+  searchQuotaMode: "lifetime" | "daily";
   showNearWarning: boolean;
   showHardWarning: boolean;
   nearLeadCap: boolean;
@@ -45,6 +46,7 @@ export function PlanUsageCard({
   searchUsed,
   searchLimit,
   searchRemaining,
+  searchQuotaMode,
   showNearWarning,
   showHardWarning,
   nearLeadCap,
@@ -71,7 +73,7 @@ export function PlanUsageCard({
           <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Usage</h3>
           {!isPro && (
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Starter limits — upgrade for unlimited leads and more searches.
+              Starter limits — upgrade for unlimited leads and a higher search quota.
             </p>
           )}
         </div>
@@ -102,10 +104,12 @@ export function PlanUsageCard({
         >
           {showHardWarning
             ? atLeadCap && atSearchCap
-              ? "Lead and daily search limits reached — upgrade to continue."
+              ? "Lead and search limits reached — upgrade to continue."
               : atLeadCap
                 ? "Lead limit reached — upgrade for unlimited leads."
-                : "Daily search limit reached — upgrade for a higher quota."
+                : searchQuotaMode === "lifetime"
+                  ? "Search limit reached — upgrade for a higher quota."
+                  : "Daily search limit reached — upgrade for a higher quota."
             : "You’re close to a Starter limit — consider upgrading soon."}
           {showHardWarning && atLeadCap && (
             <p className="mt-1 text-[11px] font-medium opacity-90">
@@ -130,7 +134,9 @@ export function PlanUsageCard({
 
         <div>
           <div className="mb-1.5 flex items-center justify-between text-xs">
-            <span className="text-slate-600 dark:text-slate-300">Discovery searches (today)</span>
+            <span className="text-slate-600 dark:text-slate-300">
+              {searchQuotaMode === "lifetime" ? "Discovery searches (total)" : "Discovery searches (today)"}
+            </span>
             <span className="tabular-nums text-slate-500 dark:text-slate-400">
               {searchUsed} / {searchLimit}
             </span>
@@ -139,7 +145,9 @@ export function PlanUsageCard({
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">
             {isPro
               ? `${searchRemaining} searches left today · resets at midnight UTC`
-              : `${searchRemaining} left today · same search within 7 days uses cache`}
+              : searchQuotaMode === "lifetime"
+                ? `${searchRemaining} live searches left total · same search within 7 days uses cache`
+                : `${searchRemaining} left today · same search within 7 days uses cache`}
           </p>
         </div>
       </div>

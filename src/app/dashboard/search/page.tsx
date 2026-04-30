@@ -13,10 +13,11 @@ import {
 } from "@/lib/place-search-scoring";
 
 type UsageInfo = {
+  mode?: "lifetime" | "daily";
   used: number;
   limit: number;
   remaining: number;
-  day: string;
+  day: string | null;
 };
 
 export default function SearchPage() {
@@ -72,8 +73,8 @@ export default function SearchPage() {
           setUsage(data.usage);
         }
         throw new Error(
-          data.error === "Daily search limit reached"
-            ? "You’ve reached today’s Starter search limit. Upgrade to Pro to keep searching, or try again tomorrow when the quota resets."
+          data.error === "Search limit reached" || data.error === "Daily search limit reached"
+            ? "You’ve used all Starter live searches. Upgrade to Pro for a higher quota."
             : (data.error ?? "Search failed")
         );
       }
@@ -106,15 +107,15 @@ export default function SearchPage() {
       </h1>
       {usage && (
         <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-          Live Google searches today:{" "}
+          Live Google searches{usage.mode === "lifetime" ? " (total)" : " (today)"}:{" "}
           <span className="font-medium tabular-nums text-slate-900 dark:text-slate-100">
             {usage.used} / {usage.limit}
           </span>{" "}
-          used. Resets daily.{" "}
-          <Link
-            href="/dashboard"
-            className="font-medium text-indigo-600 dark:text-indigo-400"
-          >
+          used.
+          {usage.mode === "lifetime"
+            ? " Starter total does not reset."
+            : " Resets daily at midnight UTC."}{" "}
+          <Link href="/dashboard/plan" className="font-medium text-indigo-600 dark:text-indigo-400">
             Pro
           </Link>{" "}
           raises the cap.
