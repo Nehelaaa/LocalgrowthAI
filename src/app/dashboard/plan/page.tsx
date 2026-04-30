@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BillingSubscriptionControls } from "@/components/dashboard/BillingSubscriptionControls";
 import type { BillingControlsMode } from "@/components/dashboard/BillingSubscriptionControls";
 import { ManageBillingButton } from "@/components/dashboard/ManageBillingButton";
@@ -14,7 +15,9 @@ import {
   hasProEntitlement,
   starterLeadsRemaining,
 } from "@/lib/entitlements";
+import { prisma } from "@/lib/db";
 import { requireDashboardUser } from "@/lib/session-user";
+import { syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";
 import { getSearchUsageState } from "@/lib/search-usage";
 import {
   getStripePlanPresentment,
@@ -25,7 +28,9 @@ import {
 import { getSubscriptionDisplayInfo } from "@/lib/stripe-subscription-display";
 import { customerBillingFaq } from "@/lib/billing-policies";
 
-type Props = { searchParams: Promise<{ checkout?: string; portal?: string }> };
+type Props = {
+  searchParams: Promise<{ checkout?: string; portal?: string; billing?: string }>;
+};
 
 function formatLongDate(d: Date | null | undefined): string | null {
   if (!d) return null;
@@ -71,8 +76,25 @@ function invoiceDownloadHref(inv: SafeInvoiceRow): string | null {
 }
 
 export default async function PlanPage({ searchParams }: Props) {
-  const user = await requireDashboardUser();
+  let user = await requireDashboardUser();
   const sp = await searchParams;
+
+  // Stripe webhooks can arrive after the browser returns from Checkout. Pull subscription
+  // from Stripe immediately so Pro unlocks on first paint, then redirect so the dashboard
+  // layout (nav) re-fetches with the updated plan.
+  if (sp.checkout === "success") {
+    await syncUserSubscriptionFromStripe(user.id);
+    user = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    if (hasProEntitlement(user)) {
+      redirect("/dashboard/plan?billing=synced");
+    }
+  }
+  if (sp.portal === "return") {
+    await syncUserSubscriptionFromStripe(user.id);
+    user = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    redirect("/dashboard/plan?billing=portal");
+  }
+
   const isPro = hasProEntitlement(user);
   const hasStripeSub = hasActiveStripeSubscription(user);
 
@@ -213,12 +235,23 @@ export default async function PlanPage({ searchParams }: Props) {
       </header>
 
       <div className="space-y-2">
-        {sp.checkout === "success" && (
+        {sp.billing === "synced" && (
           <div
             className="rounded-lg border border-emerald-200/80 bg-emerald-50/90 px-3 py-2.5 text-sm text-emerald-900 dark:border-emerald-500/25 dark:bg-emerald-950/30 dark:text-emerald-100"
             role="status"
           >
-            Payment received — your plan should update within a minute.
+            Pro is active on your account — you can use Pro limits right away.
+          </div>
+        )}
+        {sp.checkout === "success" && !hasProEntitlement(user) && (
+          <div
+            className="rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-500/25 dark:bg-amber-950/30 dark:text-amber-100"
+            role="status"
+          >
+            Payment received, but we couldn&apos;t confirm your subscription yet. Refresh in a
+            moment, or open{" "}
+            <span className="font-medium">Manage billing</span> below once it appears. If this
+            persists, your Stripe webhook may not be reaching production.
           </div>
         )}
         {sp.checkout === "canceled" && (
@@ -229,12 +262,12 @@ export default async function PlanPage({ searchParams }: Props) {
             Checkout canceled. You can try again anytime.
           </div>
         )}
-        {sp.portal === "return" && (
+        {sp.billing === "portal" && (
           <div
             className="rounded-lg border border-violet-200/80 bg-violet-50/90 px-3 py-2.5 text-sm text-violet-900 dark:border-violet-500/25 dark:bg-violet-950/30 dark:text-violet-100"
             role="status"
           >
-            Welcome back — refresh if changes don&apos;t show yet.
+            Billing portal changes saved — your plan and payment method should match Stripe now.
           </div>
         )}
       </div>

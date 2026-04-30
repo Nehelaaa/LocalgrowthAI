@@ -6,25 +6,12 @@ import {
   findUserIdByStripeCustomerId,
 } from "@/lib/owner-billing-events";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import { subscriptionToUserData, syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
 
-const ACTIVE = "active";
-const TRIAL = "trialing";
 const CANCELED = "canceled";
-
-type SubWithPeriod = Stripe.Subscription & { current_period_end: number };
-
-function subToData(sub: SubWithPeriod) {
-  const isPro = sub.status === ACTIVE || sub.status === TRIAL || sub.status === "past_due";
-  return {
-    stripeSubscriptionId: sub.id,
-    subscriptionStatus: sub.status,
-    plan: isPro ? "pro" : "free",
-    subscriptionPeriodEnd: new Date(sub.current_period_end * 1000),
-  } as const;
-}
 
 function customerIdFromStripeCustomerField(
   customer: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined
@@ -75,7 +62,7 @@ export async function POST(request: Request) {
         if (s.mode === "subscription" && s.subscription && s.customer) {
           const customerId = typeof s.customer === "string" ? s.customer : s.customer.id;
           const subId = typeof s.subscription === "string" ? s.subscription : s.subscription.id;
-          const sub = (await stripe.subscriptions.retrieve(subId)) as unknown as SubWithPeriod;
+          const sub = await stripe.subscriptions.retrieve(subId);
           const userIdRaw = s.client_reference_id ?? s.metadata?.userId;
 
           let mappedUserId: string | null = null;
@@ -89,7 +76,7 @@ export async function POST(request: Request) {
               console.error("Stripe webhook: checkout references deleted customer", customerId);
               await prisma.user.updateMany({
                 where: { stripeCustomerId: customerId },
-                data: { ...subToData(sub) },
+                data: { ...subscriptionToUserData(sub) },
               });
               mappedUserId = await findUserIdByStripeCustomerId(customerId);
             } else {
@@ -101,7 +88,7 @@ export async function POST(request: Request) {
                   where: { id: uid },
                   data: {
                     stripeCustomerId: customerId,
-                    ...subToData(sub),
+                    ...subscriptionToUserData(sub),
                   },
                 });
                 mappedUserId = uid;
@@ -117,7 +104,7 @@ export async function POST(request: Request) {
                 }
                 await prisma.user.updateMany({
                   where: { stripeCustomerId: customerId },
-                  data: { ...subToData(sub) },
+                  data: { ...subscriptionToUserData(sub) },
                 });
                 mappedUserId = await findUserIdByStripeCustomerId(customerId);
               }
@@ -125,7 +112,7 @@ export async function POST(request: Request) {
           } else {
             await prisma.user.updateMany({
               where: { stripeCustomerId: customerId },
-              data: { ...subToData(sub) },
+              data: { ...subscriptionToUserData(sub) },
             });
             mappedUserId = await findUserIdByStripeCustomerId(customerId);
           }
@@ -145,7 +132,7 @@ export async function POST(request: Request) {
       }
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
-        const sub = event.data.object as SubWithPeriod;
+        const sub = event.data.object as Stripe.Subscription;
         const customerId =
           typeof sub.customer === "string" ? sub.customer : sub.customer.id;
         const mappedUserId = await findUserIdByStripeCustomerId(customerId);
@@ -161,7 +148,7 @@ export async function POST(request: Request) {
             },
           });
 
-          const subEx = sub as SubWithPeriod & {
+          const subEx = sub as Stripe.Subscription & {
             canceled_at?: number | null;
             cancellation_details?: {
               reason?: string | null;
@@ -201,7 +188,7 @@ export async function POST(request: Request) {
         } else {
           await prisma.user.updateMany({
             where: { stripeCustomerId: customerId },
-            data: { ...subToData(sub) },
+            data: { ...subscriptionToUserData(sub) },
           });
 
           if (sub.cancel_at_period_end) {
@@ -251,6 +238,9 @@ export async function POST(request: Request) {
         if (reason === "subscription_create" || reason === "subscription_cycle") {
           const customerId = customerIdFromStripeCustomerField(inv.customer);
           const mappedUserId = await findUserIdByStripeCustomerId(customerId);
+          if (mappedUserId) {
+            await syncUserSubscriptionFromStripe(mappedUserId);
+          }
           await createOwnerBillingEvent({
             kind: "payment_succeeded",
             severity: "info",
