@@ -1,22 +1,27 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import type { Role } from "@prisma/client";
 
-function ownerEmail(): string | null {
-  const e = process.env.OWNER_EMAIL;
-  if (!e) return null;
-  const trimmed = e.trim().toLowerCase();
-  return trimmed.length ? trimmed : null;
+function ownerEmailsFromEnv(): Set<string> {
+  const raw = `${process.env.OWNER_EMAIL ?? ""},${process.env.OWNER_EMAILS ?? ""}`;
+  const parts = raw
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set(parts);
 }
 
 export function isOwnerEmail(email: string | null | undefined): boolean {
-  const target = ownerEmail();
-  if (!target) return false;
-  return String(email ?? "").trim().toLowerCase() === target;
+  const list = ownerEmailsFromEnv();
+  if (list.size === 0) return false;
+  return list.has(String(email ?? "").trim().toLowerCase());
 }
 
 export function isOwnerSession(session: unknown): boolean {
-  const email = (session as unknown as { user?: { email?: string } } | null)
-    ?.user?.email?.toLowerCase?.() ?? "";
+  const s = session as unknown as { user?: { email?: string; role?: Role } } | null;
+  const role = (s?.user?.role as Role | undefined) ?? "USER";
+  if (role === "ADMIN") return true;
+  const email = s?.user?.email?.toLowerCase?.() ?? "";
   return isOwnerEmail(email);
 }
 

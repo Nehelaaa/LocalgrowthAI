@@ -14,8 +14,16 @@ export const metadata: Metadata = {
   },
   description:
     "Search Google Places, qualify local leads, and run outreach + pipeline from one clean workspace.",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
   openGraph: {
     type: "website",
+    siteName: "LocalLeadster",
+  },
+  twitter: {
+    card: "summary_large_image",
   },
 };
 

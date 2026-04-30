@@ -14,7 +14,6 @@ const JOB_STATUSES = [
   "done",
   "cancelled",
 ] as const;
-type JobStatus = (typeof JOB_STATUSES)[number];
 const jobStatus = z.enum(JOB_STATUSES);
 
 function assertTradesUser() {

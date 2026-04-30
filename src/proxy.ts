@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { isOwnerEmail } from "@/lib/owner";
 import { NextResponse } from "next/server";
 
 export default auth((req) => {
@@ -12,6 +13,17 @@ export default auth((req) => {
     u.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
     return NextResponse.redirect(u);
   }
+
+  // Owner-only area: require the OWNER_EMAIL match even if authenticated.
+  const path = req.nextUrl.pathname;
+  if (path.startsWith("/owner") || path.startsWith("/api/owner/")) {
+    const email = req.auth.user?.email ?? "";
+    const role = (req.auth.user as unknown as { role?: string } | null)?.role ?? "USER";
+    if (role !== "ADMIN" && !isOwnerEmail(email)) {
+      return NextResponse.redirect(new URL("/unauthorized", req.nextUrl));
+    }
+  }
+
   return NextResponse.next();
 });
 

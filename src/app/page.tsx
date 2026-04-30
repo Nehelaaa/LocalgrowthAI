@@ -6,6 +6,8 @@ import { HowItWorksSection } from "@/components/marketing/HowItWorksSection";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { PricingSection } from "@/components/marketing/PricingSection";
 import { ProductMockup } from "@/components/marketing/ProductMockup";
+import { SellingPointsSection } from "@/components/marketing/SellingPointsSection";
+import { SocialProofSection } from "@/components/marketing/SocialProofSection";
 import { SolutionsSection } from "@/components/marketing/SolutionsSection";
 import { StatsStrip } from "@/components/marketing/StatsStrip";
 import { marketingFaqs } from "@/lib/marketing/faq";
@@ -31,7 +33,7 @@ export default function HomePage() {
           >
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-                Lead gen + pipeline for local B2B
+                Local lead generation + CRM pipeline
               </p>
               <h1
                 id="hero-heading"
@@ -40,12 +42,9 @@ export default function HomePage() {
                 Find prospects, qualify fast, and close more local deals.
               </h1>
               <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
-                An all-in-one workspace for anyone selling to local businesses: Google Places search,
-                signal-based scoring, a real CRM pipeline, and{" "}
-                <strong className="font-semibold text-slate-800 dark:text-slate-200">
-                  AI outreach on Pro
-                </strong>{" "}
-                — built to keep outreach simple and consistent.
+                A Google Places lead generation tool that keeps outreach simple: search a territory, qualify with
+                fast signals, run a CRM pipeline, and export to your stack when you’re ready — built for agencies,
+                freelancers, and sales teams selling to local businesses.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
@@ -91,6 +90,10 @@ export default function HomePage() {
 
           <SolutionsSection />
 
+          <SellingPointsSection />
+
+          <SocialProofSection />
+
           <section
             className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20"
             id="value-prop"
@@ -135,7 +138,7 @@ export default function HomePage() {
                     <span className="mt-0.5 text-emerald-600" aria-hidden>
                       ✓
                     </span>
-                    Optional AI copy when you add your own OpenAI key (server-side only).
+                    Exports (Pro): CSV + JSON endpoints for your stack.
                   </li>
                 </ul>
               </div>
@@ -169,16 +172,6 @@ export default function HomePage() {
                   icon: "📊",
                 },
                 {
-                  t: "AI outreach (Pro)",
-                  d: "Email, call, DM, and Loom-style scripts when you connect OpenAI on the server.",
-                  icon: "✨",
-                },
-                {
-                  t: "Client demo pages",
-                  d: "Share a one-click HTML preview to help prospects see what a site could be.",
-                  icon: "🖥️",
-                },
-                {
                   t: "Your data, your account",
                   d: "Leads are scoped to your login — ready for real client work, not a shared list.",
                   icon: "🔐",
@@ -187,6 +180,11 @@ export default function HomePage() {
                   t: "Exports (Pro)",
                   d: "CSV and JSON for Sheets, Airtable, and automation (Zapier, Make, webhooks).",
                   icon: "⬇️",
+                },
+                {
+                  t: "Pro-ready billing",
+                  d: "Upgrade in-app and manage billing securely through Stripe.",
+                  icon: "💳",
                 },
               ].map((f) => (
                 <li

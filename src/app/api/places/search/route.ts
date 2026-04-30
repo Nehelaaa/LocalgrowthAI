@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
 import { searchPlaces } from "@/lib/google-places";
 import { prisma } from "@/lib/db";
 import { getCachedSearchResults, placesSearchCacheKey, setCachedSearchResults } from "@/lib/places-search-cache";
@@ -16,18 +16,15 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const originErr = enforceSameOrigin(request);
+    if (originErr) return originErr;
+
     const s = await auth();
     if (!s?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const key = getClientIdentifier(request);
-    const { success } = rateLimit(key);
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429 }
-      );
-    }
+    const rl = rateLimitOr429(request, "places_search");
+    if (rl) return rl;
 
     const user = await prisma.user.findUnique({ where: { id: s.user.id } });
     if (!user) {
@@ -93,10 +90,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (e) {
-    console.error(e);
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Search failed" },
-      { status: 500 }
-    );
+    console.error("[api/places/search]", e);
+    return NextResponse.json({ error: safeErrorMessage() }, { status: 500 });
   }
 }

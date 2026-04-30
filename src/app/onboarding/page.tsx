@@ -26,7 +26,7 @@ export default async function OnboardingPage() {
           Google business searches per day (cached repeats don&apos;t count). Pro: unlimited
           lead saves, exports, and{" "}
           <span className="font-medium text-slate-800 dark:text-slate-200">{PRO_SEARCHES_PER_DAY}</span>{" "}
-          searches per day. Tell us your profession so we can show the right tools.
+          searches per day.
         </p>
         <OnboardingForm currentProfession={user.profession} />
       </div>

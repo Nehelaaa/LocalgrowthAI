@@ -7,11 +7,11 @@ export const marketingFaqs: { q: string; a: string }[] = [
   },
   {
     q: "What’s included on the Free plan?",
-    a: `You can search, use the CRM, and add up to ${FREE_LEAD_LIMIT} new leads over the life of the account (deleting a lead does not free a slot). AI generation, exports, and unlimited saves require Pro (via Stripe in the app).`,
+    a: `You can search, use the CRM, and add up to ${FREE_LEAD_LIMIT} new leads over the life of the account (deleting a lead does not free a slot). Exports and unlimited saves require Pro (via Stripe in the app).`,
   },
   {
-    q: "Do I need a Google or OpenAI key?",
-    a: "Google Places powers search; OpenAI powers optional AI text. Keys stay on your server in environment variables — never exposed in the browser.",
+    q: "Do I need a Google key?",
+    a: "Google Places powers search. Your API key stays on your server in environment variables — never exposed in the browser.",
   },
   {
     q: "Is my data isolated from other customers?",

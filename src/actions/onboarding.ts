@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
 
 const professionIds = Object.keys(PROFESSIONS) as [ProfessionId, ...ProfessionId[]];
-const professionSchema = z.enum(professionIds);
+const professionSchema = z.union([z.enum(professionIds), z.literal("")]);
 
 export type OnboardingState = { error?: string; success?: boolean };
 
@@ -19,11 +19,11 @@ export async function completeOnboarding(
   const prof = String(formData.get("profession") ?? "");
   const parsed = professionSchema.safeParse(prof);
   if (!parsed.success) {
-    return { error: "Choose your profession to continue." };
+    return { error: "Choose a profession or skip." };
   }
   await prisma.user.update({
     where: { id: user.id },
-    data: { onboardingComplete: true, profession: parsed.data },
+    data: { onboardingComplete: true, profession: parsed.data ? parsed.data : null },
   });
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");

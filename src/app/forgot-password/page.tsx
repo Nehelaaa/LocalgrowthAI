@@ -1,8 +1,10 @@
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import type { Metadata } from "next";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Forgot password",
+  robots: { index: false, follow: false },
 };
 
 export default function ForgotPasswordPage() {
@@ -14,9 +16,14 @@ export default function ForgotPasswordPage() {
       />
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200/80 bg-white p-8 shadow-xl dark:border-slate-800/80 dark:bg-slate-900">
         <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold text-white">
-            L
-          </span>
+          <Image
+            src="/favicon.svg"
+            alt="LocalLeadster"
+            className="h-9 w-9 rounded-xl shadow-md"
+            width={36}
+            height={36}
+            priority
+          />
           <span className="text-lg font-bold text-slate-900 dark:text-white">LocalLeadster</span>
         </div>
         <h1 className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">

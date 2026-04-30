@@ -94,18 +94,18 @@ export function RegisterForm({ hasGoogle }: { hasGoogle: boolean }) {
             htmlFor="profession"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Profession
+            Profession (optional)
           </label>
           <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            We customize your dashboard and mobile experience for your work.
+            Helps us understand your use-case (doesn’t change the dashboard).
           </p>
           <select
             id="profession"
             name="profession"
-            required
-            defaultValue="web_agency"
+            defaultValue=""
             className="mt-1 w-full min-h-[48px] appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           >
+            <option value="">Skip for now</option>
             {professionOrder.map((id) => (
               <option key={id} value={id}>
                 {PROFESSIONS[id].label}

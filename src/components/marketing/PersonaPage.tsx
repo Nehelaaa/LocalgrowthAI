@@ -29,7 +29,7 @@ const personas: Record<
     ],
     proof: [
       { t: "Built for daily use", d: "The UI is designed for speed: search → save → next action." },
-      { t: "Client-ready demos (Pro)", d: "Share a quick preview to help prospects visualize the upgrade." },
+      { t: "Exports when you need them (Pro)", d: "Push lists into Sheets, Airtable, or automation without losing context." },
     ],
     Illustration: IllustrationRadar,
   },
@@ -38,11 +38,11 @@ const personas: Record<
     title: "Turn territory searches into a predictable pipeline.",
     subtitle:
       "Standardize prospecting across the team, keep context on every lead, and scale outreach without chaos.",
-    bullets: ["Team-ready workflow", "Exports + billing on Pro", "AI outreach (Pro) with your key"],
+    bullets: ["Team-ready workflow", "Exports + billing on Pro", "Clean pipeline for daily follow-ups"],
     workflow: [
       { t: "Define your ICP", d: "Territory + trade + signals: build a repeatable list-building motion." },
       { t: "Score + stage", d: "Tiers + CRM stages keep everyone aligned on what happens next." },
-      { t: "Close faster", d: "Generate scripts, export to your stack, and keep a clean audit trail." },
+      { t: "Close faster", d: "Run follow-ups, export to your stack, and keep a clean audit trail." },
     ],
     proof: [
       { t: "Pro-ready infrastructure", d: "Secure auth + Stripe billing built in." },

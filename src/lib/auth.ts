@@ -41,6 +41,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: prismaAuthAdapter(prisma),
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   trustHost: true,
+  useSecureCookies: process.env.NODE_ENV === "production",
   /** Send OAuth/provider failures back to the app instead of a generic auth error page. */
   pages: { signIn: "/login", error: "/login" },
   debug: process.env.NODE_ENV === "development",

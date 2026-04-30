@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
 
@@ -23,9 +24,14 @@ export function MarketingShell({
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-3.5">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold text-white shadow-md">
-              L
-            </span>
+            <Image
+              src="/favicon.svg"
+              alt="LocalLeadster"
+              className="h-9 w-9 rounded-xl shadow-md"
+              width={36}
+              height={36}
+              priority
+            />
             <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
               LocalLeadster
             </span>

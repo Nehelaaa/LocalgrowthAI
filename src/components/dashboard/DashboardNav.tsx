@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -102,7 +103,13 @@ function buildNavItems(showTrades: boolean, showOwner: boolean) {
     // Put Owner at top so it’s easy to find.
     out.splice(1, 0, ownerItem);
   }
-  if (!showTrades && !showOwner) return nav;
+  // Always keep billing last, regardless of optional items.
+  const billingIdx = out.findIndex((i) => i.href === "/dashboard/plan");
+  if (billingIdx >= 0) {
+    const [billing] = out.splice(billingIdx, 1);
+    out.push(billing);
+  }
+  if (!showTrades && !showOwner) return out;
   return out;
 }
 
@@ -185,14 +192,16 @@ function BrandBlock({ small }: { small?: boolean }) {
       href="/dashboard"
       className="group flex items-center gap-2 transition hover:opacity-90 touch-manipulation"
     >
-      <span
+      <Image
+        src="/favicon.svg"
+        alt="LocalLeadster"
         className={
-          "flex items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 font-bold text-white shadow-md shadow-indigo-500/25 " +
-          (small ? "h-8 w-8 text-xs" : "h-9 w-9 text-sm")
+          "rounded-xl shadow-md shadow-indigo-500/20 " + (small ? "h-8 w-8" : "h-9 w-9")
         }
-      >
-        L
-      </span>
+        width={small ? 32 : 36}
+        height={small ? 32 : 36}
+        priority
+      />
       <span>
         <span
           className={
@@ -202,7 +211,7 @@ function BrandBlock({ small }: { small?: boolean }) {
         >
           LocalLeadster
         </span>
-        {!small && <span className="text-xs font-medium text-slate-500 dark:text-slate-400">AI</span>}
+        {!small && <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline</span>}
       </span>
     </Link>
   );
@@ -216,24 +225,35 @@ function FooterHome({
   return (
     <div className="sticky bottom-0 z-10 shrink-0 space-y-2 border-t border-slate-200/80 bg-white/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/60">
       {user && (
-        <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
-          <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+        <div className="rounded-xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white/70 p-3 shadow-sm dark:border-slate-700/50 dark:from-slate-800/40 dark:to-slate-900/30">
+          <p className="truncate text-xs font-semibold text-slate-600 dark:text-slate-300">
             {user.name || user.email}
           </p>
-          <p className="mt-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
             {user.isPro ? "Pro" : "Free plan"}
           </p>
           {!user.isPro && <UpgradeButton className="mt-2 w-full" label="Upgrade to Pro" />}
           {user.isPro && <ManageBillingButton className="mt-2 w-full" />}
         </div>
       )}
-      <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
+      <div className="rounded-xl border border-slate-200/80 bg-white/70 p-1 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/20">
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="w-full min-h-[44px] rounded-lg text-left text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="group flex w-full min-h-[44px] items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 dark:text-slate-200 dark:hover:bg-red-950/30 dark:hover:text-red-200"
         >
-          Sign out
+          <span>Sign out</span>
+          <svg
+            className="h-4 w-4 text-slate-400 transition-colors group-hover:text-red-500 dark:text-slate-500 dark:group-hover:text-red-300"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9l3 3-3 3m3-3H8.25" />
+          </svg>
         </button>
       </div>
     </div>

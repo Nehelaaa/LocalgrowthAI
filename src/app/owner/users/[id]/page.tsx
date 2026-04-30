@@ -45,7 +45,7 @@ export default async function OwnerUserDetailPage({ params }: Props) {
       </Link>
 
       <header className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-bold text-slate-900 dark:text-white">
               {user.name || user.email}
@@ -57,6 +57,11 @@ export default async function OwnerUserDetailPage({ params }: Props) {
               <span className="rounded-lg bg-slate-100 px-2 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                 plan: {user.plan}
               </span>
+              {user.role === "ADMIN" && (
+                <span className="rounded-lg bg-amber-50 px-2 py-1 font-semibold text-amber-900 dark:bg-amber-950/20 dark:text-amber-200">
+                  owner
+                </span>
+              )}
               {user.subscriptionStatus && (
                 <span className="rounded-lg bg-indigo-50 px-2 py-1 font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200">
                   {user.subscriptionStatus}
@@ -75,17 +80,19 @@ export default async function OwnerUserDetailPage({ params }: Props) {
             </div>
           </div>
 
-          <OwnerUserActions
-            userId={user.id}
-            disabled={user.disabled}
-            plan={(user.plan === "pro" ? "pro" : "free") as "free" | "pro"}
-          />
+          <div className="sm:pt-1">
+            <OwnerUserActions
+              userId={user.id}
+              disabled={user.disabled}
+              plan={(user.plan === "pro" ? "pro" : "free") as "free" | "pro"}
+              role={user.role}
+            />
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <MiniStat label="Leads" value={user.leads.length} />
           <MiniStat label="Searches today" value={user.searchDayUsages[0]?.count ?? 0} />
-          <MiniStat label="AI calls today" value={user.aiDayUsages[0]?.count ?? 0} />
         </div>
       </header>
 

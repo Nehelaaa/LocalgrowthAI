@@ -45,16 +45,15 @@ export function OnboardingForm({
           What do you do?
         </label>
         <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-          We tailor the dashboard and tools to your work — e.g. lead gen for
-          agencies, or calls &amp; jobs for field trades.
+          Optional. Helps us understand your use-case (doesn’t change the dashboard).
         </p>
         <select
           id="onboarding-profession"
           name="profession"
-          required
-          defaultValue={currentProfession ?? "web_agency"}
+          defaultValue={currentProfession ?? ""}
           className="mt-2 w-full min-h-[48px] appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
         >
+          <option value="">Skip for now</option>
           {order.map((id) => (
             <option key={id} value={id}>
               {PROFESSIONS[id].label}

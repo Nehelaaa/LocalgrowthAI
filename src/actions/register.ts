@@ -16,7 +16,7 @@ const schema = z
       .string()
       .min(8, "At least 8 characters")
       .max(200),
-    profession: z.enum(professionIds),
+    profession: z.union([z.enum(professionIds), z.literal("")]).optional(),
   })
   .strict();
 
@@ -63,7 +63,7 @@ export async function registerUser(
       plan: "free",
       grandfatheredPro: false,
       onboardingComplete: false,
-      profession: parsed.data.profession,
+      profession: parsed.data.profession && parsed.data.profession.length > 0 ? parsed.data.profession : null,
     },
   });
 

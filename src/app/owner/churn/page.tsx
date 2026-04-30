@@ -13,7 +13,8 @@ function readMetaString(meta: unknown, key: string): string | null {
 export default async function OwnerChurnPage() {
   await requireOwnerOrRedirect();
 
-  const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const since30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const [cancellations, scheduledEnds, churn30d] = await Promise.all([
     prisma.ownerBillingEvent.findMany({

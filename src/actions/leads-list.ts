@@ -16,10 +16,19 @@ export async function getLeads(filters?: {
 }) {
   const user = await requireUserForAction();
   const where: Prisma.LeadWhereInput = { userId: user.id };
-  const businessWhere: Prisma.BusinessWhereInput = {};
+  const businessAnd: Prisma.BusinessWhereInput[] = [];
 
   if (filters?.search) {
-    businessWhere.name = { contains: filters.search };
+    const q = filters.search.trim();
+    if (q) {
+      businessAnd.push({
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { city: { contains: q, mode: "insensitive" } },
+          { state: { contains: q, mode: "insensitive" } },
+        ],
+      });
+    }
   }
   if (filters?.contactStatus) {
     where.contactStatus = filters.contactStatus;
@@ -28,19 +37,22 @@ export async function getLeads(filters?: {
     where.badge = filters.badge;
   }
   if (filters?.minRating != null) {
-    businessWhere.rating = { gte: filters.minRating };
+    businessAnd.push({ rating: { gte: filters.minRating } });
   }
   if (filters?.minReviews != null) {
-    businessWhere.reviewCount = { gte: filters.minReviews };
+    businessAnd.push({ reviewCount: { gte: filters.minReviews } });
   }
   if (filters?.noWebsiteOnly) {
-    businessWhere.OR = [{ website: null }, { hasSocialOnly: true }];
+    businessAnd.push({ OR: [{ website: null }, { hasSocialOnly: true }] });
   }
   if (filters?.businessType) {
-    businessWhere.businessType = { contains: filters.businessType };
+    const t = filters.businessType.trim();
+    if (t) {
+      businessAnd.push({ businessType: { contains: t, mode: "insensitive" } });
+    }
   }
-  if (Object.keys(businessWhere).length > 0) {
-    where.business = { is: businessWhere };
+  if (businessAnd.length > 0) {
+    where.business = { is: { AND: businessAnd } };
   }
 
   return prisma.lead.findMany({

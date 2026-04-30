@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 const items = [
   { href: "/owner", label: "Overview" },
@@ -36,13 +38,23 @@ export function AdminShell({
     <div className="min-h-[100dvh] bg-slate-100/70 dark:bg-slate-950">
       <div className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/60">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-4 lg:px-6">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              Owner dashboard
-            </p>
-            <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
-              {ownerEmail}
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <Image
+              src="/favicon.svg"
+              alt="LocalLeadster"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-xl shadow-sm"
+              priority
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                Owner dashboard
+              </p>
+              <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
+                {ownerEmail}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -69,6 +81,14 @@ export function AdminShell({
             >
               Back to app
             </Link>
+
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-rose-900/40 dark:hover:bg-rose-950/30 dark:hover:text-rose-200"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </div>

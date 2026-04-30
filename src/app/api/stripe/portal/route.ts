@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,24 +15,20 @@ function appOrigin(request: NextRequest) {
   );
 }
 
-function stripeErrorMessage(e: unknown): string {
-  if (e instanceof Stripe.errors.StripeError) {
-    return e.message;
-  }
-  if (e instanceof Error && e.message) {
-    return e.message;
-  }
-  return "Could not open billing portal.";
-}
-
 export async function POST(request: NextRequest) {
   try {
+    const originErr = enforceSameOrigin(request);
+    if (originErr) return originErr;
+
     if (!isStripeConfigured()) {
       return NextResponse.json(
         { error: "Stripe is not configured (STRIPE_SECRET_KEY)." },
         { status: 503 }
       );
     }
+    const rl = rateLimitOr429(request, "stripe_portal");
+    if (rl) return rl;
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -72,15 +68,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: portal.url });
   } catch (e) {
     console.error("[api/stripe/portal]", e);
-    const message = stripeErrorMessage(e);
-    return NextResponse.json(
-      {
-        error:
-          message.length > 280
-            ? `${message.slice(0, 280)}… (see server terminal)`
-            : message,
-      },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: safeErrorMessage() }, { status: 502 });
   }
 }

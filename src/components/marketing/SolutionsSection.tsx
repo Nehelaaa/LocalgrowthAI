@@ -12,9 +12,9 @@ const solutions = [
   {
     href: "/for/agencies",
     title: "Agencies & teams",
-    desc: "Turn territory searches into predictable meetings — with CRM stages, exports, and Pro AI.",
+    desc: "Turn territory searches into predictable meetings — with CRM stages, exports, and secure Pro billing.",
     Illustration: IllustrationPipeline,
-    bullets: ["Team-ready pipeline", "Exports to your stack", "AI outreach on Pro"],
+    bullets: ["Team-ready pipeline", "Exports to your stack", "Stripe billing on Pro"],
   },
   {
     href: "/for/sales",

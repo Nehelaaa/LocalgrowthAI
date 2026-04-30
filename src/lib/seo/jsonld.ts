@@ -12,12 +12,18 @@ export function homeJsonLd() {
         url: site,
         description:
           "Lead generation and pipeline for selling to local businesses: search, qualify, and close deals faster.",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${site}/?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
       },
       {
         "@type": "SoftwareApplication",
         name: "LocalLeadster",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
+        url: site,
         offers: {
           "@type": "Offer",
           price: "0",
@@ -28,13 +34,14 @@ export function homeJsonLd() {
           "Google Places business search",
           "Signal-based lead scoring",
           "CRM pipeline and exports",
-          "AI-powered outreach (Pro)",
+          "CSV + JSON exports (Pro)",
         ],
       },
       {
         "@type": "Organization",
         name: "LocalLeadster",
         url: site,
+        logo: `${site}/logo.svg`,
       },
     ],
   } as const;
@@ -58,13 +65,18 @@ export function faqJsonLd(items: { q: string; a: string }[]) {
 export const homeMetadata: Metadata = {
   title: "LocalLeadster — Lead Gen + Pipeline for Local B2B",
   description:
-    "Search Google Places, qualify leads with simple signals, run your CRM pipeline, and use AI outreach on Pro. Free to start — built for anyone selling to local businesses.",
+    "Search Google Places, qualify leads with simple signals, run your CRM pipeline, and export to your stack on Pro. Free to start — built for anyone selling to local businesses.",
   keywords: [
+    "local lead generation",
     "local business lead generation",
+    "google places lead generation",
     "b2b prospecting tool",
-    "local business lead generation",
+    "local business prospecting",
     "crm pipeline",
-    "Google Places B2B",
+    "sales pipeline software",
+    "outreach workflow",
+    "agency lead generation",
+    "freelancer lead generation",
   ],
   openGraph: {
     title: "LocalLeadster — Find and close local deals",

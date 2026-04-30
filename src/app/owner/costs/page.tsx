@@ -30,8 +30,8 @@ export default async function OwnerCostsPage() {
 
   const today = getUtcDayString();
   const now = new Date();
-  const d7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const d30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const range7 = utcDayRangeStrings(d7, now);
   const range30 = utcDayRangeStrings(d30, now);
 
@@ -56,11 +56,10 @@ export default async function OwnerCostsPage() {
       <header>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Cost &amp; margin monitoring</h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
-          <strong>Google</strong> and <strong>AI</strong> costs are <strong>estimates</strong> from your own usage
-          tables and configurable unit rates. Tune{" "}
-          <code className="rounded bg-slate-100 px-1 text-xs dark:bg-slate-800">GOOGLE_COST_PER_SEARCH_USD</code> and{" "}
-          <code className="rounded bg-slate-100 px-1 text-xs dark:bg-slate-800">AI_COST_PER_CALL_USD</code> to match
-          your real Google Cloud / OpenAI bills.
+          <strong>Google</strong> costs are <strong>estimates</strong> from your own usage tables and configurable unit
+          rates. Tune{" "}
+          <code className="rounded bg-slate-100 px-1 text-xs dark:bg-slate-800">GOOGLE_COST_PER_SEARCH_USD</code> to
+          match your real Google Cloud bills.
         </p>
       </header>
 
@@ -76,7 +75,7 @@ export default async function OwnerCostsPage() {
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Metric label="Paid revenue (30d)" value={moneyCents(paid30.cents)} sub={`${paid30.invoiceCount} invoices`} />
-            <Metric label="Est. API cost (30d)" value={usd(cost30Usd)} sub="Google + AI" />
+            <Metric label="Est. API cost (30d)" value={usd(cost30Usd)} sub="Google API" />
             <Metric
               label="Net (30d, rough)"
               value={usd(net30Usd)}
@@ -109,8 +108,7 @@ export default async function OwnerCostsPage() {
       <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 text-sm text-slate-600 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:text-slate-400">
         <p>
           <strong className="text-slate-900 dark:text-white">Accuracy:</strong> Search counts are server-side Google
-          API calls only (not cache hits). AI counts follow <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">AiDayUsage</code>{" "}
-          increments in the app. Pair this view with{" "}
+          API calls only (not cache hits). Pair this view with{" "}
           <Link href="/owner/usage" className="font-medium text-indigo-600 underline dark:text-indigo-400">
             Usage charts
           </Link>{" "}

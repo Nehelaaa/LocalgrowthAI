@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getUtcDayString } from "@/lib/search-usage";
 import { ownerUsageLastNDays, ownerTopUsersBySearches } from "@/actions/owner-usage";
@@ -15,10 +14,6 @@ export default async function OwnerUsagePage() {
   ]);
 
   const totalSearchesToday = top.reduce((s, r) => s + r.count, 0);
-  const totalAiToday = await prisma.aiDayUsage.aggregate({
-    where: { day },
-    _sum: { count: true },
-  });
 
   return (
     <div className="w-full min-w-0 max-w-6xl space-y-6">
@@ -50,12 +45,6 @@ export default async function OwnerUsagePage() {
           </p>
           <p className="mt-1 text-xs text-indigo-900/70 dark:text-indigo-200/70">
             Total searches today ({day})
-          </p>
-          <p className="mt-4 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-            {totalAiToday._sum.count ?? 0}
-          </p>
-          <p className="mt-1 text-xs text-indigo-900/70 dark:text-indigo-200/70">
-            Total AI calls today
           </p>
         </div>
       </div>

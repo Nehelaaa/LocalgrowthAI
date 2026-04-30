@@ -107,6 +107,11 @@ export function PlanUsageCard({
                 ? "Lead limit reached — upgrade for unlimited leads."
                 : "Daily search limit reached — upgrade for a higher quota."
             : "You’re close to a Starter limit — consider upgrading soon."}
+          {showHardWarning && atLeadCap && (
+            <p className="mt-1 text-[11px] font-medium opacity-90">
+              Starter lead slots are lifetime total — deleting a lead doesn&apos;t restore a slot.
+            </p>
+          )}
         </div>
       )}
 

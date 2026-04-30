@@ -10,26 +10,76 @@ function moneyUSD(cents: number) {
   });
 }
 
+function formatShortDateTime(d: Date): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(d);
+}
+
 export default async function OwnerOverviewPage() {
   await requireOwnerOrRedirect();
 
   const day = getUtcDayString();
+  const now = new Date();
+  const since30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const since24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  const [totalUsers, payingUsers, activeUsers30d, totalSearchesToday, pastDueUsers] =
-    await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({
-        where: { plan: "pro", subscriptionStatus: { in: ["active", "trialing", "past_due"] } },
-      }),
-      prisma.user.count({
-        where: { updatedAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
-      }),
-      prisma.searchDayUsage.aggregate({
-        where: { day },
-        _sum: { count: true },
-      }),
-      prisma.user.count({ where: { subscriptionStatus: "past_due" } }),
-    ]);
+  const [
+    totalUsers,
+    payingUsers,
+    activeUsers30d,
+    totalSearchesToday,
+    pastDueUsers,
+    recentUsers,
+    billingEvents,
+    topSearchUsersToday,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({
+      where: { plan: "pro", subscriptionStatus: { in: ["active", "trialing", "past_due"] } },
+    }),
+    prisma.user.count({
+      where: { updatedAt: { gte: since30 } },
+    }),
+    prisma.searchDayUsage.aggregate({
+      where: { day },
+      _sum: { count: true },
+    }),
+    prisma.user.count({ where: { subscriptionStatus: "past_due" } }),
+    prisma.user.findMany({
+      where: { createdAt: { gte: since24 } },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        plan: true,
+        role: true,
+        disabled: true,
+      },
+    }),
+    prisma.ownerBillingEvent.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        createdAt: true,
+        severity: true,
+        kind: true,
+        title: true,
+        user: { select: { email: true } },
+      },
+    }),
+    prisma.searchDayUsage.findMany({
+      where: { day },
+      orderBy: { count: "desc" },
+      take: 8,
+      select: {
+        count: true,
+        user: { select: { email: true, name: true, disabled: true } },
+      },
+    }),
+  ]);
 
   // Approx monthly revenue (best-effort): count pro users * env price (fallback $29)
   const proMonthlyCents =
@@ -89,30 +139,139 @@ export default async function OwnerOverviewPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <QuickLink href="/owner/revenue" title="Revenue" sub="Stripe MRR + invoices" />
-        <QuickLink href="/owner/churn" title="Churn" sub="Who canceled & when" />
-        <QuickLink href="/owner/billing-playbook" title="Billing playbook" sub="Policies, webhooks, cancel flow" />
-        <QuickLink href="/owner/costs" title="Costs & margin" sub="API $ vs Stripe cash" />
-        <QuickLink href="/owner/usage" title="Usage" sub="Search + AI over time" />
-        <QuickLink href="/owner/flags" title="Flags" sub="Feature rollouts" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60 lg:col-span-2">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                Live snapshot
+              </h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Recent signups + today’s usage. Refresh to update.
+              </p>
+            </div>
+            <Link
+              href="/owner/usage"
+              className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Open usage →
+            </Link>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-slate-200/70 bg-slate-50/60 p-4 dark:border-slate-800/70 dark:bg-slate-950/20">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  New accounts (24h)
+                </p>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  {recentUsers.length}
+                </span>
+              </div>
+              {recentUsers.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">No new users in the last 24 hours.</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {recentUsers.map((u) => (
+                    <li key={u.id} className="flex items-center justify-between gap-3">
+                      <Link
+                        href={`/owner/users/${u.id}`}
+                        className="min-w-0 truncate text-sm font-semibold text-slate-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-300"
+                      >
+                        {u.name || u.email}
+                      </Link>
+                      <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                        {formatShortDateTime(u.createdAt)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-slate-200/70 bg-slate-50/60 p-4 dark:border-slate-800/70 dark:bg-slate-950/20">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Top searches (today)
+                </p>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  Total {totalSearchesToday._sum.count ?? 0}
+                </span>
+              </div>
+              {topSearchUsersToday.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">No searches recorded yet today.</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {topSearchUsersToday.map((r, idx) => (
+                    <li key={idx} className="flex items-center justify-between gap-3">
+                      <span className="min-w-0 truncate text-sm font-semibold text-slate-900 dark:text-white">
+                        {r.user.name || r.user.email}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold tabular-nums text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200">
+                        {r.count}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                Billing feed
+              </h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Latest Stripe/webhook signals.
+              </p>
+            </div>
+            <Link
+              href="/owner/alerts"
+              className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Open alerts →
+            </Link>
+          </div>
+
+          <ul className="mt-4 space-y-2">
+            {billingEvents.map((e) => (
+              <li
+                key={e.id}
+                className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800/70 dark:bg-slate-950/20"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 text-sm font-semibold text-slate-900 dark:text-white">
+                    {e.title}
+                  </p>
+                  <span
+                    className={
+                      "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide " +
+                      (e.severity === "critical"
+                        ? "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-200"
+                        : e.severity === "warning"
+                          ? "bg-amber-50 text-amber-900 dark:bg-amber-950/20 dark:text-amber-200"
+                          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200")
+                    }
+                  >
+                    {e.severity}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {formatShortDateTime(e.createdAt)}
+                  {e.user?.email ? ` · ${e.user.email}` : ""}
+                </p>
+              </li>
+            ))}
+            {billingEvents.length === 0 && (
+              <li className="text-sm text-slate-500">No billing events yet.</li>
+            )}
+          </ul>
+        </section>
       </div>
     </div>
-  );
-}
-
-function QuickLink({ href, title, sub }: { href: string; title: string; sub: string }) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm transition hover:-translate-y-[1px] hover:bg-white dark:border-slate-800/80 dark:bg-slate-900/60 dark:hover:bg-slate-900"
-    >
-      <p className="text-sm font-semibold text-slate-900 dark:text-white">{title}</p>
-      <p className="mt-1 text-xs text-slate-500">{sub}</p>
-      <p className="mt-3 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-        Open <span className="transition group-hover:translate-x-0.5">→</span>
-      </p>
-    </Link>
   );
 }
 

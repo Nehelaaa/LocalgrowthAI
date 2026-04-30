@@ -1,8 +1,6 @@
 import { getDashboardMetrics } from "@/actions/metrics";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getCurrentUser } from "@/lib/session-user";
-import { isTradesProfession } from "@/lib/profession";
 
 const toneRing: Record<string, string> = {
   indigo:
@@ -129,11 +127,7 @@ function iconWrap(
 
 export default async function DashboardPage() {
   const m = await getDashboardMetrics();
-  const user = await getCurrentUser();
   const cards = cardsData(m);
-  const p = user?.profession;
-  const isRe = p === "real_estate";
-  const isTrades = isTradesProfession(p);
 
   return (
     <div className="w-full min-w-0 max-w-6xl">
@@ -144,25 +138,9 @@ export default async function DashboardPage() {
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
           Dashboard
         </h1>
-        {isRe && (
-          <p className="mt-2 max-w-2xl text-base text-slate-600 dark:text-slate-400">
-            Grow your book of business: search the map for local touchpoints, track who you
-            have contacted, and keep your buyer and seller follow-ups in one place.
-          </p>
-        )}
-        {isTrades && (
-          <p className="mt-2 max-w-2xl text-base text-slate-600 dark:text-slate-400">
-            You&apos;re in <span className="font-medium text-amber-800 dark:text-amber-200">field
-            service</span> mode. Use the Trades area for phone leads, the schedule, and
-            simple invoices; use Find businesses if you also pitch local web work.
-          </p>
-        )}
-        {!isRe && !isTrades && (
-          <p className="mt-2 max-w-2xl text-base text-slate-600 dark:text-slate-400">
-            Your pipeline at a glance — find prospects, work leads, and close more website
-            projects.
-          </p>
-        )}
+        <p className="mt-2 max-w-2xl text-base text-slate-600 dark:text-slate-400">
+          Your pipeline at a glance — find prospects, work leads, and close more projects.
+        </p>
       </header>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -193,14 +171,6 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-10 flex max-w-2xl flex-col gap-4 sm:flex-row sm:items-center sm:flex-wrap">
-        {isTrades && (
-          <Link
-            href="/dashboard/trades"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 py-3.5 text-sm font-semibold text-white shadow transition hover:bg-amber-500"
-          >
-            Trades hub (calls &amp; jobs)
-          </Link>
-        )}
         <Link
           href="/dashboard/search"
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-violet-500 hover:to-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"

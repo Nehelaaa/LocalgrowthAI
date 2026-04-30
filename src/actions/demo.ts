@@ -4,21 +4,30 @@ import { revalidatePath } from "next/cache";
 import { assertOwnsLead, requireUserForAction } from "@/lib/session-user";
 import { mustUpgradeForProFeatures } from "@/lib/entitlements";
 import { prisma } from "@/lib/db";
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 const DEMO_TEMPLATE = (name: string, niche: string) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${name} | Demo</title>
+  <title>${escapeHtml(name)} | Demo</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-900">
   <!-- Hero -->
   <header class="bg-gradient-to-br from-indigo-600 to-purple-700 text-white py-20 px-6">
     <div class="max-w-4xl mx-auto text-center">
-      <h1 class="text-4xl md:text-5xl font-bold mb-4">${name}</h1>
-      <p class="text-xl text-indigo-100">Your trusted ${niche} in the community</p>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">${escapeHtml(name)}</h1>
+      <p class="text-xl text-indigo-100">Your trusted ${escapeHtml(niche)} in the community</p>
       <a href="#contact" class="inline-block mt-8 bg-white text-indigo-600 font-semibold px-8 py-3 rounded-lg hover:bg-indigo-50 transition">Get in Touch</a>
     </div>
   </header>
@@ -29,7 +38,7 @@ const DEMO_TEMPLATE = (name: string, niche: string) => `
     <div class="grid md:grid-cols-3 gap-8">
       <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
         <div class="w-12 h-12 bg-indigo-100 rounded-lg mb-4"></div>
-        <h3 class="font-semibold text-lg mb-2">Quality ${niche}</h3>
+        <h3 class="font-semibold text-lg mb-2">Quality ${escapeHtml(niche)}</h3>
         <p class="text-slate-600">Professional service you can rely on.</p>
       </div>
       <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
@@ -58,7 +67,7 @@ const DEMO_TEMPLATE = (name: string, niche: string) => `
   </section>
 
   <footer class="py-8 text-center text-slate-500 text-sm">
-    © ${new Date().getFullYear()} ${name}. All rights reserved.
+    © ${new Date().getFullYear()} ${escapeHtml(name)}. All rights reserved.
   </footer>
 </body>
 </html>

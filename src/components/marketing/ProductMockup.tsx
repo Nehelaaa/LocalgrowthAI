@@ -5,14 +5,14 @@ import { useState } from "react";
 const tabs = [
   { id: "search" as const, label: "Find" },
   { id: "crm" as const, label: "Score & CRM" },
-  { id: "ai" as const, label: "AI & close" },
+  { id: "export" as const, label: "Export" },
 ];
 
 export function ProductMockup() {
   const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("search");
   return (
     <div
-      className="relative mx-auto w-full max-w-lg rounded-2xl border border-slate-200/90 bg-slate-50 shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-700/80 dark:bg-slate-900/90 dark:ring-white/5"
+      className="relative mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-50 shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-700/80 dark:bg-slate-900/90 dark:ring-white/5"
       role="region"
       aria-label="Product interface preview"
     >
@@ -24,28 +24,74 @@ export function ProductMockup() {
           app.localleadster.com/dashboard
         </span>
       </div>
-      <div className="flex border-b border-slate-200/80 bg-white/80 dark:border-slate-800/80 dark:bg-slate-900/40">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={
-              "min-h-[40px] flex-1 border-b-2 px-2 text-xs font-semibold transition sm:text-sm " +
-              (tab === t.id
-                ? "border-indigo-600 text-indigo-700 dark:border-indigo-400 dark:text-indigo-300"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200")
-            }
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="relative bg-white/70 dark:bg-slate-900/30">
+        <div className="flex border-b border-slate-200/80 bg-white/80 dark:border-slate-800/80 dark:bg-slate-900/40">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={
+                "min-h-[40px] flex-1 border-b-2 px-2 text-xs font-semibold transition sm:text-sm " +
+                (tab === t.id
+                  ? "border-indigo-600 text-indigo-700 dark:border-indigo-400 dark:text-indigo-300"
+                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200")
+              }
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-3 sm:p-4">
+          {tab === "search" && <PanelSearch />}
+          {tab === "crm" && <PanelCrm />}
+          {tab === "export" && <PanelExport />}
+        </div>
+
+        {/* Lightweight “selling” callouts for first-glance clarity */}
+        <div className="pointer-events-none absolute right-3 top-[64px] hidden w-[210px] space-y-2 sm:block">
+          {tab === "search" && (
+            <>
+              <Callout title="Find high-intent leads" body="No website / social-only signals in seconds." />
+              <Callout title="Save in one click" body="Build a pipeline as you search." tone="indigo" />
+            </>
+          )}
+          {tab === "crm" && (
+            <>
+              <Callout title="Prioritize fast" body="HOT / WARM / COLD tiers + next step." />
+              <Callout title="Never lose context" body="Notes + follow-ups live on the lead." tone="indigo" />
+            </>
+          )}
+          {tab === "export" && (
+            <>
+              <Callout title="Export to your stack (Pro)" body="CSV + JSON for Sheets, Airtable, and automation." />
+              <Callout title="Keep the pipeline moving" body="Track outcomes + follow-ups without chaos." tone="indigo" />
+            </>
+          )}
+        </div>
       </div>
-      <div className="p-3 sm:p-4">
-        {tab === "search" && <PanelSearch />}
-        {tab === "crm" && <PanelCrm />}
-        {tab === "ai" && <PanelAi />}
-      </div>
+    </div>
+  );
+}
+
+function Callout({
+  title,
+  body,
+  tone,
+}: {
+  title: string;
+  body: string;
+  tone?: "indigo";
+}) {
+  const toneCls =
+    tone === "indigo"
+      ? "border-indigo-200/60 bg-indigo-50/80 text-indigo-950 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-100"
+      : "border-slate-200/70 bg-white/85 text-slate-900 dark:border-slate-800/70 dark:bg-slate-900/55 dark:text-slate-100";
+  return (
+    <div className={"rounded-2xl border p-3 shadow-sm backdrop-blur " + toneCls}>
+      <p className="text-[11px] font-extrabold tracking-tight">{title}</p>
+      <p className="mt-1 text-[10px] leading-relaxed opacity-80">{body}</p>
     </div>
   );
 }
@@ -145,30 +191,29 @@ function PanelCrm() {
   );
 }
 
-function PanelAi() {
+function PanelExport() {
   return (
     <div className="space-y-2 text-left text-xs">
       <div className="rounded-lg border border-indigo-200/60 bg-indigo-50/80 p-2.5 dark:border-indigo-500/30 dark:bg-indigo-500/10">
         <p className="text-[9px] font-bold uppercase text-indigo-600 dark:text-indigo-300">
-          AI — Email draft
+          Pro — Export
         </p>
         <p className="mt-1 text-[10px] leading-relaxed text-slate-700 dark:text-slate-200">
-          Hi [Name] — I noticed [Business] has great reviews but no site yet. I help local [Trade] in
-          [City] get found online. Worth a 10-min call?
+          Download CSV or use a JSON endpoint to push leads into Sheets, Airtable, Zapier/Make, or your CRM.
         </p>
       </div>
-      <div className="flex flex-wrap gap-1">
-        {["Email", "Call", "DM", "Loom"].map((x) => (
-          <span
-            key={x}
-            className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-          >
-            {x}
-          </span>
-        ))}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg border border-slate-200/80 bg-white p-2 dark:border-slate-700/50 dark:bg-slate-900/40">
+          <p className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">CSV</p>
+          <p className="mt-1 text-[11px] font-extrabold text-slate-900 dark:text-white">localleadster-leads.csv</p>
+        </div>
+        <div className="rounded-lg border border-slate-200/80 bg-white p-2 dark:border-slate-700/50 dark:bg-slate-900/40">
+          <p className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">JSON</p>
+          <p className="mt-1 text-[11px] font-extrabold text-slate-900 dark:text-white">/api/export/leads</p>
+        </div>
       </div>
       <p className="text-[10px] text-slate-500 dark:text-slate-400">
-        Pro: generate + export + client demo pages in one flow.
+        Keep your pipeline in one place, export when you need to collaborate or automate.
       </p>
     </div>
   );

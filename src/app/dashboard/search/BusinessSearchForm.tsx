@@ -86,6 +86,7 @@ export function BusinessSearchForm({ onSearch, loading }: Props) {
           </select>
         </div>
       </div>
+
       <button
         type="submit"
         disabled={loading}

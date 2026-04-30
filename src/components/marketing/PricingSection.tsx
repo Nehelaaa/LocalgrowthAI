@@ -25,8 +25,8 @@ export function PricingSection() {
             Simple, honest pricing
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 sm:text-lg dark:text-slate-400">
-            Start free. Upgrade in the app when you want AI, exports, and unlimited leads — billed securely
-            through Stripe.
+            Start free. Upgrade in the app when you want exports and unlimited leads — billed securely through
+            Stripe.
           </p>
         </div>
 
@@ -95,11 +95,11 @@ export function PricingSection() {
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
-                <span>AI insights &amp; multi-channel outreach copy</span>
+                <span>Exports: CSV + JSON endpoints</span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
-                <span>CSV / JSON export &amp; client demo pages</span>
+                <span>Automation-friendly (Sheets, Airtable, Zapier/Make)</span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
