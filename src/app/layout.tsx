@@ -9,8 +9,8 @@ const base = process.env.AUTH_URL
 export const metadata: Metadata = {
   metadataBase: base,
   title: {
-    default: "LocalGrowth AI",
-    template: "%s | LocalGrowth AI",
+    default: "LocalLeadster",
+    template: "%s | LocalLeadster",
   },
   description:
     "Search Google Places, qualify local leads, and run outreach + pipeline from one clean workspace.",

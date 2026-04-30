@@ -27,7 +27,7 @@ export function MarketingShell({
               L
             </span>
             <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-              LocalGrowth AI
+              LocalLeadster
             </span>
           </Link>
           <nav
@@ -72,7 +72,7 @@ export function MarketingShell({
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <p className="font-medium text-slate-700 dark:text-slate-300">
-            © {new Date().getFullYear()} LocalGrowth AI
+            © {new Date().getFullYear()} LocalLeadster
           </p>
           <p className="mt-1">Lead generation + pipeline for selling to local businesses.</p>
           <nav className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2" aria-label="Footer">

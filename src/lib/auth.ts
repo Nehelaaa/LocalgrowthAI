@@ -33,7 +33,11 @@ const googleId = process.env.GOOGLE_CLIENT_ID;
 const googleSecret = process.env.GOOGLE_CLIENT_SECRET;
 const hasGoogle = Boolean(googleId && googleSecret);
 
+/** Explicit secret avoids rare cases where inferred env isn’t seen at runtime on the server (shows as ?error=Configuration). */
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: authSecret,
   adapter: prismaAuthAdapter(prisma),
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   trustHost: true,

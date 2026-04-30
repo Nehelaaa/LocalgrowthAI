@@ -1,4 +1,4 @@
-// LocalGrowth AI - Prisma Schema
+// LocalLeadster - Prisma Schema
 // Production: PostgreSQL (Neon). Set DATABASE_URL in .env / Vercel.
 
 generator client {

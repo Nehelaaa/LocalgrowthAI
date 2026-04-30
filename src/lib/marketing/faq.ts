@@ -2,7 +2,7 @@ import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
 
 export const marketingFaqs: { q: string; a: string }[] = [
   {
-    q: "Who is LocalGrowth AI for?",
+    q: "Who is LocalLeadster for?",
     a: "Web agencies, freelancers, and small dev shops that sell sites to local businesses and need a repeatable way to find and work leads — not a generic B2B database.",
   },
   {

@@ -12,7 +12,7 @@ export function GoogleSetupHint() {
       <p className="mt-1 text-amber-900/90 dark:text-amber-200/90">
         Add an OAuth 2.0 <strong>Web client</strong> in Google Cloud, then set in{" "}
         <code className="rounded bg-amber-100/80 px-1 font-mono text-xs dark:bg-amber-900/50">
-          localgrowth-app/.env
+          .env
         </code>
         :{" "}
         <code className="block mt-1 font-mono text-xs">

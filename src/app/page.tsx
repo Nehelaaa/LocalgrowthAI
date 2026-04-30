@@ -115,7 +115,7 @@ export default function HomePage() {
                 </h2>
                 <p className="mt-3 text-slate-600 dark:text-slate-400">
                   You need speed, context, and a clear next step for every lead — not a raw spreadsheet
-                  export. LocalGrowth ties search, scoring, and follow-up into one system you can run
+                  export. LocalLeadster ties search, scoring, and follow-up into one system you can run
                   daily.
                 </p>
                 <ul className="mt-5 space-y-2.5 text-sm text-slate-700 dark:text-slate-300">

@@ -21,7 +21,7 @@ export function ProductMockup() {
         <span className="h-2.5 w-2.5 rounded-full bg-amber-400/90" aria-hidden />
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/90" aria-hidden />
         <span className="ml-2 flex-1 truncate rounded-md bg-slate-100 px-2 py-0.5 text-center text-[10px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-          app.localgrowth.ai/dashboard
+          app.localleadster.com/dashboard
         </span>
       </div>
       <div className="flex border-b border-slate-200/80 bg-white/80 dark:border-slate-800/80 dark:bg-slate-900/40">

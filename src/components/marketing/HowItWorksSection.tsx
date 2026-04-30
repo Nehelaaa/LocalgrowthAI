@@ -53,7 +53,7 @@ export function HowItWorksSection() {
           id="how-heading"
           className="text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white"
         >
-          How LocalGrowth works
+          How LocalLeadster works
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-base text-slate-600 dark:text-slate-400">
           Four simple steps from map to contract. Click a step to explore.

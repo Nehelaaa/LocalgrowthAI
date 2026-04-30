@@ -8,7 +8,7 @@ export async function sendPasswordResetEmail(
 ): Promise<{ ok: boolean; loggedToConsole?: boolean }> {
   const key = process.env.RESEND_API_KEY?.trim();
   const from =
-    process.env.EMAIL_FROM?.trim() ?? "LocalGrowth AI <onboarding@resend.dev>";
+    process.env.EMAIL_FROM?.trim() ?? "LocalLeadster <onboarding@resend.dev>";
 
   if (!key) {
     if (process.env.NODE_ENV === "development") {
@@ -30,7 +30,7 @@ export async function sendPasswordResetEmail(
     body: JSON.stringify({
       from,
       to: [email],
-      subject: "Reset your LocalGrowth AI password",
+      subject: "Reset your LocalLeadster password",
       html: `<p>You requested a password reset.</p><p><a href="${resetUrl}">Reset password</a> (expires in 1 hour).</p><p>If you didn’t ask for this, you can ignore this email.</p>`,
     }),
   });

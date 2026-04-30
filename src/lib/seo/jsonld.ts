@@ -8,14 +8,14 @@ export function homeJsonLd() {
     "@graph": [
       {
         "@type": "WebSite",
-        name: "LocalGrowth AI",
+        name: "LocalLeadster",
         url: site,
         description:
           "Lead generation and pipeline for selling to local businesses: search, qualify, and close deals faster.",
       },
       {
         "@type": "SoftwareApplication",
-        name: "LocalGrowth AI",
+        name: "LocalLeadster",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         offers: {
@@ -33,7 +33,7 @@ export function homeJsonLd() {
       },
       {
         "@type": "Organization",
-        name: "LocalGrowth AI",
+        name: "LocalLeadster",
         url: site,
       },
     ],
@@ -56,7 +56,7 @@ export function faqJsonLd(items: { q: string; a: string }[]) {
 }
 
 export const homeMetadata: Metadata = {
-  title: "LocalGrowth AI — Lead Gen + Pipeline for Local B2B",
+  title: "LocalLeadster — Lead Gen + Pipeline for Local B2B",
   description:
     "Search Google Places, qualify leads with simple signals, run your CRM pipeline, and use AI outreach on Pro. Free to start — built for anyone selling to local businesses.",
   keywords: [
@@ -67,7 +67,7 @@ export const homeMetadata: Metadata = {
     "Google Places B2B",
   ],
   openGraph: {
-    title: "LocalGrowth AI — Find and close local deals",
+    title: "LocalLeadster — Find and close local deals",
     description:
       "End-to-end workflow: search, qualify, outreach, and close — from one clean workspace.",
     type: "website",
@@ -75,7 +75,7 @@ export const homeMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LocalGrowth AI — Lead gen + pipeline",
+    title: "LocalLeadster — Lead gen + pipeline",
     description: "Search, qualify, and close local deals from one dashboard.",
   },
   robots: { index: true, follow: true },

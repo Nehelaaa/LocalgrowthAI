@@ -26,7 +26,7 @@ export default async function ResetPasswordPage({
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-sm font-bold text-white">
             L
           </span>
-          <span className="text-lg font-bold text-slate-900 dark:text-white">LocalGrowth AI</span>
+          <span className="text-lg font-bold text-slate-900 dark:text-white">LocalLeadster</span>
         </div>
         <h1 className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">Set a new password</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">

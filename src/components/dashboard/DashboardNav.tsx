@@ -200,7 +200,7 @@ function BrandBlock({ small }: { small?: boolean }) {
             "block font-bold leading-tight tracking-tight text-slate-900 dark:text-white"
           }
         >
-          LocalGrowth
+          LocalLeadster
         </span>
         {!small && <span className="text-xs font-medium text-slate-500 dark:text-slate-400">AI</span>}
       </span>

@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "LocalGrowth AI",
+  "name": "LocalLeadster",
   "version": "0.1.0",
-  "description": "Add businesses from Google Maps to LocalGrowth AI",
+  "description": "Add businesses from Google Maps to LocalLeadster",
   "permissions": ["activeTab"],
   "host_permissions": ["https://www.google.com/maps/*"],
   "action": {
-    "default_title": "Add to LocalGrowth AI",
+    "default_title": "Add to LocalLeadster",
     "default_icon": "icon48.png"
   },
   "content_scripts": [

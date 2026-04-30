@@ -35,7 +35,7 @@ export function PlanComparisonGrid({ isPro, hasStripeSub, proPriceLabel }: Props
     <div id="compare-plans" className="scroll-mt-8">
       <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Compare plans</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Pick the tier that matches how you use LocalGrowth.
+        Pick the tier that matches how you use LocalLeadster.
       </p>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2 lg:gap-6">

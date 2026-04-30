@@ -1,4 +1,4 @@
-# LocalGrowth AI
+# LocalLeadster
 
 Full-stack SaaS to find local businesses without websites, score them, and manage outreach to convert them into web development clients.
 
@@ -106,7 +106,7 @@ prisma/
 
 ## Optional
 
-- **Chrome extension** – Placeholder for “Add to LocalGrowth AI” from Google Maps in `chrome-extension/`; implement parsing and API as needed.
+- **Chrome extension** – Placeholder for “Add to LocalLeadster” from Google Maps in `chrome-extension/`; implement parsing and API as needed.
 - **Webhook** – Set `WEBHOOK_URL` and call it when a new lead is saved (hook point exists in actions).
 - **Google Sheets sync** – Use `/api/export/leads` JSON with Zapier/Make to sync to Sheets.
 
