@@ -4,9 +4,8 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { assertOwnsLead, requireUserForAction } from "@/lib/session-user";
 import { prisma } from "@/lib/db";
-import { canCreateMoreLeads, mustUpgradeForProFeatures } from "@/lib/entitlements";
+import { canCreateMoreLeads } from "@/lib/entitlements";
 import { computeLeadScore } from "@/lib/lead-score";
-import { generateOpportunityInsights, generateOutreach } from "@/lib/openai";
 import type { ContactStatus, Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -311,99 +310,6 @@ export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
   });
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");
-}
-
-export async function generateOpportunityForLead(leadId: string) {
-  const user = await requireUserForAction();
-  if (mustUpgradeForProFeatures(user)) {
-    throw new Error("PRO_REQUIRED");
-  }
-  await prisma.aiDayUsage.upsert({
-    where: {
-      userId_day: { userId: user.id, day: new Date().toISOString().slice(0, 10) },
-    },
-    create: { userId: user.id, day: new Date().toISOString().slice(0, 10), count: 1 },
-    update: { count: { increment: 1 } },
-  });
-  await assertOwnsLead(user.id, leadId);
-  const lead = await prisma.lead.findUnique({
-    where: { id: leadId },
-    include: { business: true },
-  });
-  if (!lead) throw new Error("Lead not found");
-
-  const { insights, revenueEstimate } = await generateOpportunityInsights({
-    businessName: lead.business.name,
-    businessType: lead.business.businessType ?? "local business",
-    city: lead.business.city ?? undefined,
-    state: lead.business.state ?? undefined,
-    rating: lead.business.rating ?? undefined,
-    reviewCount: lead.business.reviewCount,
-    hasNoWebsite: lead.business.website == null || lead.business.hasSocialOnly,
-    hasSocialOnly: lead.business.hasSocialOnly,
-  });
-
-  const noKeyMessage = "Add OPENAI_API_KEY to your .env file";
-  if (!insights.startsWith(noKeyMessage)) {
-    await prisma.lead.update({
-      where: { id: leadId },
-      data: { opportunityInsights: insights, revenueEstimate },
-    });
-  }
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/leads");
-  return { insights, revenueEstimate };
-}
-
-export async function generateOutreachForLead(
-  leadId: string,
-  type: "email" | "call_script" | "instagram_dm" | "loom_script"
-) {
-  const user = await requireUserForAction();
-  if (mustUpgradeForProFeatures(user)) {
-    throw new Error("PRO_REQUIRED");
-  }
-  await prisma.aiDayUsage.upsert({
-    where: {
-      userId_day: { userId: user.id, day: new Date().toISOString().slice(0, 10) },
-    },
-    create: { userId: user.id, day: new Date().toISOString().slice(0, 10), count: 1 },
-    update: { count: { increment: 1 } },
-  });
-  await assertOwnsLead(user.id, leadId);
-  const lead = await prisma.lead.findUnique({
-    where: { id: leadId },
-    include: { business: true },
-  });
-  if (!lead) throw new Error("Lead not found");
-
-  const content = await generateOutreach({
-    businessName: lead.business.name,
-    businessType: lead.business.businessType ?? "local business",
-    city: lead.business.city ?? undefined,
-    state: lead.business.state ?? undefined,
-    rating: lead.business.rating ?? undefined,
-    reviewCount: lead.business.reviewCount,
-    type,
-  });
-
-  const noKeyMessage = "Add OPENAI_API_KEY to your .env file";
-  if (!content.startsWith(noKeyMessage)) {
-    await prisma.outreach.create({
-      data: { leadId, type, content },
-    });
-  }
-  revalidatePath("/dashboard/leads");
-  return { content, type };
-}
-
-export async function getOutreaches(leadId: string) {
-  const user = await requireUserForAction();
-  await assertOwnsLead(user.id, leadId);
-  return prisma.outreach.findMany({
-    where: { leadId },
-    orderBy: { generatedAt: "desc" },
-  });
 }
 
 export async function updateLeadStatus(
