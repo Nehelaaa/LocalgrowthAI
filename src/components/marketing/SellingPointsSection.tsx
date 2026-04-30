@@ -16,16 +16,12 @@ const points = [
     desc: "Status, notes, follow-ups, tags, and a clean history on every lead.",
   },
   {
-    title: "Exports (Pro)",
-    desc: "CSV + JSON endpoints for Sheets, Airtable, and automation (Zapier/Make/webhooks).",
+    title: "Close deals & track revenue",
+    desc: "Deal value, close dates, and outcomes so you always know what’s in play and what’s closing soon.",
   },
   {
     title: "Designed for daily outreach",
     desc: "Search → save → next step. A workflow you can actually run every day without context switching.",
-  },
-  {
-    title: "Stripe billing, secure accounts",
-    desc: "Upgrade in-app, manage billing in Stripe, and keep access scoped to your account.",
   },
 ] as const;
 

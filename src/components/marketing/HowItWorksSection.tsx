@@ -26,9 +26,9 @@ const steps = [
   },
   {
     id: 4,
-    title: "Export & scale (Pro)",
-    body: "When you’re ready to collaborate or automate, export CSV or use the JSON endpoint to push leads into Sheets, Airtable, Zapier/Make, or your CRM.",
-    eyebrow: "Exports + automation",
+    title: "Close deals & track revenue",
+    body: "Move opportunities to Won/Lost, set deal value, and see what’s closing this week. Keep your pipeline clean and know exactly how much money is in play.",
+    eyebrow: "Closing + revenue",
     accent: "violet" as const,
   },
 ];
@@ -170,7 +170,7 @@ export function HowItWorksSection() {
                   {s.id === 1 && <Pill>City + radius + category</Pill>}
                   {s.id === 2 && <Pill>Signals + tiers</Pill>}
                   {s.id === 3 && <Pill>Pipeline + follow-ups</Pill>}
-                  {s.id === 4 && <Pill>CSV + JSON exports</Pill>}
+                  {s.id === 4 && <Pill>Won value + revenue</Pill>}
                 </div>
               </div>
 
@@ -178,7 +178,7 @@ export function HowItWorksSection() {
                 {s.id === 1 && <VisualSearch />}
                 {s.id === 2 && <VisualScore />}
                 {s.id === 3 && <VisualPipeline />}
-                {s.id === 4 && <VisualExport />}
+                {s.id === 4 && <VisualClose />}
               </div>
             </div>
           </div>
@@ -491,20 +491,20 @@ function VisualPipeline() {
   );
 }
 
-function VisualExport() {
+function VisualClose() {
   return (
     <Frame>
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="rounded-2xl border border-violet-200/60 bg-violet-50/70 p-3 dark:border-violet-500/25 dark:bg-violet-500/10">
           <p className="text-[11px] font-extrabold uppercase tracking-wide text-violet-700 dark:text-violet-200">
-            Export
+            Revenue view
           </p>
           <p className="mt-2 text-sm leading-relaxed text-slate-800 dark:text-slate-100">
-            Push your lead list into the tools you already use. Keep LocalLeadster as the source‑of‑truth — export
-            when you need to collaborate or automate.
+            Track deal value as you move leads through the pipeline. See what’s likely to close soon, and how much
+            revenue you’ve won this month.
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-violet-800 dark:text-violet-200">
-            {["CSV", "JSON", "Sheets", "Airtable"].map((x) => (
+            {["Deal value", "Close date", "Won/Lost", "Totals"].map((x) => (
               <span key={x} className="rounded-full bg-white/80 px-3 py-1 dark:bg-slate-900/40">
                 {x}
               </span>
@@ -514,32 +514,32 @@ function VisualExport() {
         <div className="space-y-3">
           <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
             <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Endpoints
+              Closing this week
             </p>
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/40">
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">CSV export</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">Lakeview Dental</span>
                 <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200">
-                  Ready
+                  $2,400
                 </span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/40">
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">JSON endpoint</span>
-                <span className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-extrabold text-white">
-                  /api/export/leads
+                <span className="text-sm font-semibold text-slate-900 dark:text-white">Austin Roofing Co</span>
+                <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
+                  $3,200
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Use automation tools to sync leads where your team works.
+                Prioritize the biggest deals and keep momentum with next steps.
               </p>
             </div>
           </div>
           <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
             <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Works with
+              Snapshot
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {["Google Sheets", "Airtable", "Zapier", "Make"].map((x) => (
+              {["Pipeline: $12.8k", "Closing: $5.6k", "Won: $3.1k", "Follow-ups: 7"].map((x) => (
                 <span
                   key={x}
                   className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-[10px] font-semibold text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200"

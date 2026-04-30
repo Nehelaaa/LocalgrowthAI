@@ -5,7 +5,7 @@ import { useState } from "react";
 const tabs = [
   { id: "search" as const, label: "Find" },
   { id: "crm" as const, label: "Score & CRM" },
-  { id: "export" as const, label: "Export" },
+  { id: "close" as const, label: "Close & revenue" },
 ];
 
 export function ProductMockup() {
@@ -43,18 +43,20 @@ export function ProductMockup() {
           ))}
         </div>
 
-        <div className="p-3 sm:p-4">
-          {tab === "search" && <PanelSearch />}
-          {tab === "crm" && <PanelCrm />}
-          {tab === "export" && <PanelExport />}
+        <div className="p-3 sm:p-4 sm:pr-[236px]">
+          <div key={tab} className="lgai-mock-fade">
+            {tab === "search" && <PanelSearch />}
+            {tab === "crm" && <PanelCrm />}
+            {tab === "close" && <PanelClose />}
+          </div>
         </div>
 
         {/* Lightweight “selling” callouts for first-glance clarity */}
         <div className="pointer-events-none absolute right-3 top-[64px] hidden w-[210px] space-y-2 sm:block">
           {tab === "search" && (
             <>
-              <Callout title="Find high-intent leads" body="No website / social-only signals in seconds." />
-              <Callout title="Save in one click" body="Build a pipeline as you search." tone="indigo" />
+              <Callout title="Google-business results" body="Names, ratings, phone, and quick signals at a glance." />
+              <Callout title="Save in one click" body="Build your pipeline while you search." tone="indigo" />
             </>
           )}
           {tab === "crm" && (
@@ -63,14 +65,15 @@ export function ProductMockup() {
               <Callout title="Never lose context" body="Notes + follow-ups live on the lead." tone="indigo" />
             </>
           )}
-          {tab === "export" && (
+          {tab === "close" && (
             <>
-              <Callout title="Export to your stack (Pro)" body="CSV + JSON for Sheets, Airtable, and automation." />
-              <Callout title="Keep the pipeline moving" body="Track outcomes + follow-ups without chaos." tone="indigo" />
+              <Callout title="Track money in play" body="Deal value + close date per opportunity." />
+              <Callout title="Close faster" body="See what’s closing this week and follow up on time." tone="indigo" />
             </>
           )}
         </div>
       </div>
+
     </div>
   );
 }
@@ -111,30 +114,76 @@ function PanelSearch() {
         </span>
       </div>
       <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Results
+        Google businesses
       </p>
       {[
-        { name: "Apex Plumbing Co.", tag: "No site", hot: true },
-        { name: "QuickFix Drains", tag: "Social only", hot: false },
-        { name: "City Rooter LLC", tag: "No site", hot: true },
+        {
+          name: "Apex Plumbing Co.",
+          rating: 4.8,
+          reviews: 126,
+          addr: "South Austin • 2.1 mi",
+          phone: "(512) 555‑0137",
+          signal: "No website",
+          hot: true,
+        },
+        {
+          name: "QuickFix Drains",
+          rating: 4.6,
+          reviews: 74,
+          addr: "East Austin • 4.0 mi",
+          phone: "(512) 555‑0189",
+          signal: "Social only",
+          hot: false,
+        },
+        {
+          name: "City Rooter LLC",
+          rating: 4.9,
+          reviews: 203,
+          addr: "Central Austin • 3.3 mi",
+          phone: "(512) 555‑0104",
+          signal: "No website",
+          hot: true,
+        },
       ].map((r) => (
         <div
           key={r.name}
-          className="group flex items-center justify-between gap-2 rounded-lg border border-slate-200/80 bg-white px-2.5 py-2 text-xs transition hover:border-indigo-200 hover:shadow-sm dark:border-slate-700/50 dark:bg-slate-900/50 dark:hover:border-indigo-500/30"
+          className="group rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-xs transition hover:border-indigo-200 hover:shadow-sm dark:border-slate-700/50 dark:bg-slate-900/50 dark:hover:border-indigo-500/30"
         >
-          <div>
-            <p className="font-medium text-slate-800 dark:text-slate-100">{r.name}</p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">{r.tag}</p>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {r.hot && (
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
-                HOT
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-slate-800 dark:text-slate-100">{r.name}</p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <span className="font-semibold text-slate-700 dark:text-slate-200">
+                  ★ {r.rating.toFixed(1)}
+                </span>
+                <span>({r.reviews})</span>
+                <span className="opacity-60">•</span>
+                <span>{r.addr}</span>
+              </div>
+              <p className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">{r.phone}</p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <span
+                className={
+                  "rounded-full px-2 py-0.5 text-[9px] font-bold " +
+                  (r.signal === "No website"
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200"
+                    : "bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200")
+                }
+              >
+                {r.signal}
               </span>
-            )}
-            <span className="rounded bg-indigo-100 px-2 py-0.5 text-[9px] font-semibold text-indigo-800 group-hover:bg-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-200">
-              + Save
-            </span>
+              <div className="flex items-center gap-1.5">
+                {r.hot && (
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
+                    HOT
+                  </span>
+                )}
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[9px] font-semibold text-indigo-800 group-hover:bg-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-200">
+                  + Save
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       ))}
@@ -191,30 +240,62 @@ function PanelCrm() {
   );
 }
 
-function PanelExport() {
+function PanelClose() {
   return (
     <div className="space-y-2 text-left text-xs">
+      <div className="grid grid-cols-3 gap-1.5 text-center text-[9px] sm:text-[10px]">
+        {[
+          { v: "$12.8k", l: "Pipeline" },
+          { v: "$5.6k", l: "Closing" },
+          { v: "$3.1k", l: "Won" },
+        ].map((s) => (
+          <div
+            key={s.l}
+            className="rounded-lg border border-slate-200/80 bg-white p-1.5 dark:border-slate-700/50 dark:bg-slate-900/50"
+          >
+            <p className="text-sm font-bold text-slate-900 dark:text-white">{s.v}</p>
+            <p className="text-slate-500 dark:text-slate-400">{s.l}</p>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        Closing this week
+      </p>
+
+      {[
+        { n: "Lakeview Dental", st: "Proposal sent", v: "$2,400", tone: "emerald" as const },
+        { n: "Austin Roofing Co", st: "Negotiation", v: "$3,200", tone: "amber" as const },
+      ].map((r) => (
+        <div
+          key={r.n}
+          className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-xs dark:border-slate-700/50 dark:bg-slate-900/50"
+        >
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-slate-800 dark:text-slate-100">{r.n}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">{r.st}</p>
+          </div>
+          <span
+            className={
+              "rounded-full px-2 py-0.5 text-[9px] font-extrabold " +
+              (r.tone === "emerald"
+                ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200"
+                : "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200")
+            }
+          >
+            {r.v}
+          </span>
+        </div>
+      ))}
+
       <div className="rounded-lg border border-indigo-200/60 bg-indigo-50/80 p-2.5 dark:border-indigo-500/30 dark:bg-indigo-500/10">
         <p className="text-[9px] font-bold uppercase text-indigo-600 dark:text-indigo-300">
-          Pro — Export
+          Close faster
         </p>
         <p className="mt-1 text-[10px] leading-relaxed text-slate-700 dark:text-slate-200">
-          Download CSV or use a JSON endpoint to push leads into Sheets, Airtable, Zapier/Make, or your CRM.
+          Add deal value and a close date to every lead so you always know what revenue is in play.
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-lg border border-slate-200/80 bg-white p-2 dark:border-slate-700/50 dark:bg-slate-900/40">
-          <p className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">CSV</p>
-          <p className="mt-1 text-[11px] font-extrabold text-slate-900 dark:text-white">localleadster-leads.csv</p>
-        </div>
-        <div className="rounded-lg border border-slate-200/80 bg-white p-2 dark:border-slate-700/50 dark:bg-slate-900/40">
-          <p className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">JSON</p>
-          <p className="mt-1 text-[11px] font-extrabold text-slate-900 dark:text-white">/api/export/leads</p>
-        </div>
-      </div>
-      <p className="text-[10px] text-slate-500 dark:text-slate-400">
-        Keep your pipeline in one place, export when you need to collaborate or automate.
-      </p>
     </div>
   );
 }

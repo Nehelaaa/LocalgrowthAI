@@ -12,7 +12,8 @@ function ownerEmailAllowlist(): Set<string> {
   );
 }
 
-export default async function middleware(req: NextRequest) {
+/** Next.js 16+ edge guard (root `proxy.ts` + webpack build avoids Vercel NFT path bugs with Turbopack). */
+export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   const token = await getToken({
@@ -32,8 +33,8 @@ export default async function middleware(req: NextRequest) {
 
   // Owner-only area: allow ADMIN, or allowlisted email(s).
   if (path.startsWith("/owner") || path.startsWith("/api/owner/")) {
-    const role = String((token as any)?.role ?? "USER");
-    const email = String((token as any)?.email ?? "").trim().toLowerCase();
+    const role = String((token as { role?: string }).role ?? "USER");
+    const email = String((token as { email?: string }).email ?? "").trim().toLowerCase();
     const owners = ownerEmailAllowlist();
     if (role !== "ADMIN" && (owners.size === 0 || !owners.has(email))) {
       return NextResponse.redirect(new URL("/unauthorized", req.nextUrl));
@@ -55,4 +56,3 @@ export const config = {
     "/api/stripe/portal",
   ],
 };
-

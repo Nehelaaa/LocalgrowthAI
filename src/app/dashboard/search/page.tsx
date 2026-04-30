@@ -73,7 +73,7 @@ export default function SearchPage() {
         }
         throw new Error(
           data.error === "Daily search limit reached"
-            ? "You’ve used today’s live Google search quota. Repeat the same search to load cached results, or upgrade to Pro for more API-backed searches per day."
+            ? "You’ve reached today’s Starter search limit. Upgrade to Pro to keep searching, or try again tomorrow when the quota resets."
             : (data.error ?? "Search failed")
         );
       }
@@ -110,7 +110,7 @@ export default function SearchPage() {
           <span className="font-medium tabular-nums text-slate-900 dark:text-slate-100">
             {usage.used} / {usage.limit}
           </span>{" "}
-          used. Cached repeats don&apos;t count.{" "}
+          used. Resets daily.{" "}
           <Link
             href="/dashboard"
             className="font-medium text-indigo-600 dark:text-indigo-400"
@@ -124,12 +124,6 @@ export default function SearchPage() {
       {error && (
         <div className="mt-4 space-y-2 rounded-lg bg-red-50 dark:bg-red-900/20 px-4 py-3 text-red-700 dark:text-red-300">
           <p>{error}</p>
-          {error.includes("quota") && (
-            <p className="text-sm opacity-90">
-              Tip: run the exact same city, radius, and type again to hit the{" "}
-              <span className="font-medium">7-day cache</span> and avoid another API call.
-            </p>
-          )}
         </div>
       )}
       {fromCache && results.length > 0 && (

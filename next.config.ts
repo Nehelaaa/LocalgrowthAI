@@ -46,11 +46,7 @@ const nextConfig: NextConfig = {
   },
   // Hide the dev-only "N" pill (route/Turbopack info) in the corner; errors still show.
   devIndicators: false,
-  // With dependencies only under `localgrowth-app/`, we must not resolve CSS
-  // and modules from a parent directory that has no `node_modules`.
-  // Project root in the IDE is often the repo (parent) folder, while deps live
-  // in localgrowth-app/. A matching tailwind in the parent package.json (see
-  // ../package.json) lets dev-time PostCSS resolve @import "tailwindcss".
+  // Lock Turbopack to this app when the git root has extra lockfiles or parent folders without `node_modules`.
   turbopack: {
     root: appRoot,
   },

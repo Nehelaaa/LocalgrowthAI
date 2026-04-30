@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { FAQSection } from "@/components/marketing/FAQSection";
 import { HowItWorksSection } from "@/components/marketing/HowItWorksSection";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { OutreachProofSection } from "@/components/marketing/OutreachProofSection";
 import { PricingSection } from "@/components/marketing/PricingSection";
 import { ProductMockup } from "@/components/marketing/ProductMockup";
 import { SellingPointsSection } from "@/components/marketing/SellingPointsSection";
-import { SocialProofSection } from "@/components/marketing/SocialProofSection";
 import { SolutionsSection } from "@/components/marketing/SolutionsSection";
 import { StatsStrip } from "@/components/marketing/StatsStrip";
 import { marketingFaqs } from "@/lib/marketing/faq";
@@ -43,7 +42,7 @@ export default function HomePage() {
               </h1>
               <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
                 A Google Places lead generation tool that keeps outreach simple: search a territory, qualify with
-                fast signals, run a CRM pipeline, and export to your stack when you’re ready — built for agencies,
+                fast signals, run a CRM pipeline, and close more deals with clear next steps — built for agencies,
                 freelancers, and sales teams selling to local businesses.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -71,7 +70,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            <div className="relative flex justify-center lg:justify-end" id="product-tour">
+            <div className="relative flex justify-center lg:justify-end lgai-hero-fade" id="product-tour">
               <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-tr from-indigo-500/15 via-violet-500/10 to-transparent blur-2xl" aria-hidden />
               <ProductMockup />
             </div>
@@ -92,58 +91,7 @@ export default function HomePage() {
 
           <SellingPointsSection />
 
-          <SocialProofSection />
-
-          <section
-            className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20"
-            id="value-prop"
-            aria-labelledby="value-heading"
-          >
-            <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-200 shadow-lg dark:border-slate-700/50">
-                <Image
-                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1000&q=80&auto=format&fit=crop"
-                  alt="Agency team collaborating on a web project with laptops"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-              </div>
-              <div>
-                <h2
-                  id="value-heading"
-                  className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white"
-                >
-                  Built for how real outreach actually happens
-                </h2>
-                <p className="mt-3 text-slate-600 dark:text-slate-400">
-                  You need speed, context, and a clear next step for every lead — not a raw spreadsheet
-                  export. LocalLeadster ties search, scoring, and follow-up into one system you can run
-                  daily.
-                </p>
-                <ul className="mt-5 space-y-2.5 text-sm text-slate-700 dark:text-slate-300">
-                  <li className="flex gap-2">
-                    <span className="mt-0.5 text-emerald-600" aria-hidden>
-                      ✓
-                    </span>
-                    Secure accounts with Stripe billing when you upgrade to Pro.
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="mt-0.5 text-emerald-600" aria-hidden>
-                      ✓
-                    </span>
-                    Per-lead history: status, notes, follow-ups, and website quote fields.
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="mt-0.5 text-emerald-600" aria-hidden>
-                      ✓
-                    </span>
-                    Exports (Pro): CSV + JSON endpoints for your stack.
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </section>
+          <OutreachProofSection />
 
           <section
             id="features"
@@ -157,7 +105,7 @@ export default function HomePage() {
               Everything in one product
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600 dark:text-slate-400">
-              From map search to export — organized so you can scale outreach without losing context.
+              From search to close — organized so you can scale outreach without losing context.
             </p>
             <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
               {[
@@ -177,14 +125,14 @@ export default function HomePage() {
                   icon: "🔐",
                 },
                 {
-                  t: "Exports (Pro)",
-                  d: "CSV and JSON for Sheets, Airtable, and automation (Zapier, Make, webhooks).",
-                  icon: "⬇️",
+                  t: "Close deals & track revenue",
+                  d: "Deal value, close dates, outcomes, and a weekly view so you always know what’s in play.",
+                  icon: "💰",
                 },
                 {
-                  t: "Pro-ready billing",
-                  d: "Upgrade in-app and manage billing securely through Stripe.",
-                  icon: "💳",
+                  t: "Close deals with customers",
+                  d: "Keep every conversation moving: notes, follow-ups, and a clear next step until the account says yes — not just a list of names.",
+                  icon: "🤝",
                 },
               ].map((f) => (
                 <li

@@ -4,7 +4,7 @@ import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-s
 import { searchPlaces } from "@/lib/google-places";
 import { prisma } from "@/lib/db";
 import { getCachedSearchResults, placesSearchCacheKey, setCachedSearchResults } from "@/lib/places-search-cache";
-import { canPerformGoogleSearch, getSearchUsageState, incrementSearchUsageForUser } from "@/lib/search-usage";
+import { getSearchUsageState, incrementSearchUsageForUser } from "@/lib/search-usage";
 import { z } from "zod";
 
 const schema = z.object({
@@ -42,36 +42,36 @@ export async function POST(request: NextRequest) {
     const params = parsed.data;
     const cacheKey = placesSearchCacheKey(params);
 
-    const cached = await getCachedSearchResults(cacheKey);
-    if (cached) {
-      const usage = await getSearchUsageState(user);
-      return NextResponse.json({
-        places: cached,
-        fromCache: true,
-        usage: {
-          used: usage.used,
-          limit: usage.limit,
-          remaining: usage.remaining,
-          day: usage.day,
-        },
-      });
-    }
-
-    if (!(await canPerformGoogleSearch(user))) {
-      const usage = await getSearchUsageState(user);
+    // When Starter quota is exhausted, block usage (including cache) until upgrade.
+    const usageBefore = await getSearchUsageState(user);
+    if (usageBefore.remaining === 0) {
       return NextResponse.json(
         {
           error: "Daily search limit reached",
           code: "SEARCH_LIMIT",
           usage: {
-            used: usage.used,
-            limit: usage.limit,
+            used: usageBefore.used,
+            limit: usageBefore.limit,
             remaining: 0,
-            day: usage.day,
+            day: usageBefore.day,
           },
         },
         { status: 403 }
       );
+    }
+
+    const cached = await getCachedSearchResults(cacheKey);
+    if (cached) {
+      return NextResponse.json({
+        places: cached,
+        fromCache: true,
+        usage: {
+          used: usageBefore.used,
+          limit: usageBefore.limit,
+          remaining: usageBefore.remaining,
+          day: usageBefore.day,
+        },
+      });
     }
 
     const results = await searchPlaces(params);

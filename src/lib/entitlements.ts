@@ -3,7 +3,7 @@ import type { User } from "@prisma/client";
 /** Free plan: max new leads ever created (deletes do not free slots). */
 export const FREE_LEAD_LIMIT = 5;
 /** Daily cap on Google Places *API* calls (Text Search), not cached repeats. */
-export const FREE_SEARCHES_PER_DAY = 20;
+export const FREE_SEARCHES_PER_DAY = 10;
 export const PRO_SEARCHES_PER_DAY = 100;
 export const PRO_PLAN = "pro" as const;
 export const FREE_PLAN = "free" as const;
