@@ -82,6 +82,70 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // If a user already exists with this email (e.g. credentials signup) and the same Google
+      // account tries to sign in, Auth.js may throw OAuthAccountNotLinked depending on prior state.
+      // We explicitly link (or re-link) the Google account to the email-matching user since this
+      // app already opts into dangerous email linking.
+      if (account?.provider === "google") {
+        const email =
+          (typeof (profile as { email?: unknown } | null)?.email === "string"
+            ? String((profile as { email?: unknown }).email)
+            : typeof user?.email === "string"
+              ? String(user.email)
+              : "")
+            .trim()
+            .toLowerCase();
+        const providerAccountId = String(account.providerAccountId ?? "").trim();
+        if (email && providerAccountId) {
+          const existing = await prisma.user.findUnique({ where: { email } });
+          if (existing) {
+            await prisma.account.upsert({
+              where: {
+                provider_providerAccountId: {
+                  provider: "google",
+                  providerAccountId,
+                },
+              },
+              create: {
+                userId: existing.id,
+                type: account.type ?? "oidc",
+                provider: "google",
+                providerAccountId,
+                access_token: account.access_token ?? null,
+                refresh_token: account.refresh_token ?? null,
+                expires_at: account.expires_at ?? null,
+                token_type: account.token_type ?? null,
+                scope: account.scope ?? null,
+                id_token: account.id_token ?? null,
+                session_state:
+                  typeof account.session_state === "string"
+                    ? account.session_state
+                    : account.session_state == null
+                      ? null
+                      : String(account.session_state),
+              },
+              update: {
+                userId: existing.id,
+                access_token: account.access_token ?? null,
+                refresh_token: account.refresh_token ?? null,
+                expires_at: account.expires_at ?? null,
+                token_type: account.token_type ?? null,
+                scope: account.scope ?? null,
+                id_token: account.id_token ?? null,
+                session_state:
+                  typeof account.session_state === "string"
+                    ? account.session_state
+                    : account.session_state == null
+                      ? null
+                      : String(account.session_state),
+              },
+            });
+          }
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
