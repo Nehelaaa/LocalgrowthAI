@@ -3,6 +3,27 @@
 import { useState } from "react";
 import { getSession, signOut } from "next-auth/react";
 
+/**
+ * Auth.js forbids GET /api/auth/signin/:provider — it throws UnknownAction ("Unsupported action").
+ * The built-in sign-in page submits a POST with csrfToken; we mirror that so navigation always works.
+ */
+function postOAuthSignIn(providerId: string, csrfToken: string, callbackUrl: string) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = `/api/auth/signin/${encodeURIComponent(providerId)}`;
+  const csrf = document.createElement("input");
+  csrf.type = "hidden";
+  csrf.name = "csrfToken";
+  csrf.value = csrfToken;
+  const cb = document.createElement("input");
+  cb.type = "hidden";
+  cb.name = "callbackUrl";
+  cb.value = callbackUrl;
+  form.append(csrf, cb);
+  document.body.appendChild(form);
+  form.submit();
+}
+
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>
@@ -76,10 +97,11 @@ export function GoogleSignInButton({
               if (session?.user) {
                 await signOut({ redirect: false });
               }
-              // Use a hard navigation to the server sign-in endpoint. This avoids rare cases where
-              // client-side signIn() can stall (extensions, blocked storage, weird browser state).
-              const next = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(redirectTo)}`;
-              window.location.assign(next);
+              const csrfRes = await fetch("/api/auth/csrf", { credentials: "same-origin" });
+              if (!csrfRes.ok) throw new Error("csrf");
+              const { csrfToken } = (await csrfRes.json()) as { csrfToken?: string };
+              if (!csrfToken) throw new Error("csrfToken");
+              postOAuthSignIn("google", csrfToken, redirectTo);
             } catch (e) {
               console.error("Google sign-in failed:", e);
               setError(
