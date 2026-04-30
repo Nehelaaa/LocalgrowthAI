@@ -74,14 +74,14 @@ export const homeMetadata: Metadata = {
     "local business prospecting",
     "crm pipeline",
     "sales pipeline software",
-    "outreach workflow",
+    "follow-up workflow",
     "agency lead generation",
     "freelancer lead generation",
   ],
   openGraph: {
     title: "LocalLeadster — Find and close local deals",
     description:
-      "End-to-end workflow: search, qualify, outreach, and close — from one clean workspace.",
+      "End-to-end workflow: search, qualify, manage follow-ups, and close — from one clean workspace.",
     type: "website",
     url: "/",
   },

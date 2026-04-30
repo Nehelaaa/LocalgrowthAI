@@ -168,16 +168,9 @@ function UsageCard({
             {usage.searchCalls} × {usage.googleUnitUsd}/call
           </p>
         </div>
-        <div>
-          <p className="text-xs text-slate-500">OpenAI (tracked calls)</p>
-          <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{usd(usage.aiUsd)}</p>
-          <p className="text-xs text-slate-500">
-            {usage.aiCalls} × {usage.aiUnitUsd}/call
-          </p>
-        </div>
         <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
-          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Combined estimate</p>
-          <p className="text-lg font-bold text-indigo-700 dark:text-indigo-300">{usd(usage.totalUsd)}</p>
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Estimated cost</p>
+          <p className="text-lg font-bold text-indigo-700 dark:text-indigo-300">{usd(usage.googleUsd)}</p>
         </div>
       </div>
     </div>

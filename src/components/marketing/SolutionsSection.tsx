@@ -7,7 +7,7 @@ const solutions = [
     title: "Freelance web devs",
     desc: "Find local businesses, qualify fast, and keep your follow-ups in one clean pipeline.",
     Illustration: IllustrationRadar,
-    bullets: ["Spot weak web presence", "Save + score leads", "Simple outreach workflow"],
+    bullets: ["Spot weak web presence", "Save + score leads", "Simple follow-up workflow"],
   },
   {
     href: "/for/agencies",
