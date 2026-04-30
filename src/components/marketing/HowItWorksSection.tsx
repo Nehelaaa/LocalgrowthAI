@@ -20,7 +20,7 @@ const steps = [
   {
     id: 3,
     title: "Run your pipeline",
-    body: "Track contact status, notes, follow-up dates, and value in a built-in CRM. No more scattered spreadsheets for your web dev sales.",
+    body: "Track contact status, notes, follow-up dates, and value in a built-in CRM. No more scattered spreadsheets for your sales process.",
     eyebrow: "Simple CRM pipeline",
     accent: "emerald" as const,
   },

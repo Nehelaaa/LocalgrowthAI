@@ -17,18 +17,23 @@ const personas: Record<
   }
 > = {
   freelancers: {
-    eyebrow: "Freelance web developers",
-    title: "Book more local clients without living in spreadsheets.",
+    eyebrow: "Freelancers & solo operators",
+    title: "Book more clients without living in spreadsheets.",
     subtitle:
-      "Search a city, grab qualified leads, and keep follow-ups organized until you close the project.",
-    bullets: ["Find under-served businesses fast", "Prioritize with simple signals", "Track follow-ups in one pipeline"],
+      "Search a city, grab qualified leads, and keep follow-ups organized until you close the deal.",
+    bullets: [
+      "Find under-served businesses fast",
+      "Prioritize with simple signals",
+      "Track follow-ups in one pipeline",
+      "Great for consultants, creatives, marketers, and local services",
+    ],
     workflow: [
-      { t: "Search your territory", d: "Pick a city + industry and pull real businesses from Google Places." },
-      { t: "Qualify in seconds", d: "Flag weak web presence and prioritize with tiers." },
-      { t: "Follow up consistently", d: "Notes, status, and next steps live on the lead — not in your head." },
+      { t: "Pick a niche", d: "Choose what you sell (ads, SEO, coaching, video, cleaning, accounting, etc.)." },
+      { t: "Search your territory", d: "Pick a city + category and pull real businesses from Google Places." },
+      { t: "Work the list", d: "Save leads, track status, and run follow-ups without losing context." },
     ],
     proof: [
-      { t: "Built for daily use", d: "The UI is designed for speed: search → save → next action." },
+      { t: "Works across niches", d: "Same workflow whether you sell services, retainers, or one-off projects." },
       { t: "Exports when you need them (Pro)", d: "Push lists into Sheets, Airtable, or automation without losing context." },
     ],
     Illustration: IllustrationRadar,

@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
       // Next renders JSON-LD via inline <script>, and the demo page includes the Tailwind CDN script.
       "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.tailwindcss.com https://accounts.google.com https://apis.google.com",
       "style-src 'self' 'unsafe-inline' https:",
-      "connect-src 'self' https://api.stripe.com https://*.stripe.com https://places.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com https://api.openai.com",
+      "connect-src 'self' https://api.stripe.com https://*.stripe.com https://places.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com",
       "frame-src https://js.stripe.com https://accounts.google.com",
     ].join("; ");
 

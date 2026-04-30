@@ -4,8 +4,8 @@ import { IllustrationOutreach, IllustrationPipeline, IllustrationRadar } from ".
 const solutions = [
   {
     href: "/for/freelancers",
-    title: "Freelance web devs",
-    desc: "Find local businesses, qualify fast, and keep your follow-ups in one clean pipeline.",
+    title: "Freelancers",
+    desc: "Find local prospects, qualify fast, and keep follow-ups in one clean pipeline.",
     Illustration: IllustrationRadar,
     bullets: ["Spot weak web presence", "Save + score leads", "Simple follow-up workflow"],
   },
