@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { StarterLimitOverlay } from "@/components/dashboard/StarterLimitOverlay";
+import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session-user";
 import { canCreateMoreLeads, FREE_LEAD_LIMIT, hasProEntitlement } from "@/lib/entitlements";
 import { isOwnerEmail } from "@/lib/owner";
 import { getSearchUsageState } from "@/lib/search-usage";
+import { isStripeConfigured } from "@/lib/stripe";
+import { syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,13 +19,22 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
+  let user = await getCurrentUser();
   if (!user) {
     redirect("/login?callbackUrl=/dashboard");
   }
   if (!user.onboardingComplete) {
     redirect("/onboarding");
   }
+
+  // If webhooks lag or DB drifted, Stripe may show an active Pro sub while we still think Starter.
+  // Sync once per dashboard request (only when not already Pro and billing exists in Stripe).
+  if (!hasProEntitlement(user) && user.stripeCustomerId && isStripeConfigured()) {
+    await syncUserSubscriptionFromStripe(user.id);
+    const fresh = await prisma.user.findUnique({ where: { id: user.id } });
+    if (fresh) user = fresh;
+  }
+
   const isPro = hasProEntitlement(user);
   const canCreateLeads = canCreateMoreLeads(user.lifetimeLeadsCreated, user);
   const usage = await getSearchUsageState(user);
