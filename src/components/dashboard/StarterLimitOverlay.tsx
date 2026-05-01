@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Props = {
   isPro: boolean;
@@ -34,6 +34,19 @@ export function StarterLimitOverlay({
     // Include counters so if usage changes (e.g., upgrade) the overlay can re-evaluate.
     return `starter_limit_overlay_dismissed:${kind}:${leadsUsed}/${leadsLimit}:${searchesUsed}/${searchesLimit}:${searchQuotaMode}`;
   }, [atLeadCap, atSearchCap, leadsLimit, leadsUsed, searchesLimit, searchesUsed, searchQuotaMode]);
+
+  // After upgrade to Pro, clear tab dismiss flags so a future downgrade shows the overlay again.
+  useEffect(() => {
+    if (!isPro) return;
+    try {
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const k = sessionStorage.key(i);
+        if (k?.startsWith("starter_limit_overlay_dismissed:")) sessionStorage.removeItem(k);
+      }
+    } catch {
+      // ignore
+    }
+  }, [isPro]);
 
   const dismissed =
     localDismissed ||

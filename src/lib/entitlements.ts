@@ -15,14 +15,29 @@ const ACTIVE = new Set([
   "past_due", // grace: keep Pro until recovery or cancel
 ]);
 
+type ProEntitlementUser = Pick<User, "plan" | "subscriptionStatus" | "grandfatheredPro"> & {
+  stripeSubscriptionId?: string | null;
+};
+
 /** Full product access: legacy accounts, or paid Pro, or free trial. */
-export function hasProEntitlement(
-  u: Pick<User, "plan" | "subscriptionStatus" | "grandfatheredPro">
-): boolean {
+export function hasProEntitlement(u: ProEntitlementUser): boolean {
   if (u.grandfatheredPro) return true;
+
+  const s = u.subscriptionStatus ?? null;
+
+  // Paying Stripe subscription on file (handles `plan` still "free" until webhooks/sync finish).
+  if (u.stripeSubscriptionId && s != null && ACTIVE.has(s)) return true;
+
   if (u.plan !== "pro") return false;
-  const s = u.subscriptionStatus;
-  return s != null && ACTIVE.has(s);
+
+  // Plan already flipped to Pro but Stripe status not written yet (webhook lag).
+  if (s == null || s === "") return true;
+
+  if (s === "canceled" || s === "unpaid" || s === "incomplete_expired" || s === "incomplete") {
+    return false;
+  }
+
+  return ACTIVE.has(s);
 }
 
 /** @param lifetimeLeadsCreated — from `User.lifetimeLeadsCreated` (monotonic; not reduced on delete). */
