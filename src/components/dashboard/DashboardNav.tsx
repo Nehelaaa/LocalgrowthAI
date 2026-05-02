@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { ManageBillingButton } from "./ManageBillingButton";
@@ -237,9 +236,9 @@ function FooterHome({
         </div>
       )}
       <div className="rounded-xl border border-slate-200/80 bg-white/70 p-1 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/20">
-        <button
-          type="button"
-          onClick={() => signOut({ callbackUrl: "/login" })}
+        <Link
+          href="/sign-out"
+          prefetch={false}
           className="group flex w-full min-h-[44px] items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 dark:text-slate-200 dark:hover:bg-red-950/30 dark:hover:text-red-200"
         >
           <span>Sign out</span>
@@ -254,7 +253,7 @@ function FooterHome({
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9l3 3-3 3m3-3H8.25" />
           </svg>
-        </button>
+        </Link>
       </div>
     </div>
   );

@@ -53,9 +53,7 @@ export function LeadDetailPanel({
     return updateLead({
       leadId,
       notes: notes || undefined,
-      followUpDate: followUpDate
-        ? new Date(followUpDate).toISOString()
-        : null,
+      followUpDate: followUpDate.trim() === "" ? null : followUpDate,
       websiteQuote,
     }).then(refreshLead);
   }, [leadId, notes, followUpDate, websiteQuote, refreshLead]);
@@ -69,7 +67,13 @@ export function LeadDetailPanel({
         router.refresh();
       });
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Could not save changes.");
+      const msg =
+        e instanceof Error
+          ? e.message
+          : typeof e === "string"
+            ? e
+            : "Could not save changes.";
+      setSaveError(msg);
     } finally {
       setSaving(false);
     }

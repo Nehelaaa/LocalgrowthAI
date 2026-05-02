@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 
 const items = [
   { href: "/owner", label: "Overview" },
@@ -82,13 +81,13 @@ export function AdminShell({
               Back to app
             </Link>
 
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/login" })}
+            <Link
+              href="/sign-out"
+              prefetch={false}
               className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-rose-900/40 dark:hover:bg-rose-950/30 dark:hover:text-rose-200"
             >
               Sign out
-            </button>
+            </Link>
           </div>
         </div>
       </div>

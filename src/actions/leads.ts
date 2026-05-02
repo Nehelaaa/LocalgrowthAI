@@ -245,11 +245,8 @@ const updateLeadSchema = z.object({
     "CLOSED_LOST",
   ]).optional(),
   notes: z.string().optional(),
-  // HTML date inputs use YYYY-MM-DD; the client may also send full ISO datetimes
-  followUpDate: z
-    .union([z.iso.date(), z.iso.datetime()])
-    .nullable()
-    .optional(),
+  /** YYYY-MM-DD from `<input type="date" />`, ISO string, or null to clear */
+  followUpDate: z.union([z.string(), z.null()]).optional(),
   tags: z.array(z.string()).optional(),
   // Accept string; numbers can come from atypical client payloads
   websiteQuote: z.union([z.string(), z.number()]).optional(),
@@ -260,12 +257,49 @@ function tagsToDb(tags: string[] | undefined): string | undefined {
   return JSON.stringify(tags);
 }
 
+function parseFollowUpForDb(value: string | null): Date | null {
+  if (value === null) return null;
+  const raw = String(value).trim();
+  if (raw === "") return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const d = new Date(`${raw}T12:00:00.000Z`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
-  const user = await requireUserForAction();
-  const parsed = updateLeadSchema.parse(formData);
-  await assertOwnsLead(user.id, parsed.leadId);
+  let user;
+  try {
+    user = await requireUserForAction();
+  } catch (e) {
+    if (e instanceof Error && e.message === "UNAUTHORIZED") {
+      throw new Error("Your session expired. Please sign in again.");
+    }
+    if (e instanceof Error && e.message === "ACCOUNT_DISABLED") {
+      throw new Error("This account is disabled.");
+    }
+    throw e;
+  }
+
+  const parsed = updateLeadSchema.safeParse(formData);
+  if (!parsed.success) {
+    throw new Error(
+      parsed.error.issues.map((i) => i.message).join(", ") || "Invalid lead update."
+    );
+  }
+
+  try {
+    await assertOwnsLead(user.id, parsed.data.leadId);
+  } catch (e) {
+    if (e instanceof Error && e.message === "FORBIDDEN") {
+      throw new Error("You can’t update this lead.");
+    }
+    throw e;
+  }
   const { leadId, contactStatus, notes, followUpDate, tags, websiteQuote } =
-    parsed;
+    parsed.data;
 
   const data: Prisma.LeadUpdateInput = {};
 
@@ -282,18 +316,7 @@ export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
     }
   }
   if (followUpDate !== undefined) {
-    if (followUpDate === null) {
-      data.followUpDate = null;
-    } else {
-      const d = /^\d{4}-\d{2}-\d{2}$/.test(followUpDate)
-        ? new Date(`${followUpDate}T00:00:00.000Z`)
-        : new Date(followUpDate);
-      if (Number.isNaN(d.getTime())) {
-        data.followUpDate = null;
-      } else {
-        data.followUpDate = d;
-      }
-    }
+    data.followUpDate = parseFollowUpForDb(followUpDate);
   }
   if (websiteQuote !== undefined) {
     const t = String(websiteQuote).trim();
