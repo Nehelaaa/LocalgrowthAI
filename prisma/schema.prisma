@@ -6,8 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Pooled URL for serverless (Neon pooler / PgBouncer). Runtime queries use this.
+  url       = env("DATABASE_URL")
+  // Non-pooled URL for migrations (advisory locks). Required for `prisma migrate deploy` on Neon + Vercel.
+  // Neon: use “Direct connection” in the dashboard (host without `-pooler`).
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {

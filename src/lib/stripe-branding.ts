@@ -1,9 +1,20 @@
 /**
- * Hosted Stripe Checkout can be themed per session. Customer Portal is themed from the
- * Stripe Dashboard (Settings → Branding) and optional Billing Portal configuration — see
- * `stripeOperatorChecklist` in billing-policies.
+ * Hosted Stripe Checkout can be themed per session via `checkoutBrandingSettings()`.
  *
- * Defaults match the app’s violet/indigo palette (see `public/logo.svg` gradient).
+ * **Customer Portal** (the “… partners with Stripe for simplified billing” page) is **not**
+ * themeable from this codebase — Stripe renders it. Customize it here:
+ * [Dashboard → Settings → Branding](https://dashboard.stripe.com/settings/branding)
+ * — Icon (square), Logo (optional wider asset), Accent color, Brand color, and **Public business name**
+ * (that name appears in the portal header next to the logo).
+ *
+ * The **Sandbox** badge and names like “Localgrowth sandbox” come from **test mode** and your
+ * Stripe account / business profile settings, not from env vars.
+ *
+ * Optional: [Billing → Customer portal](https://dashboard.stripe.com/settings/billing/portal)
+ * to define which actions customers can do; put the configuration id in
+ * `STRIPE_BILLING_PORTAL_CONFIGURATION_ID`. See `stripeOperatorChecklist` in `billing-policies.ts`.
+ *
+ * Defaults below match the app’s violet/indigo palette (see `public/logo.svg` gradient).
  */
 const DEFAULT_DISPLAY_NAME = "Localgrowth";
 /** Light violet page background (similar to violet-50) */
