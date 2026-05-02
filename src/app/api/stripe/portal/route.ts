@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { billingPortalConfigurationId } from "@/lib/stripe-branding";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
 
@@ -60,9 +61,11 @@ export async function POST(request: NextRequest) {
     }
 
     const origin = appOrigin(request);
+    const cfg = billingPortalConfigurationId();
     const portal = await stripe.billingPortal.sessions.create({
       customer: u.stripeCustomerId,
       return_url: `${origin}/dashboard/plan?portal=return`,
+      ...(cfg ? { configuration: cfg } : {}),
     });
 
     return NextResponse.json({ url: portal.url });

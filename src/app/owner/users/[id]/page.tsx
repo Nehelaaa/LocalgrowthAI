@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getUtcDayString } from "@/lib/search-usage";
 import { isStripeConfigured } from "@/lib/stripe";
+import { OwnerCustomerBillingHistory } from "./OwnerCustomerBillingHistory";
 import { OwnerStripeBillingActions } from "./OwnerStripeBillingActions";
 import { OwnerUserActions } from "./OwnerUserActions";
 
@@ -95,6 +96,11 @@ export default async function OwnerUserDetailPage({ params }: Props) {
           <MiniStat label="Searches today" value={user.searchDayUsages[0]?.count ?? 0} />
         </div>
       </header>
+
+      <OwnerCustomerBillingHistory
+        stripeConfigured={stripeConfigured}
+        stripeCustomerId={user.stripeCustomerId}
+      />
 
       <OwnerStripeBillingActions
         userId={user.id}

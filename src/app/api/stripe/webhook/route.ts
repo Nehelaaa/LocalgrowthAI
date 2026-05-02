@@ -27,6 +27,32 @@ function subscriptionIdFromInvoice(inv: Stripe.Invoice): string | null {
   return typeof sub === "string" ? sub : sub.id;
 }
 
+/** Webhook payloads sometimes omit `customer` on Charge; resolve via retrieve + PaymentIntent. */
+async function resolveStripeCustomerIdForCharge(
+  stripe: Stripe,
+  ch: Stripe.Charge
+): Promise<string | null> {
+  const direct = customerIdFromStripeCustomerField(ch.customer);
+  if (direct) return direct;
+  if (!ch.id) return null;
+  try {
+    const full = await stripe.charges.retrieve(ch.id, {
+      expand: ["customer", "payment_intent"],
+    });
+    const fromCharge = customerIdFromStripeCustomerField(full.customer);
+    if (fromCharge) return fromCharge;
+    const pi = full.payment_intent;
+    if (pi && typeof pi === "object" && "customer" in pi) {
+      return customerIdFromStripeCustomerField(
+        (pi as Stripe.PaymentIntent).customer as string | Stripe.Customer | null
+      );
+    }
+  } catch (e) {
+    console.error("Stripe webhook: resolveStripeCustomerIdForCharge", e);
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   if (!isStripeConfigured() || !process.env.STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json(
@@ -260,21 +286,29 @@ export async function POST(request: Request) {
       }
       case "charge.refunded": {
         const ch = event.data.object as Stripe.Charge;
-        const customerId = customerIdFromStripeCustomerField(ch.customer);
+        const customerId = await resolveStripeCustomerIdForCharge(stripe, ch);
         const mappedUserId = await findUserIdByStripeCustomerId(customerId);
         const fullyRefunded = (ch.amount_refunded ?? 0) >= (ch.amount ?? 0);
+        const currency = (ch.currency ?? "usd").toUpperCase();
+        const refundedMinor = ch.amount_refunded ?? 0;
+        const amountMinor = ch.amount ?? 0;
+        const amountLabel =
+          refundedMinor > 0
+            ? `${(refundedMinor / 100).toLocaleString(undefined, { style: "currency", currency })} refunded`
+            : undefined;
         await createOwnerBillingEvent({
           kind: "refund",
           severity: fullyRefunded ? "warning" : "info",
           title: fullyRefunded ? "Charge fully refunded" : "Charge partially refunded",
-          body: ch.id ? `Charge ${ch.id} refunded.` : "Refund processed.",
+          body: [ch.id ? `Charge ${ch.id}.` : null, amountLabel].filter(Boolean).join(" "),
           stripeCustomerId: customerId,
           stripeChargeId: ch.id,
           userId: mappedUserId,
           metadata: {
-            amount: ch.amount,
-            amountRefunded: ch.amount_refunded,
+            amount: amountMinor,
+            amountRefunded: refundedMinor,
             currency: ch.currency,
+            stripeEventId: event.id,
           },
         });
         break;

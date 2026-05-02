@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ownerUsageLastNDays } from "@/actions/owner-usage";
+import { OwnerHealthDashboard } from "@/components/owner/OwnerHealthDashboard";
 import { prisma } from "@/lib/db";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getUtcDayString } from "@/lib/search-usage";
@@ -31,6 +33,7 @@ export default async function OwnerOverviewPage() {
     recentUsers,
     billingEvents,
     topSearchUsersToday,
+    usageSeriesRaw,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({
@@ -79,7 +82,39 @@ export default async function OwnerOverviewPage() {
         user: { select: { email: true, name: true, disabled: true } },
       },
     }),
+    ownerUsageLastNDays(14),
   ]);
+
+  const daysWindow = usageSeriesRaw.map((r) => r.day);
+  const windowStart = daysWindow[0]
+    ? new Date(`${daysWindow[0]}T00:00:00.000Z`)
+    : since24;
+  const newUsersInWindow = await prisma.user.findMany({
+    where: { createdAt: { gte: windowStart } },
+    select: { createdAt: true },
+  });
+  const signupsByDay = new Map<string, number>();
+  for (const d of daysWindow) signupsByDay.set(d, 0);
+  for (const u of newUsersInWindow) {
+    const key = u.createdAt.toISOString().slice(0, 10);
+    if (signupsByDay.has(key)) signupsByDay.set(key, (signupsByDay.get(key) ?? 0) + 1);
+  }
+  const healthSeries = usageSeriesRaw.map((r) => ({
+    day: r.day,
+    searches: r.searches,
+    aiCalls: r.aiCalls,
+    signups: signupsByDay.get(r.day) ?? 0,
+  }));
+
+  const freeUsers = Math.max(0, totalUsers - payingUsers);
+  const billingFeedPayload = billingEvents.map((e) => ({
+    id: e.id,
+    createdAt: e.createdAt.toISOString(),
+    severity: e.severity,
+    kind: e.kind,
+    title: e.title,
+    userEmail: e.user?.email ?? null,
+  }));
 
   // Approx monthly revenue (best-effort): count pro users * env price (fallback $29)
   const proMonthlyCents =
@@ -139,26 +174,35 @@ export default async function OwnerOverviewPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60 lg:col-span-2">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Live snapshot
-              </h2>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Recent signups + today’s usage. Refresh to update.
-              </p>
-            </div>
-            <Link
-              href="/owner/usage"
-              className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              Open usage →
-            </Link>
-          </div>
+      <OwnerHealthDashboard
+        series={healthSeries}
+        billingEvents={billingFeedPayload}
+        metrics={{
+          totalUsers,
+          payingUsers,
+          freeUsers,
+          pastDueUsers,
+          searchesToday: totalSearchesToday._sum.count ?? 0,
+        }}
+      />
 
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Live snapshot</h2>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Recent signups + today’s usage. Refresh to update.
+            </p>
+          </div>
+          <Link
+            href="/owner/usage"
+            className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            Open usage →
+          </Link>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-slate-200/70 bg-slate-50/60 p-4 dark:border-slate-800/70 dark:bg-slate-950/20">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -216,61 +260,7 @@ export default async function OwnerOverviewPage() {
               )}
             </div>
           </div>
-        </section>
-
-        <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Billing feed
-              </h2>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Latest Stripe/webhook signals.
-              </p>
-            </div>
-            <Link
-              href="/owner/alerts"
-              className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              Open alerts →
-            </Link>
-          </div>
-
-          <ul className="mt-4 space-y-2">
-            {billingEvents.map((e) => (
-              <li
-                key={e.id}
-                className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800/70 dark:bg-slate-950/20"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 text-sm font-semibold text-slate-900 dark:text-white">
-                    {e.title}
-                  </p>
-                  <span
-                    className={
-                      "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide " +
-                      (e.severity === "critical"
-                        ? "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-200"
-                        : e.severity === "warning"
-                          ? "bg-amber-50 text-amber-900 dark:bg-amber-950/20 dark:text-amber-200"
-                          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200")
-                    }
-                  >
-                    {e.severity}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {formatShortDateTime(e.createdAt)}
-                  {e.user?.email ? ` · ${e.user.email}` : ""}
-                </p>
-              </li>
-            ))}
-            {billingEvents.length === 0 && (
-              <li className="text-sm text-slate-500">No billing events yet.</li>
-            )}
-          </ul>
-        </section>
-      </div>
+      </section>
     </div>
   );
 }

@@ -4,7 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { saveManualCrmLeadForPipeline } from "@/actions/leads";
 
-export function AddManualLeadDialog() {
+type AddManualLeadDialogProps = {
+  /** Merged into the trigger button (e.g. `w-full sm:w-auto` on mobile). */
+  triggerClassName?: string;
+};
+
+export function AddManualLeadDialog({ triggerClassName = "" }: AddManualLeadDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,7 +64,10 @@ export function AddManualLeadDialog() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+        className={
+          "inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:from-violet-500 hover:to-indigo-500 active:scale-[0.99] dark:shadow-indigo-900/30 " +
+          triggerClassName
+        }
       >
         Add lead
       </button>

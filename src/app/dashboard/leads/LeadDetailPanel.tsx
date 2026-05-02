@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ContactStatusPicker } from "@/components/ContactStatusPicker";
 import { DeleteLeadDialog } from "@/components/DeleteLeadDialog";
 import { updateLeadStatus, updateLead, deleteLead } from "@/actions/leads";
+import { InvoiceBuilderModal } from "@/components/invoices/InvoiceBuilderModal";
 import { getLeadById } from "@/actions/leads-list";
 import type { Lead, Business } from "@prisma/client";
 
@@ -26,6 +27,9 @@ export function LeadDetailPanel({
   const [notes, setNotes] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
   const [websiteQuote, setWebsiteQuote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   useEffect(() => {
     getLeadById(leadId).then((l) => {
@@ -54,6 +58,21 @@ export function LeadDetailPanel({
       websiteQuote,
     }).then(refreshLead);
   }, [leadId, notes, followUpDate, websiteQuote, refreshLead]);
+
+  const handleSave = useCallback(async () => {
+    setSaveError(null);
+    setSaving(true);
+    try {
+      await persistLeadFields();
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Could not save changes.");
+    } finally {
+      setSaving(false);
+    }
+  }, [persistLeadFields, router]);
 
   /** Auto-save price (and other fields) shortly after you stop typing. */
   useEffect(() => {
@@ -114,6 +133,15 @@ export function LeadDetailPanel({
         onConfirm={() => void confirmRemoveFromPanel()}
       />
 
+      <InvoiceBuilderModal
+        open={invoiceOpen}
+        onClose={() => setInvoiceOpen(false)}
+        initialClientName={lead.business.name}
+        initialClientAddress={lead.business.address ?? ""}
+        initialWebsitePriceText={websiteQuote}
+        initialNotes={notes}
+      />
+
       <div
         className="relative z-[101] flex h-full max-h-[100dvh] w-full min-h-0 max-w-2xl flex-col overflow-hidden rounded-none border-0 border-slate-200 bg-white shadow-2xl sm:max-h-[min(90vh,900px)] sm:rounded-2xl sm:border dark:border-slate-700 dark:bg-slate-900"
         onClick={(e) => e.stopPropagation()}
@@ -128,7 +156,21 @@ export function LeadDetailPanel({
               · {lead.badge}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={() => setInvoiceOpen(true)}
+              className="inline-flex min-h-[44px] min-w-0 touch-manipulation items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-800 shadow-sm transition hover:bg-indigo-100 dark:border-indigo-500/30 dark:bg-indigo-950/40 dark:text-indigo-100 dark:hover:bg-indigo-900/50"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                />
+              </svg>
+              Generate invoice
+            </button>
             <button
               type="button"
               onClick={() => setDeleteDialogOpen(true)}
@@ -248,7 +290,7 @@ export function LeadDetailPanel({
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
               What you&apos;re charging this business for the website (any format
               you like). Saves automatically about a second after you stop typing,
-              or when you leave this field.
+              when you leave a field, or when you tap Save below.
             </p>
             <input
               type="text"
@@ -284,6 +326,26 @@ export function LeadDetailPanel({
               className="mt-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white"
             />
           </section>
+        </div>
+
+        <div
+          className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-900 sm:px-6"
+        >
+          {saveError ? (
+            <p className="mb-2 text-sm text-red-600 dark:text-red-400" role="alert">
+              {saveError}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving}
+              className="inline-flex min-h-11 min-w-[7.5rem] touch-manipulation items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

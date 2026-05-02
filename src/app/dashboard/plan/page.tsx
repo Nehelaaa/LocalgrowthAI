@@ -23,7 +23,9 @@ import {
   getStripePlanPresentment,
   getProCheckoutPricePresentment,
   listInvoicesForCustomer,
+  listPaymentActivityForCustomer,
   type SafeInvoiceRow,
+  type SafePaymentActivityRow,
 } from "@/lib/stripe-customer-billing";
 import { getSubscriptionDisplayInfo } from "@/lib/stripe-subscription-display";
 import { customerBillingFaq } from "@/lib/billing-policies";
@@ -75,6 +77,84 @@ function invoiceDownloadHref(inv: SafeInvoiceRow): string | null {
   return inv.hostedInvoiceUrl ?? inv.invoicePdf;
 }
 
+function paymentStatusBadgeClass(status: SafePaymentActivityRow["statusLabel"]): string {
+  if (status === "Refunded") {
+    return "bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-100";
+  }
+  if (status === "Partially refunded") {
+    return "bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100";
+  }
+  return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
+}
+
+function PaymentActivityBlock({ rows }: { rows: SafePaymentActivityRow[] }) {
+  if (rows.length === 0) {
+    return (
+      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+        No card charges returned from Stripe yet. If you just paid, refresh in a moment.
+      </p>
+    );
+  }
+  return (
+    <div className="mt-4 overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
+      <table className="w-full min-w-[560px] text-left text-sm">
+        <thead className="border-b border-slate-100 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-800/50">
+          <tr>
+            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Date</th>
+            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Status</th>
+            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Charged</th>
+            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Refunded</th>
+            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Net</th>
+            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300"> </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+          {rows.map((row) => (
+            <tr key={row.id} className="bg-white dark:bg-slate-900">
+              <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-400">
+                {formatInvoiceDate(row.createdUnix)}
+              </td>
+              <td className="px-3 py-2">
+                <span
+                  className={
+                    "inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold " +
+                    paymentStatusBadgeClass(row.statusLabel)
+                  }
+                >
+                  {row.statusLabel}
+                </span>
+              </td>
+              <td className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-900 dark:text-white">
+                {formatMoneyMinor(row.amount, row.currency)}
+              </td>
+              <td className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-700 dark:text-slate-300">
+                {row.amountRefunded > 0 ? formatMoneyMinor(row.amountRefunded, row.currency) : "—"}
+              </td>
+              <td className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-900 dark:text-white">
+                {formatMoneyMinor(row.netAfterRefunds, row.currency)}
+              </td>
+              <td className="px-3 py-2 text-right">
+                {row.receiptUrl ? (
+                  <a
+                    href={row.receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-violet-600 hover:underline dark:text-violet-400"
+                  >
+                    Receipt
+                  </a>
+                ) : (
+                  <span className="text-slate-400">—</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default async function PlanPage({ searchParams }: Props) {
   let user = await requireDashboardUser();
   const sp = await searchParams;
@@ -98,7 +178,7 @@ export default async function PlanPage({ searchParams }: Props) {
   const isPro = hasProEntitlement(user);
   const hasStripeSub = hasActiveStripeSubscription(user);
 
-  const [liveSub, presentment, proCheckoutPresentment, invoices, searchUsage] =
+  const [liveSub, presentment, proCheckoutPresentment, invoices, paymentActivity, searchUsage] =
     await Promise.all([
     user.stripeSubscriptionId != null
       ? getSubscriptionDisplayInfo(user.stripeSubscriptionId)
@@ -108,6 +188,9 @@ export default async function PlanPage({ searchParams }: Props) {
     user.stripeCustomerId
       ? listInvoicesForCustomer(user.stripeCustomerId, 30)
       : Promise.resolve([] as SafeInvoiceRow[]),
+    user.stripeCustomerId
+      ? listPaymentActivityForCustomer(user.stripeCustomerId, 30)
+      : Promise.resolve([] as SafePaymentActivityRow[]),
     getSearchUsageState(user),
   ]);
 
@@ -348,6 +431,18 @@ export default async function PlanPage({ searchParams }: Props) {
             </div>
           </dl>
 
+          <div className="mt-8 border-t border-slate-100 pt-8 dark:border-slate-800">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Payments &amp; refunds
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-500 dark:text-slate-400">
+              {customerBillingFaq.paymentActivityIntro.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            <PaymentActivityBlock rows={paymentActivity} />
+          </div>
+
           {paidInvoices.length === 0 ? (
             <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
               No invoices yet. After your first successful payment, download links will appear here.
@@ -379,7 +474,13 @@ export default async function PlanPage({ searchParams }: Props) {
                             {inv.number ?? `${inv.id.slice(0, 12)}…`}
                           </td>
                           <td className="whitespace-nowrap px-3 py-2 text-slate-900 dark:text-white">
-                            {formatMoneyMinor(inv.amountPaid, inv.currency)}
+                            <span className="block">{formatMoneyMinor(inv.amountPaid, inv.currency)}</span>
+                            {inv.postPaymentCreditNotesAmount > 0 ? (
+                              <span className="mt-1 block text-xs font-medium text-amber-800 dark:text-amber-200">
+                                Credit note{" "}
+                                {formatMoneyMinor(inv.postPaymentCreditNotesAmount, inv.currency)}
+                              </span>
+                            ) : null}
                           </td>
                           <td className="px-3 py-2 text-right">
                             {href ? (
@@ -403,6 +504,20 @@ export default async function PlanPage({ searchParams }: Props) {
               </div>
             </div>
           )}
+        </section>
+      )}
+
+      {user.stripeCustomerId && !hasStripeSub && (
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Payments &amp; refunds
+          </h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-500 dark:text-slate-400">
+            {customerBillingFaq.paymentActivityIntro.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <PaymentActivityBlock rows={paymentActivity} />
         </section>
       )}
 

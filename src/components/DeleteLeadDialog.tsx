@@ -130,10 +130,13 @@ export function TrashIconButton({
   onClick,
   disabled,
   label,
+  className = "",
 }: {
   onClick: () => void;
   disabled?: boolean;
   label: string;
+  /** Appended to default button styles (e.g. mobile sizing). */
+  className?: string;
 }) {
   return (
     <button
@@ -142,7 +145,10 @@ export function TrashIconButton({
       disabled={disabled}
       aria-label={label}
       title={label}
-      className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-0 text-slate-500 touch-manipulation transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:pointer-events-none disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-red-900/60 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+      className={
+        "inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-0 text-slate-500 touch-manipulation transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:pointer-events-none disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-red-900/60 dark:hover:bg-red-950/30 dark:hover:text-red-400 " +
+        className
+      }
     >
       <svg
         className="h-4 w-4"

@@ -3,6 +3,24 @@ import { prisma } from "@/lib/db";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getUtcDayString } from "@/lib/search-usage";
 
+function RefundMetaLine({ metadata }: { metadata: Record<string, unknown> }) {
+  const ar = metadata.amountRefunded;
+  const cur = metadata.currency;
+  if (typeof ar !== "number") return null;
+  const code = typeof cur === "string" && cur.length >= 3 ? cur.toUpperCase() : "USD";
+  let label: string;
+  try {
+    label = (ar / 100).toLocaleString(undefined, { style: "currency", currency: code });
+  } catch {
+    return null;
+  }
+  return (
+    <p className="mt-2 text-xs font-medium text-slate-700 dark:text-slate-200">
+      Stripe totals: {label} marked refunded on the charge
+    </p>
+  );
+}
+
 export default async function OwnerAlertsPage() {
   await requireOwnerOrRedirect();
   const day = getUtcDayString();
@@ -75,6 +93,9 @@ export default async function OwnerAlertsPage() {
                     </p>
                     {e.body ? (
                       <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{e.body}</p>
+                    ) : null}
+                    {e.kind === "refund" && e.metadata && typeof e.metadata === "object" ? (
+                      <RefundMetaLine metadata={e.metadata as Record<string, unknown>} />
                     ) : null}
                     {e.user ? (
                       <p className="mt-2 truncate text-xs text-slate-600 dark:text-slate-300">

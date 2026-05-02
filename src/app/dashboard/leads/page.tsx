@@ -39,10 +39,17 @@ export default async function LeadsPage({
   });
 
   return (
-    <div className="w-full min-w-0 max-w-6xl">
-      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">CRM Leads</h1>
-        <AddManualLeadDialog />
+    <div className="w-full min-w-0 max-w-6xl space-y-4 pb-2">
+      <div className="flex flex-col gap-3 sm:mb-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="min-w-0 space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+            CRM Leads
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Track prospects, pricing, and follow-ups.
+          </p>
+        </div>
+        <AddManualLeadDialog triggerClassName="w-full sm:w-auto justify-center" />
       </div>
       <LeadsFilters />
       <LeadsTable leads={leads} />

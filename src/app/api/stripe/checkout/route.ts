@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasActiveStripeSubscription } from "@/lib/entitlements";
 import { getStripe, isStripeConfigured, proPriceId } from "@/lib/stripe";
+import { billingPortalConfigurationId, checkoutBrandingSettings } from "@/lib/stripe-branding";
 import { subscriptionToUserData } from "@/lib/stripe-subscription-sync";
 import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
 
@@ -21,9 +22,11 @@ async function portalUrlForCustomer(stripeCustomerId: string, request: NextReque
   try {
     const stripe = getStripe();
     const origin = appOrigin(request);
+    const cfg = billingPortalConfigurationId();
     const portal = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
       return_url: `${origin}/dashboard/plan?portal=return`,
+      ...(cfg ? { configuration: cfg } : {}),
     });
     return portal.url ?? null;
   } catch {
@@ -167,6 +170,7 @@ export async function POST(request: NextRequest) {
       subscription_data: {
         metadata: { userId: u.id },
       },
+      branding_settings: checkoutBrandingSettings(origin),
     });
 
     if (!checkout.url) {

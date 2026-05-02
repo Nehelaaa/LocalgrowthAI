@@ -69,21 +69,35 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
 
   if (leads.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-12 text-center text-slate-500">
-        No leads yet. Use “Find businesses” to search and add leads.
+      <div className="rounded-2xl border border-dashed border-slate-200/90 bg-white/80 px-6 py-14 text-center dark:border-slate-700/80 dark:bg-slate-900/70">
+        <p className="text-base font-medium text-slate-700 dark:text-slate-200">No leads yet</p>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+          Use <span className="font-medium text-violet-700 dark:text-violet-300">Find businesses</span> to search,
+          or add one manually.
+        </p>
       </div>
     );
   }
 
   const actionsLocked = deleteSubmitting || deleteTarget !== null;
 
-  const rowActions = (lead: LeadWithBusiness) => (
-    <div className="flex items-center justify-end gap-2 sm:justify-end">
+  const rowActions = (lead: LeadWithBusiness, layout: "mobile" | "desktop") => (
+    <div
+      className={
+        layout === "mobile"
+          ? "flex items-stretch gap-2 pt-1"
+          : "flex items-center justify-end gap-2 sm:justify-end"
+      }
+    >
       <button
         type="button"
         onClick={() => setSelectedId(lead.id)}
         disabled={actionsLocked}
-        className="inline-flex min-h-[44px] min-w-[88px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 active:bg-indigo-100 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-indigo-900/50 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-300 touch-manipulation"
+        className={
+          layout === "mobile"
+            ? "inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-md shadow-indigo-500/15 transition hover:from-violet-500 hover:to-indigo-500 active:scale-[0.99] disabled:opacity-40 dark:shadow-indigo-900/25 touch-manipulation"
+            : "inline-flex min-h-[44px] min-w-[88px] items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 active:bg-indigo-100 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-indigo-900/50 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-300 touch-manipulation"
+        }
       >
         Details
       </button>
@@ -96,6 +110,11 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
         }
         disabled={actionsLocked}
         label={`Remove ${lead.business.name} from leads`}
+        className={
+          layout === "mobile"
+            ? "min-h-[48px] min-w-[48px] shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-600 dark:bg-slate-800"
+            : undefined
+        }
       />
     </div>
   );
@@ -115,71 +134,85 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
           <div
             key={lead.id}
             role="listitem"
-            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
+            className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700/80 dark:bg-slate-900/90 dark:ring-white/[0.05]"
           >
-            <div className="flex flex-col gap-3 min-w-0">
-              <div>
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-br from-violet-50/80 to-white px-4 py-3.5 dark:border-slate-800 dark:from-violet-950/25 dark:to-slate-900/80">
+              <div className="min-w-0 flex-1">
                 {googleMapsUrlForBusiness(lead.business) ? (
                   <a
                     href={googleMapsUrlForBusiness(lead.business) ?? "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-slate-900 hover:text-indigo-700 hover:underline dark:text-white dark:hover:text-indigo-300"
+                    className="block font-semibold leading-snug text-slate-900 hover:text-violet-700 dark:text-white dark:hover:text-violet-300"
                     title="Open Google listing"
                   >
                     {lead.business.name}
                   </a>
                 ) : (
-                  <p className="font-medium text-slate-900 dark:text-white">
+                  <p className="font-semibold leading-snug text-slate-900 dark:text-white">
                     {lead.business.name}
                   </p>
                 )}
-                <p className="text-sm text-slate-500">
-                  {lead.business.city}, {lead.business.state}
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {[lead.business.city, lead.business.state].filter(Boolean).join(", ") || "—"}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm sm:grid-cols-2">
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Score</p>
-                  <p className="font-mono text-slate-800 dark:text-slate-200">
-                    {lead.leadScore}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Badge</p>
-                  <span
-                    className={`mt-0.5 inline-block rounded px-2 py-0.5 text-xs font-medium ${BADGE_COLORS[lead.badge]}`}
-                  >
-                    {lead.badge}
-                  </span>
-                </div>
-                <div className="col-span-2 min-w-0">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Status</p>
-                  <span
-                    className={`mt-1 inline-flex min-h-[1.75rem] max-w-full items-center whitespace-nowrap rounded-full px-3 py-1 text-left text-xs font-medium ${contactStatusPillClass[lead.contactStatus]}`}
-                  >
-                    {contactStatusLabel[lead.contactStatus]}
-                  </span>
-                </div>
-                <div className="col-span-2 min-w-0">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Website price</p>
-                  <p
-                    className="mt-0.5 truncate text-slate-600 dark:text-slate-300"
-                    title={lead.websiteQuote ?? undefined}
-                  >
-                    {lead.websiteQuote ?? "—"}
-                  </p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Follow-up</p>
-                  <p className="text-slate-600 dark:text-slate-300">
-                    {lead.followUpDate
-                      ? new Date(lead.followUpDate).toLocaleDateString()
-                      : "—"}
-                  </p>
-                </div>
+              <div
+                className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-white shadow-inner shadow-slate-900/5 ring-1 ring-violet-200/60 dark:bg-slate-800 dark:ring-violet-500/20"
+                aria-label={`Score ${lead.leadScore}`}
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  Score
+                </span>
+                <span className="text-lg font-bold tabular-nums leading-none text-violet-700 dark:text-violet-300">
+                  {lead.leadScore}
+                </span>
               </div>
-              {rowActions(lead)}
+            </div>
+
+            <div className="flex flex-wrap gap-2 px-4 pb-3 pt-3">
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${BADGE_COLORS[lead.badge]}`}
+              >
+                {lead.badge}
+              </span>
+              <span
+                className={`inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-xs font-medium ${contactStatusPillClass[lead.contactStatus]}`}
+              >
+                {contactStatusLabel[lead.contactStatus]}
+              </span>
+            </div>
+
+            <div className="mx-4 mb-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-50/90 p-3 dark:bg-slate-800/50">
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  Website price
+                </p>
+                <p
+                  className="mt-0.5 truncate text-sm font-medium text-slate-800 dark:text-slate-100"
+                  title={lead.websiteQuote ?? undefined}
+                >
+                  {lead.websiteQuote ?? "—"}
+                </p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  Follow-up
+                </p>
+                <p className="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-100">
+                  {lead.followUpDate
+                    ? new Date(lead.followUpDate).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                    : "—"}
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+              {rowActions(lead, "mobile")}
             </div>
           </div>
         ))}
@@ -267,7 +300,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
                       : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {rowActions(lead)}
+                    {rowActions(lead, "desktop")}
                   </td>
                 </tr>
               ))}

@@ -18,6 +18,21 @@ export type SafeInvoiceRow = {
   status: string | null;
   hostedInvoiceUrl: string | null;
   invoicePdf: string | null;
+  /** Post-payment credit notes (often refunds/credits) in minor units — from Stripe invoice. */
+  postPaymentCreditNotesAmount: number;
+};
+
+/** Charge-level activity — refunds are visible here even when the invoice row still says “Paid”. */
+export type SafePaymentActivityRow = {
+  id: string;
+  createdUnix: number;
+  currency: string;
+  amount: number;
+  amountRefunded: number;
+  netAfterRefunds: number;
+  statusLabel: "Succeeded" | "Partially refunded" | "Refunded";
+  description: string | null;
+  receiptUrl: string | null;
 };
 
 function intervalLabel(interval: string | null | undefined): string {
@@ -134,7 +149,48 @@ export async function listInvoicesForCustomer(
         status: inv.status,
         hostedInvoiceUrl: inv.hosted_invoice_url ?? null,
         invoicePdf: inv.invoice_pdf ?? null,
+        postPaymentCreditNotesAmount: inv.post_payment_credit_notes_amount ?? 0,
       }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Lists card charges for the customer. Refund state comes from `amount_refunded` on each charge,
+ * which matches Stripe Dashboard → Payments and is more reliable for “was this refunded?” than
+ * the hosted portal invoice list alone.
+ */
+export async function listPaymentActivityForCustomer(
+  customerId: string,
+  limit = 25
+): Promise<SafePaymentActivityRow[]> {
+  if (!isStripeConfigured() || !customerId) return [];
+  try {
+    const stripe = getStripe();
+    const res = await stripe.charges.list({ customer: customerId, limit });
+    return res.data.map((ch) => {
+      const amount = ch.amount ?? 0;
+      const amountRefunded = ch.amount_refunded ?? 0;
+      const fullyRefunded = amount > 0 && amountRefunded >= amount;
+      const partial = amountRefunded > 0 && !fullyRefunded;
+      const statusLabel: SafePaymentActivityRow["statusLabel"] = fullyRefunded
+        ? "Refunded"
+        : partial
+          ? "Partially refunded"
+          : "Succeeded";
+      return {
+        id: ch.id,
+        createdUnix: ch.created,
+        currency: (ch.currency ?? "usd").toUpperCase(),
+        amount,
+        amountRefunded,
+        netAfterRefunds: Math.max(0, amount - amountRefunded),
+        statusLabel,
+        description: ch.description ?? null,
+        receiptUrl: ch.receipt_url ?? null,
+      };
+    });
   } catch {
     return [];
   }

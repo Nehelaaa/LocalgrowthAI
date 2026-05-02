@@ -1,0 +1,356 @@
+"use client";
+
+import { format } from "date-fns";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
+import { formatMoneyUSD, parseMoneyFromQuote } from "@/lib/invoice-money";
+import { formatInvoicePlainText } from "@/lib/invoice-plain-text";
+import type { InvoiceLineItem, InvoiceSnapshot } from "@/lib/invoice-types";
+import { invoiceTotals } from "@/lib/invoice-types";
+
+function companyDisplayName(): string {
+  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_INVOICE_COMPANY_NAME?.trim()) {
+    return process.env.NEXT_PUBLIC_INVOICE_COMPANY_NAME.trim();
+  }
+  return "Your company name";
+}
+
+function newLineId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `li_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function nextInvoiceNumber(): string {
+  return `INV-${format(new Date(), "yyyyMMdd")}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+}
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  initialClientName: string;
+  initialClientAddress: string;
+  initialWebsitePriceText: string;
+  initialNotes: string;
+};
+
+export function InvoiceBuilderModal({
+  open,
+  onClose,
+  initialClientName,
+  initialClientAddress,
+  initialWebsitePriceText,
+  initialNotes,
+}: Props) {
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [invoiceDate, setInvoiceDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [clientName, setClientName] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
+  const [notes, setNotes] = useState("");
+  const [taxPercent, setTaxPercent] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setErr(null);
+    setCopyDone(false);
+    setInvoiceNumber(nextInvoiceNumber());
+    setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
+    setClientName(initialClientName);
+    setClientAddress(initialClientAddress);
+    setNotes(initialNotes);
+    const amt = parseMoneyFromQuote(initialWebsitePriceText);
+    setLineItems([{ id: newLineId(), description: "Website", amount: amt }]);
+    setTaxPercent(0);
+    setDiscountAmount(0);
+  }, [open, initialClientName, initialClientAddress, initialWebsitePriceText, initialNotes]);
+
+  const snapshot = useMemo(
+    (): InvoiceSnapshot => ({
+      invoiceNumber,
+      invoiceDate,
+      clientName,
+      clientAddress,
+      lineItems,
+      notes,
+      taxPercent,
+      discountAmount,
+    }),
+    [invoiceNumber, invoiceDate, clientName, clientAddress, lineItems, notes, taxPercent, discountAmount]
+  );
+
+  const totals = useMemo(() => invoiceTotals(snapshot), [snapshot]);
+
+  const updateLine = useCallback((id: string, patch: Partial<Pick<InvoiceLineItem, "description" | "amount">>) => {
+    setLineItems((rows) =>
+      rows.map((r) => (r.id === id ? { ...r, ...patch } : r))
+    );
+  }, []);
+
+  const addLine = useCallback(() => {
+    setLineItems((rows) => [...rows, { id: newLineId(), description: "", amount: 0 }]);
+  }, []);
+
+  const removeLine = useCallback((id: string) => {
+    setLineItems((rows) => (rows.length <= 1 ? rows : rows.filter((r) => r.id !== id)));
+  }, []);
+
+  const handleDownloadPdf = useCallback(async () => {
+    setErr(null);
+    if (!clientName.trim()) {
+      setErr("Add a client name before downloading.");
+      return;
+    }
+    const hasAmount = lineItems.some((li) => li.description.trim() && li.amount > 0);
+    if (!lineItems.length || !hasAmount) {
+      setErr("Add at least one line item with a description and amount.");
+      return;
+    }
+    setPdfBusy(true);
+    try {
+      const blob = await generateInvoicePdfBlob(snapshot);
+      downloadInvoicePdf(blob, snapshot.invoiceNumber);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not create PDF.");
+    } finally {
+      setPdfBusy(false);
+    }
+  }, [clientName, lineItems, snapshot]);
+
+  const handleCopyText = useCallback(async () => {
+    setErr(null);
+    try {
+      const text = formatInvoicePlainText(companyDisplayName(), snapshot);
+      await navigator.clipboard.writeText(text);
+      setCopyDone(true);
+      window.setTimeout(() => setCopyDone(false), 2000);
+    } catch {
+      setErr("Clipboard not available. Select and copy manually from a downloaded PDF or notes.");
+    }
+  }, [snapshot]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] flex items-end justify-center bg-slate-900/60 p-0 backdrop-blur-[1px] sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal
+      aria-labelledby="invoice-builder-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="flex max-h-[100dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:max-h-[min(92dvh,900px)] sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-6 dark:border-slate-800">
+          <div>
+            <h2
+              id="invoice-builder-title"
+              className="text-lg font-bold text-slate-900 dark:text-white sm:text-xl"
+            >
+              Invoice builder
+            </h2>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Edit details, then download a PDF or copy plain text.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-11 min-w-11 shrink-0 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            aria-label="Close invoice builder"
+          >
+            <svg className="mx-auto h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+          {err ? (
+            <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
+              {err}
+            </p>
+          ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Invoice #</span>
+              <input
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Date</span>
+              <input
+                type="date"
+                value={invoiceDate}
+                onChange={(e) => setInvoiceDate(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </label>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Client name</span>
+              <input
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Client address</span>
+              <textarea
+                value={clientAddress}
+                onChange={(e) => setClientAddress(e.target.value)}
+                rows={3}
+                placeholder="Street, city, state, ZIP"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </label>
+          </div>
+
+          <div className="mt-6">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Line items</h3>
+              <button
+                type="button"
+                onClick={addLine}
+                className="text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                + Add line
+              </button>
+            </div>
+            <div className="space-y-2">
+              {lineItems.map((li) => (
+                <div
+                  key={li.id}
+                  className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 sm:flex-row sm:items-end dark:border-slate-700"
+                >
+                  <label className="min-w-0 flex-1 text-sm">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">Service / description</span>
+                    <input
+                      value={li.description}
+                      onChange={(e) => updateLine(li.id, { description: e.target.value })}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                    />
+                  </label>
+                  <label className="w-full shrink-0 text-sm sm:w-32">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">Amount</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="0.01"
+                      value={Number.isFinite(li.amount) ? li.amount : ""}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        updateLine(li.id, { amount: Number.isFinite(v) ? v : 0 });
+                      }}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm tabular-nums dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => removeLine(li.id)}
+                    disabled={lineItems.length <= 1}
+                    className="min-h-10 shrink-0 rounded-lg border border-slate-200 px-3 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Tax (%)</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={taxPercent}
+                onChange={(e) => setTaxPercent(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Discount ($)</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </label>
+          </div>
+
+          <label className="mt-4 block text-sm">
+            <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Notes</span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            />
+          </label>
+
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+            <p className="mb-2 font-semibold text-slate-800 dark:text-slate-100">Summary</p>
+            <div className="space-y-1.5 tabular-nums text-slate-700 dark:text-slate-300">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{formatMoneyUSD(totals.subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span>−{formatMoneyUSD(totals.discount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tax</span>
+                <span>{formatMoneyUSD(totals.tax)}</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-900 dark:border-slate-600 dark:text-white">
+                <span>Total due</span>
+                <span>{formatMoneyUSD(totals.total)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+            <button
+              type="button"
+              onClick={() => void handleCopyText()}
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            >
+              {copyDone ? "Copied!" : "Copy invoice text"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDownloadPdf()}
+              disabled={pdfBusy}
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            >
+              {pdfBusy ? "Building PDF…" : "Download PDF"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
