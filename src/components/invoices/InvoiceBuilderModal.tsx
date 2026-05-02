@@ -1,19 +1,18 @@
 "use client";
 
 import { format } from "date-fns";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
 import { formatMoneyUSD, parseMoneyFromQuote } from "@/lib/invoice-money";
 import { formatInvoicePlainText } from "@/lib/invoice-plain-text";
+import {
+  fileToInvoiceLogoDataUrl,
+  loadInvoiceSenderTemplate,
+  saveInvoiceSenderTemplate,
+} from "@/lib/invoice-sender-template";
 import type { InvoiceLineItem, InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
-
-function companyDisplayName(): string {
-  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_INVOICE_COMPANY_NAME?.trim()) {
-    return process.env.NEXT_PUBLIC_INVOICE_COMPANY_NAME.trim();
-  }
-  return "Your company name";
-}
 
 function newLineId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
@@ -52,11 +51,18 @@ export function InvoiceBuilderModal({
   const [pdfBusy, setPdfBusy] = useState(false);
   const [copyDone, setCopyDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [senderBusinessName, setSenderBusinessName] = useState("");
+  const [senderLogoDataUrl, setSenderLogoDataUrl] = useState<string | null>(null);
+  const [logoDragOver, setLogoDragOver] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
     setErr(null);
     setCopyDone(false);
+    const sender = loadInvoiceSenderTemplate();
+    setSenderBusinessName(sender.businessName);
+    setSenderLogoDataUrl(sender.logoDataUrl);
     setInvoiceNumber(nextInvoiceNumber());
     setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
     setClientName(initialClientName);
@@ -68,6 +74,17 @@ export function InvoiceBuilderModal({
     setDiscountAmount(0);
   }, [open, initialClientName, initialClientAddress, initialWebsitePriceText, initialNotes]);
 
+  useEffect(() => {
+    if (!open) return;
+    const id = window.setTimeout(() => {
+      saveInvoiceSenderTemplate({
+        businessName: senderBusinessName,
+        logoDataUrl: senderLogoDataUrl,
+      });
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [open, senderBusinessName, senderLogoDataUrl]);
+
   const snapshot = useMemo(
     (): InvoiceSnapshot => ({
       invoiceNumber,
@@ -78,9 +95,33 @@ export function InvoiceBuilderModal({
       notes,
       taxPercent,
       discountAmount,
+      senderBusinessName: senderBusinessName.trim() || undefined,
+      senderLogoDataUrl: senderLogoDataUrl || null,
     }),
-    [invoiceNumber, invoiceDate, clientName, clientAddress, lineItems, notes, taxPercent, discountAmount]
+    [
+      invoiceNumber,
+      invoiceDate,
+      clientName,
+      clientAddress,
+      lineItems,
+      notes,
+      taxPercent,
+      discountAmount,
+      senderBusinessName,
+      senderLogoDataUrl,
+    ]
   );
+
+  const applyLogoFile = useCallback(async (file: File | undefined) => {
+    if (!file) return;
+    setErr(null);
+    try {
+      const dataUrl = await fileToInvoiceLogoDataUrl(file);
+      setSenderLogoDataUrl(dataUrl);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not use that image.");
+    }
+  }, []);
 
   const totals = useMemo(() => invoiceTotals(snapshot), [snapshot]);
 
@@ -123,7 +164,7 @@ export function InvoiceBuilderModal({
   const handleCopyText = useCallback(async () => {
     setErr(null);
     try {
-      const text = formatInvoicePlainText(companyDisplayName(), snapshot);
+      const text = formatInvoicePlainText(snapshot);
       await navigator.clipboard.writeText(text);
       setCopyDone(true);
       window.setTimeout(() => setCopyDone(false), 2000);
@@ -172,12 +213,114 @@ export function InvoiceBuilderModal({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-6 sm:py-5">
           {err ? (
             <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
               {err}
             </p>
           ) : null}
+
+          <section className="mb-6 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 dark:border-indigo-500/20 dark:bg-indigo-950/25">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Your business</h3>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+              Logo and name are saved in this browser and reused whenever you open the invoice builder.
+            </p>
+            <label className="mt-3 block text-sm">
+              <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Business name</span>
+              <input
+                value={senderBusinessName}
+                onChange={(e) => setSenderBusinessName(e.target.value)}
+                placeholder={defaultInvoiceCompanyName()}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </label>
+            <p className="mt-3 text-xs font-medium text-slate-600 dark:text-slate-400">Logo</p>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              className="sr-only"
+              onChange={(e) => {
+                void applyLogoFile(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Upload logo: drag and drop an image, or press Enter to choose a file"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  logoInputRef.current?.click();
+                }
+              }}
+              onDragEnter={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLogoDragOver(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setLogoDragOver(false);
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLogoDragOver(false);
+                void applyLogoFile(e.dataTransfer.files?.[0]);
+              }}
+              className={
+                "mt-1 flex min-h-[112px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-3 py-4 text-center transition-colors dark:border-slate-600 " +
+                (logoDragOver
+                  ? "border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/40"
+                  : "border-slate-300 bg-white hover:border-indigo-400 hover:bg-slate-50 dark:bg-slate-800/80 dark:hover:border-indigo-500/50")
+              }
+              onClick={() => logoInputRef.current?.click()}
+            >
+              {senderLogoDataUrl ? (
+                <>
+                  {/* Data URL preview: next/image is not a fit here */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={senderLogoDataUrl}
+                    alt=""
+                    className="max-h-16 max-w-[200px] object-contain"
+                  />
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Drop a new image or click to replace</span>
+                </>
+              ) : (
+                <>
+                  <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.25} stroke="currentColor" aria-hidden>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008H12V8.25Z"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Drag &amp; drop logo here</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">PNG, JPG, or WebP · max 4 MB</span>
+                </>
+              )}
+            </div>
+            {senderLogoDataUrl ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSenderLogoDataUrl(null);
+                }}
+                className="mt-2 text-sm font-semibold text-slate-600 underline hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >
+                Remove logo
+              </button>
+            ) : null}
+          </section>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
@@ -308,7 +451,7 @@ export function InvoiceBuilderModal({
             />
           </label>
 
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 pb-5 text-sm dark:border-slate-700 dark:bg-slate-800/50">
             <p className="mb-2 font-semibold text-slate-800 dark:text-slate-100">Summary</p>
             <div className="space-y-1.5 tabular-nums text-slate-700 dark:text-slate-300">
               <div className="flex justify-between">
@@ -329,6 +472,7 @@ export function InvoiceBuilderModal({
               </div>
             </div>
           </div>
+          <div className="h-6 shrink-0 sm:h-8" aria-hidden />
         </div>
 
         <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-900 sm:px-6">

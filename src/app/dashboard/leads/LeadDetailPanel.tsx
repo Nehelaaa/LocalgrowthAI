@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ContactStatusPicker } from "@/components/ContactStatusPicker";
 import { DeleteLeadDialog } from "@/components/DeleteLeadDialog";
@@ -118,9 +119,9 @@ export function LeadDetailPanel({
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-stretch justify-center bg-slate-900/50 backdrop-blur-[1px] sm:items-center sm:p-4"
+      className="fixed inset-0 z-[110] flex items-stretch justify-center bg-slate-900/50 backdrop-blur-[1px] sm:items-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget && !deleteDialogOpen) onClose();
       }}
@@ -143,7 +144,7 @@ export function LeadDetailPanel({
       />
 
       <div
-        className="relative z-[101] flex h-full max-h-[100dvh] w-full min-h-0 max-w-2xl flex-col overflow-hidden rounded-none border-0 border-slate-200 bg-white shadow-2xl sm:max-h-[min(90vh,900px)] sm:rounded-2xl sm:border dark:border-slate-700 dark:bg-slate-900"
+        className="relative z-[111] flex h-full max-h-[100dvh] w-full min-h-0 max-w-2xl flex-col overflow-hidden rounded-none border-0 border-slate-200 bg-white shadow-2xl sm:max-h-[min(90vh,900px)] sm:rounded-2xl sm:border dark:border-slate-700 dark:bg-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-2 border-b border-slate-200 p-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:gap-4 sm:p-6 sm:pt-6 dark:border-slate-800">
@@ -348,6 +349,7 @@ export function LeadDetailPanel({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,15 +1,7 @@
+import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { formatMoneyUSD } from "@/lib/invoice-money";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
-
-const DEFAULT_COMPANY = "Your company name";
-
-function companyName(): string {
-  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_INVOICE_COMPANY_NAME?.trim()) {
-    return process.env.NEXT_PUBLIC_INVOICE_COMPANY_NAME.trim();
-  }
-  return DEFAULT_COMPANY;
-}
 
 export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise<Blob> {
   const { jsPDF } = await import("jspdf");
@@ -20,31 +12,58 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   const margin = 18;
   let y = margin;
 
-  const brand = companyName();
+  const brand = snapshot.senderBusinessName?.trim() || defaultInvoiceCompanyName();
   const { subtotal, discount, tax, total } = invoiceTotals(snapshot);
   const dateLabel = new Date(snapshot.invoiceDate).toLocaleDateString(undefined, {
     dateStyle: "long",
   });
 
-  // Logo placeholder
-  doc.setFillColor(241, 245, 249);
-  doc.roundedRect(margin, y, 28, 14, 2, 2, "F");
-  doc.setFontSize(7);
-  doc.setTextColor(100, 116, 139);
-  doc.text("LOGO", margin + 8, y + 9);
+  const headerTop = y;
+  let logoBottom = headerTop;
+
+  if (snapshot.senderLogoDataUrl) {
+    try {
+      const fmt = snapshot.senderLogoDataUrl.includes("image/png") ? "PNG" : "JPEG";
+      const props = doc.getImageProperties(snapshot.senderLogoDataUrl);
+      const logoMaxW = 32;
+      const logoMaxH = 16;
+      let imgW = logoMaxW;
+      let imgH = (props.height * imgW) / props.width;
+      if (imgH > logoMaxH) {
+        imgH = logoMaxH;
+        imgW = (props.width * imgH) / props.height;
+      }
+      doc.addImage(snapshot.senderLogoDataUrl, fmt, margin, headerTop, imgW, imgH);
+      logoBottom = headerTop + imgH;
+    } catch {
+      doc.setFillColor(241, 245, 249);
+      doc.roundedRect(margin, headerTop, 28, 14, 2, 2, "F");
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.text("LOGO", margin + 8, headerTop + 9);
+      logoBottom = headerTop + 14;
+    }
+  } else {
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(margin, headerTop, 28, 14, 2, 2, "F");
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text("LOGO", margin + 8, headerTop + 9);
+    logoBottom = headerTop + 14;
+  }
 
   doc.setFontSize(18);
   doc.setTextColor(15, 23, 42);
-  doc.text(brand, margin + 34, y + 9);
+  doc.text(brand, margin + 36, headerTop + 10);
 
   doc.setFontSize(10);
   doc.setTextColor(71, 85, 105);
-  doc.text("INVOICE", pageW - margin, y + 4, { align: "right" });
+  doc.text("INVOICE", pageW - margin, headerTop + 4, { align: "right" });
   doc.setFontSize(9);
-  doc.text(snapshot.invoiceNumber, pageW - margin, y + 10, { align: "right" });
-  doc.text(dateLabel, pageW - margin, y + 16, { align: "right" });
+  doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 10, { align: "right" });
+  doc.text(dateLabel, pageW - margin, headerTop + 16, { align: "right" });
 
-  y += 22;
+  y = Math.max(headerTop + 22, logoBottom + 6);
 
   doc.setDrawColor(226, 232, 240);
   doc.line(margin, y, pageW - margin, y);

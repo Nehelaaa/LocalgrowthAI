@@ -1,15 +1,15 @@
+import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { formatMoneyUSD } from "@/lib/invoice-money";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
 
-export function formatInvoicePlainText(
-  companyName: string,
-  snapshot: InvoiceSnapshot
-): string {
+export function formatInvoicePlainText(snapshot: InvoiceSnapshot): string {
   const { subtotal, discount, tax, total } = invoiceTotals(snapshot);
   const dateLabel = new Date(snapshot.invoiceDate).toLocaleDateString(undefined, {
     dateStyle: "long",
   });
+
+  const companyName = snapshot.senderBusinessName?.trim() || defaultInvoiceCompanyName();
 
   const lines: string[] = [
     companyName,

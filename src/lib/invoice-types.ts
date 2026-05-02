@@ -15,6 +15,10 @@ export type InvoiceSnapshot = {
   taxPercent: number;
   /** Flat discount in major currency units, applied before tax */
   discountAmount: number;
+  /** Your business name (saved template); empty uses env default in exports */
+  senderBusinessName?: string;
+  /** JPEG/PNG data URL for letterhead logo */
+  senderLogoDataUrl?: string | null;
 };
 
 export function invoiceTotals(s: Pick<InvoiceSnapshot, "lineItems" | "taxPercent" | "discountAmount">): {
