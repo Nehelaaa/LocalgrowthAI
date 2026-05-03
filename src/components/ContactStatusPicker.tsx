@@ -20,6 +20,8 @@ type FilterVariant = {
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
+  /** Smaller trigger for dense filter toolbars */
+  compact?: boolean;
 };
 
 type Props = LeadVariant | FilterVariant;
@@ -114,6 +116,7 @@ export function ContactStatusPicker(props: Props) {
   }, [open]);
 
   const isFilter = variant === "filter";
+  const compact = props.variant === "filter" && props.compact;
   const filterVal = isFilter ? props.value : "";
   const isAll =
     isFilter &&
@@ -136,20 +139,32 @@ export function ContactStatusPicker(props: Props) {
         aria-haspopup="listbox"
         aria-expanded={open}
         className={
-          "group flex w-full touch-manipulation items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-left shadow-sm transition " +
-          "hover:border-slate-300/90 hover:shadow-md active:scale-[0.995] " +
+          "group flex w-full touch-manipulation items-center justify-between gap-2 border border-slate-200/80 bg-white text-left shadow-sm transition " +
+          (compact
+            ? "rounded-lg px-3 py-2 text-sm active:scale-[0.995] "
+            : "gap-3 rounded-2xl px-4 py-3 hover:border-slate-300/90 hover:shadow-md active:scale-[0.995] ") +
+          "hover:border-slate-300/80 " +
           "focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-0 " +
           "dark:border-slate-600/40 dark:bg-slate-900/30 dark:hover:border-slate-500/50" +
           (disabled ? " cursor-not-allowed opacity-50" : " cursor-pointer")
         }
       >
-        <span className="flex min-w-0 flex-1 items-center gap-3">
+        <span
+          className={
+            "flex min-w-0 flex-1 items-center " + (compact ? "gap-2" : "gap-3")
+          }
+        >
           {current && (
             <>
               <span
-                className={`h-2.5 w-2.5 shrink-0 rounded-full ${current.dot}`}
+                className={`shrink-0 rounded-full ${compact ? "h-2 w-2" : "h-2.5 w-2.5"} ${current.dot}`}
               />
-              <span className="truncate text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-100">
+              <span
+                className={
+                  "truncate font-semibold tracking-tight text-slate-800 dark:text-slate-100 " +
+                  (compact ? "text-xs" : "text-sm")
+                }
+              >
                 {current.label}
               </span>
             </>

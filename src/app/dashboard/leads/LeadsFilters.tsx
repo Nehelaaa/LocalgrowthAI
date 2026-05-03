@@ -19,6 +19,11 @@ function ChevronToggle({ open }: { open: boolean }) {
   );
 }
 
+const lab =
+  "mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400";
+const inp =
+  "w-full min-h-[42px] touch-manipulation rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-inner shadow-slate-900/5 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-violet-500 dark:focus:ring-violet-400/20 md:min-h-[38px]";
+
 function FilterFields({
   sp,
   set,
@@ -27,38 +32,33 @@ function FilterFields({
   set: (key: string, value: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <label className="block">
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          Search
-        </span>
-        <input
-          type="search"
-          placeholder="Business name…"
-          defaultValue={sp.get("search") ?? ""}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const v = (e.target as HTMLInputElement).value.trim();
-              set("search", v);
-            }
-          }}
-          className="w-full min-h-[48px] touch-manipulation rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-inner shadow-slate-900/5 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-violet-500 dark:focus:ring-violet-400/20 md:text-sm"
-        />
-      </label>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="block min-w-0 sm:col-span-2 lg:col-span-1">
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Business type
-          </span>
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-12 md:gap-2">
+        <label className="md:col-span-5">
+          <span className={lab}>Search</span>
+          <input
+            type="search"
+            placeholder="Business name…"
+            defaultValue={sp.get("search") ?? ""}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const v = (e.target as HTMLInputElement).value.trim();
+                set("search", v);
+              }
+            }}
+            className={inp}
+          />
+        </label>
+        <label className="md:col-span-7">
+          <span className={lab}>Business type</span>
           <input
             type="text"
             list="lead-business-types"
             placeholder="Auto, salon, dentist…"
             defaultValue={sp.get("type") ?? ""}
             onChange={(e) => set("type", e.target.value)}
-            className="w-full min-h-[48px] touch-manipulation rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-inner shadow-slate-900/5 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-white md:text-sm"
+            className={inp}
           />
           <datalist id="lead-business-types">
             <option value="Auto" />
@@ -78,22 +78,24 @@ function FilterFields({
             <option value="Real estate" />
           </datalist>
         </label>
+      </div>
 
-        <div className="min-w-0">
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Contact status
-          </span>
-          <ContactStatusPicker variant="filter" value={sp.get("status") ?? ""} onChange={(v) => set("status", v)} />
+      <div className="grid grid-cols-1 items-end gap-2 sm:grid-cols-2 lg:grid-cols-12 lg:gap-2">
+        <div className="min-w-0 lg:col-span-4">
+          <span className={lab}>Contact status</span>
+          <ContactStatusPicker
+            compact
+            variant="filter"
+            value={sp.get("status") ?? ""}
+            onChange={(v) => set("status", v)}
+          />
         </div>
-
-        <label className="block min-w-0">
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Lead badge
-          </span>
+        <label className="min-w-0 lg:col-span-3">
+          <span className={lab}>Lead badge</span>
           <select
             value={sp.get("badge") ?? ""}
             onChange={(e) => set("badge", e.target.value)}
-            className="w-full min-h-[48px] touch-manipulation rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-inner shadow-slate-900/5 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-white md:text-sm"
+            className={inp}
           >
             <option value="">All badges</option>
             <option value="HOT">HOT</option>
@@ -101,23 +103,20 @@ function FilterFields({
             <option value="COLD">COLD</option>
           </select>
         </label>
+        <label className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2 text-xs font-medium text-slate-700 touch-manipulation dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200 lg:col-span-5">
+          <input
+            type="checkbox"
+            checked={sp.get("noWebsite") === "1"}
+            onChange={(e) => set("noWebsite", e.target.checked ? "1" : "")}
+            className="h-4 w-4 shrink-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-500"
+          />
+          No website only
+        </label>
       </div>
 
-      <label className="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-violet-50/40 px-4 py-3 text-sm font-medium text-slate-700 touch-manipulation dark:border-slate-600 dark:bg-violet-950/15 dark:text-slate-200">
-        <input
-          type="checkbox"
-          checked={sp.get("noWebsite") === "1"}
-          onChange={(e) => set("noWebsite", e.target.checked ? "1" : "")}
-          className="h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-500"
-        />
-        No website only
-      </label>
-
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block min-w-0">
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Min rating
-          </span>
+      <div className="grid max-w-lg grid-cols-2 gap-2">
+        <label className="min-w-0">
+          <span className={lab}>Min rating</span>
           <input
             type="number"
             placeholder="0–5"
@@ -126,20 +125,18 @@ function FilterFields({
             step={0.5}
             defaultValue={sp.get("minRating") ?? ""}
             onChange={(e) => set("minRating", e.target.value)}
-            className="w-full min-h-[48px] touch-manipulation rounded-xl border border-slate-200 bg-white px-4 py-3 text-base tabular-nums text-slate-900 shadow-inner shadow-slate-900/5 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-white md:text-sm"
+            className={`${inp} tabular-nums`}
           />
         </label>
-        <label className="block min-w-0">
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Min reviews
-          </span>
+        <label className="min-w-0">
+          <span className={lab}>Min reviews</span>
           <input
             type="number"
             placeholder="0+"
             min={0}
             defaultValue={sp.get("minReviews") ?? ""}
             onChange={(e) => set("minReviews", e.target.value)}
-            className="w-full min-h-[48px] touch-manipulation rounded-xl border border-slate-200 bg-white px-4 py-3 text-base tabular-nums text-slate-900 shadow-inner shadow-slate-900/5 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-white md:text-sm"
+            className={`${inp} tabular-nums`}
           />
         </label>
       </div>
@@ -180,16 +177,18 @@ export function LeadsFilters() {
           <ChevronToggle open={filtersOpen} />
         </button>
         {filtersOpen ? (
-          <div className={`mt-2 ${shellClass} p-4`}>
+          <div className={`mt-2 ${shellClass} p-3`}>
             <FilterFields sp={sp} set={set} />
           </div>
         ) : null}
       </div>
 
-      <div className={`hidden md:block ${shellClass} p-4 lg:p-5`}>
-        <div className="mb-4 flex items-center justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Filters</h2>
-          <span className="text-xs text-slate-500 dark:text-slate-400">Refine your pipeline</span>
+      <div className={`hidden md:block ${shellClass} p-3.5 lg:p-4`}>
+        <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Filters
+          </h2>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">Refine your pipeline</span>
         </div>
         <FilterFields sp={sp} set={set} />
       </div>
