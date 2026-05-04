@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getUtcDayString } from "@/lib/search-usage";
 import { AddOwnerCard } from "./AddOwnerCard";
+import { OwnerUsersTable } from "./OwnerUsersTable";
 
 export default async function OwnerUsersPage() {
   await requireOwnerOrRedirect();
@@ -16,6 +16,7 @@ export default async function OwnerUsersPage() {
       name: true,
       role: true,
       plan: true,
+      grandfatheredPro: true,
       subscriptionStatus: true,
       disabled: true,
       createdAt: true,
@@ -28,6 +29,19 @@ export default async function OwnerUsersPage() {
     },
     take: 500,
   });
+
+  const accountRows = users.map((u) => ({
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    role: u.role,
+    plan: u.plan,
+    subscriptionStatus: u.subscriptionStatus,
+    disabled: u.disabled,
+    grandfatheredPro: u.grandfatheredPro,
+    leadsCount: u._count.leads,
+    searchesToday: u.searchDayUsages[0]?.count ?? 0,
+  }));
 
   return (
     <div className="w-full min-w-0 max-w-6xl space-y-5">
@@ -56,83 +70,7 @@ export default async function OwnerUsersPage() {
 
       <AddOwnerCard />
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-950/40 dark:text-slate-400">
-              <tr>
-                <th className="px-4 py-3">User</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Plan</th>
-                <th className="px-4 py-3">Leads</th>
-                <th className="px-4 py-3">Searches today</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800/70">
-              {users.map((u) => (
-                <tr
-                  key={u.id}
-                  className="hover:bg-slate-50/70 dark:hover:bg-slate-950/30"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/owner/users/${u.id}`}
-                      className="font-semibold text-slate-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-300"
-                    >
-                      {u.name || u.email}
-                    </Link>
-                    <div className="text-xs text-slate-500">{u.email}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {u.role === "ADMIN" ? (
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900 dark:bg-amber-950/20 dark:text-amber-200">
-                        owner
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                        user
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200">
-                      {u.plan}
-                    </span>
-                    {u.subscriptionStatus && (
-                      <div className="mt-1 text-xs text-slate-500">
-                        {u.subscriptionStatus}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 tabular-nums">{u._count.leads}</td>
-                  <td className="px-4 py-3 tabular-nums">
-                    {u.searchDayUsages[0]?.count ?? 0}
-                  </td>
-                  <td className="px-4 py-3">
-                    {u.disabled ? (
-                      <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-200">
-                        disabled
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200">
-                        active
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td className="px-4 py-6 text-slate-500" colSpan={6}>
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <OwnerUsersTable rows={accountRows} />
     </div>
   );
 }

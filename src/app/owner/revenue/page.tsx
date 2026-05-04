@@ -1,4 +1,11 @@
 import type Stripe from "stripe";
+import {
+  aggregateSubscriptionInvoicesByUtcMonth,
+  buildSubscriptionMonthRollupRows,
+  lastNUtcMonthKeysDescending,
+  listInvoicesCreatedSince,
+  utcMonthStartUnixMonthsAgo,
+} from "@/lib/owner-revenue-monthly";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 
@@ -39,14 +46,22 @@ export default async function OwnerRevenuePage() {
 
   const stripe = getStripe();
 
-  const [subs, invoices, refunds] = await Promise.all([
+  const rollupSinceUnix = utcMonthStartUnixMonthsAgo(11);
+  const [subs, invoices, refunds, invoicesForRollup] = await Promise.all([
     stripe.subscriptions.list({ status: "active", limit: 100 }),
     stripe.invoices.list({ limit: 25 }),
     stripe.refunds.list({
       limit: 30,
       expand: ["data.charge", "data.charge.customer"],
     }),
+    listInvoicesCreatedSince(stripe, rollupSinceUnix),
   ]);
+
+  const monthKeys = lastNUtcMonthKeysDescending(12);
+  const monthlyRollup = buildSubscriptionMonthRollupRows(
+    aggregateSubscriptionInvoicesByUtcMonth(invoicesForRollup),
+    monthKeys,
+  );
 
   const mrrCents = subs.data.reduce((sum, s) => {
     const item = s.items.data[0];
@@ -93,6 +108,71 @@ export default async function OwnerRevenuePage() {
           <p className="mt-1 text-xs text-indigo-900/70 dark:text-indigo-200/70">
             Based on active subscription item unit amounts (not net of refunds unless you cancel subs).
           </p>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
+        <div className="border-b border-slate-100 px-4 py-4 dark:border-slate-800">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Subscription billing by month (UTC)
+          </h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Each row is the calendar month when Stripe created the subscription invoice.{" "}
+            <span className="font-medium text-slate-600 dark:text-slate-300">Paid</span> counts customers with at
+            least one collected subscription invoice ({`status paid, amount > 0`}).{" "}
+            <span className="font-medium text-slate-600 dark:text-slate-300">Unpaid</span> is distinct customers with
+            an <span className="font-medium">open</span> invoice still owed or an{" "}
+            <span className="font-medium">uncollectible</span> invoice — the states where you would tighten access or
+            downgrade after failed collection (your webhooks still drive when the app flips plan).{" "}
+            <span className="font-medium text-slate-600 dark:text-slate-300">Open</span> can still resolve if the
+            customer pays during Stripe retries.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-950/40 dark:text-slate-400">
+              <tr>
+                <th className="px-4 py-3">Month</th>
+                <th className="px-4 py-3">Paid (customers)</th>
+                <th className="px-4 py-3">Collected</th>
+                <th className="px-4 py-3">Unpaid (customers)</th>
+                <th className="px-4 py-3">Open</th>
+                <th className="px-4 py-3">Uncollectible</th>
+                <th className="px-4 py-3 text-right">Invoices (paid / unpaid)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800/70">
+              {monthlyRollup.map((row) => {
+                const atRisk = row.unpaidCustomers > 0;
+                return (
+                  <tr
+                    key={row.monthKey}
+                    className={
+                      atRisk
+                        ? "bg-amber-50/40 dark:bg-amber-950/15"
+                        : "hover:bg-slate-50/70 dark:hover:bg-slate-950/30"
+                    }
+                  >
+                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{row.label}</td>
+                    <td className="px-4 py-3 tabular-nums text-slate-800 dark:text-slate-200">{row.paidCustomers}</td>
+                    <td className="px-4 py-3 font-medium tabular-nums text-emerald-800 dark:text-emerald-200">
+                      {money(row.collectedCents, row.currency)}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums font-semibold text-amber-900 dark:text-amber-100">
+                      {row.unpaidCustomers}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-slate-700 dark:text-slate-300">{row.openCustomers}</td>
+                    <td className="px-4 py-3 tabular-nums text-rose-800 dark:text-rose-200">
+                      {row.uncollectibleCustomers}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
+                      {row.paidInvoices} / {row.unpaidInvoices}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
