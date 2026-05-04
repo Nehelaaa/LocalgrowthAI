@@ -1,5 +1,6 @@
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { isGoogleOAuthConfigured } from "@/lib/google-oauth";
+import { postLoginContinueUrl } from "@/lib/post-login-continue";
 import Link from "next/link";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   const hasGoogle = isGoogleOAuthConfigured();
+  const googleAfterAuthUrl = postLoginContinueUrl("/onboarding");
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-slate-100/90 p-4 dark:bg-slate-950">
       <div
@@ -60,7 +62,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="p-7">
-          <RegisterForm hasGoogle={hasGoogle} />
+          <RegisterForm hasGoogle={hasGoogle} googleAfterAuthUrl={googleAfterAuthUrl} />
           <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">
             <Link className="font-medium text-indigo-600 hover:underline dark:text-indigo-400" href="/login">
               Back to sign in

@@ -8,6 +8,7 @@ import { registerUser, type RegisterState } from "@/actions/register";
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { GoogleSetupHint } from "./GoogleSetupHint";
+import { postLoginContinueUrl } from "@/lib/post-login-continue";
 
 const professionOrder = (Object.keys(PROFESSIONS) as ProfessionId[]).sort(
   (a, b) => PROFESSIONS[a].order - PROFESSIONS[b].order
@@ -15,7 +16,14 @@ const professionOrder = (Object.keys(PROFESSIONS) as ProfessionId[]).sort(
 
 const init: RegisterState = {};
 
-export function RegisterForm({ hasGoogle }: { hasGoogle: boolean }) {
+export function RegisterForm({
+  hasGoogle,
+  googleAfterAuthUrl,
+}: {
+  hasGoogle: boolean;
+  /** Server-built `/auth/continue?next=…` so owners land in /owner after Google sign-up. */
+  googleAfterAuthUrl: string;
+}) {
   const [state, action, pending] = useActionState(registerUser, init);
   const router = useRouter();
   const signed = useRef(false);
@@ -31,7 +39,7 @@ export function RegisterForm({ hasGoogle }: { hasGoogle: boolean }) {
     void (async () => {
       const r = await signIn("credentials", { email, password, redirect: false });
       if (r?.ok) {
-        router.push("/onboarding");
+        router.push(postLoginContinueUrl("/onboarding"));
         router.refresh();
       } else {
         window.location.href = "/login?registered=1";
@@ -158,7 +166,7 @@ export function RegisterForm({ hasGoogle }: { hasGoogle: boolean }) {
               <span className="bg-white px-2 dark:bg-slate-900">or</span>
             </div>
           </div>
-          <GoogleSignInButton callbackUrl="/onboarding" label="Sign up with Google" />
+          <GoogleSignInButton callbackUrl={googleAfterAuthUrl} label="Sign up with Google" />
           <p className="text-center text-xs text-slate-500">Fastest way to get started.</p>
         </>
       )}

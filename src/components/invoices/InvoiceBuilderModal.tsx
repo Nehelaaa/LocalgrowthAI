@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
@@ -11,6 +12,11 @@ import {
   loadInvoiceSenderTemplate,
   saveInvoiceSenderTemplate,
 } from "@/lib/invoice-sender-template";
+import {
+  getInvoiceTemplate,
+  normalizeHexColor,
+  normalizeInvoiceTemplateId,
+} from "@/lib/invoice-templates";
 import type { InvoiceLineItem, InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
 
@@ -53,6 +59,9 @@ export function InvoiceBuilderModal({
   const [err, setErr] = useState<string | null>(null);
   const [senderBusinessName, setSenderBusinessName] = useState("");
   const [senderLogoDataUrl, setSenderLogoDataUrl] = useState<string | null>(null);
+  const [invoiceTemplateId, setInvoiceTemplateId] = useState("minimal");
+  const [invoiceAccentHex, setInvoiceAccentHex] = useState("#4f46e5");
+  const [invoiceLayoutDensity, setInvoiceLayoutDensity] = useState<"compact" | "comfortable">("comfortable");
   const [logoDragOver, setLogoDragOver] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,6 +72,12 @@ export function InvoiceBuilderModal({
     const sender = loadInvoiceSenderTemplate();
     setSenderBusinessName(sender.businessName);
     setSenderLogoDataUrl(sender.logoDataUrl);
+    const tid = normalizeInvoiceTemplateId(sender.templateId);
+    setInvoiceTemplateId(tid);
+    setInvoiceAccentHex(
+      normalizeHexColor(sender.accentHex, getInvoiceTemplate(tid).defaultAccentHex)
+    );
+    setInvoiceLayoutDensity(sender.density === "compact" ? "compact" : "comfortable");
     setInvoiceNumber(nextInvoiceNumber());
     setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
     setClientName(initialClientName);
@@ -80,10 +95,23 @@ export function InvoiceBuilderModal({
       saveInvoiceSenderTemplate({
         businessName: senderBusinessName,
         logoDataUrl: senderLogoDataUrl,
+        templateId: normalizeInvoiceTemplateId(invoiceTemplateId),
+        accentHex: normalizeHexColor(
+          invoiceAccentHex,
+          getInvoiceTemplate(invoiceTemplateId).defaultAccentHex
+        ),
+        density: invoiceLayoutDensity,
       });
     }, 400);
     return () => window.clearTimeout(id);
-  }, [open, senderBusinessName, senderLogoDataUrl]);
+  }, [
+    open,
+    senderBusinessName,
+    senderLogoDataUrl,
+    invoiceTemplateId,
+    invoiceAccentHex,
+    invoiceLayoutDensity,
+  ]);
 
   const snapshot = useMemo(
     (): InvoiceSnapshot => ({
@@ -97,6 +125,12 @@ export function InvoiceBuilderModal({
       discountAmount,
       senderBusinessName: senderBusinessName.trim() || undefined,
       senderLogoDataUrl: senderLogoDataUrl || null,
+      invoiceTemplateId: normalizeInvoiceTemplateId(invoiceTemplateId),
+      invoiceAccentHex: normalizeHexColor(
+        invoiceAccentHex,
+        getInvoiceTemplate(invoiceTemplateId).defaultAccentHex
+      ),
+      invoiceLayoutDensity,
     }),
     [
       invoiceNumber,
@@ -109,6 +143,9 @@ export function InvoiceBuilderModal({
       discountAmount,
       senderBusinessName,
       senderLogoDataUrl,
+      invoiceTemplateId,
+      invoiceAccentHex,
+      invoiceLayoutDensity,
     ]
   );
 
@@ -221,9 +258,18 @@ export function InvoiceBuilderModal({
           ) : null}
 
           <section className="mb-6 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 dark:border-indigo-500/20 dark:bg-indigo-950/25">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Your business</h3>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Your business</h3>
+              <Link
+                href="/dashboard/invoice-templates"
+                className="text-xs font-medium text-violet-700 underline-offset-2 hover:underline dark:text-violet-300"
+              >
+                Invoice templates →
+              </Link>
+            </div>
             <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-              Logo and name are saved in this browser and reused whenever you open the invoice builder.
+              Logo, name, and PDF layout are saved in this browser. Change the template anytime from the link
+              above — this builder uses your latest design.
             </p>
             <label className="mt-3 block text-sm">
               <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Business name</span>

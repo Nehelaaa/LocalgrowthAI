@@ -2,29 +2,18 @@
 
 import { ContactStatusPicker } from "@/components/ContactStatusPicker";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
 
-function ChevronToggle({ open }: { open: boolean }) {
-  return (
-    <svg
-      className={`h-5 w-5 shrink-0 text-slate-400 transition-transform dark:text-slate-500 ${open ? "rotate-180" : ""}`}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.75}
-      stroke="currentColor"
-      aria-hidden
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-    </svg>
-  );
-}
+const shell =
+  "rounded-xl border border-slate-200/90 bg-white/95 p-2 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700/80 dark:bg-slate-900/90 dark:ring-white/[0.05] sm:p-2.5";
 
-const lab =
-  "mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400";
 const inp =
-  "w-full min-h-[42px] touch-manipulation rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-inner shadow-slate-900/5 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-violet-500 dark:focus:ring-violet-400/20 md:min-h-[38px]";
+  "h-9 w-full min-w-0 touch-manipulation rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900 shadow-inner shadow-slate-900/[0.03] placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-violet-500 sm:px-3";
 
-function FilterFields({
+/** One scrollable row on small screens; unwraps to a 12-col grid from `sm`. */
+const stripScroll =
+  "flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch] sm:grid sm:snap-none sm:grid-cols-12 sm:gap-x-2 sm:gap-y-0 sm:overflow-visible sm:pb-0";
+
+function FilterToolbar({
   sp,
   set,
 }: {
@@ -32,57 +21,37 @@ function FilterFields({
   set: (key: string, value: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-12 md:gap-2">
-        <label className="md:col-span-5">
-          <span className={lab}>Search</span>
-          <input
-            type="search"
-            placeholder="Business name…"
-            defaultValue={sp.get("search") ?? ""}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                const v = (e.target as HTMLInputElement).value.trim();
-                set("search", v);
-              }
-            }}
-            className={inp}
-          />
-        </label>
-        <label className="md:col-span-7">
-          <span className={lab}>Business type</span>
-          <input
-            type="text"
-            list="lead-business-types"
-            placeholder="Auto, salon, dentist…"
-            defaultValue={sp.get("type") ?? ""}
-            onChange={(e) => set("type", e.target.value)}
-            className={inp}
-          />
-          <datalist id="lead-business-types">
-            <option value="Auto" />
-            <option value="Auto repair" />
-            <option value="Auto body" />
-            <option value="Salon" />
-            <option value="Hair salon" />
-            <option value="Barber" />
-            <option value="Nail salon" />
-            <option value="Dentist" />
-            <option value="Chiropractor" />
-            <option value="Plumber" />
-            <option value="Electrician" />
-            <option value="HVAC" />
-            <option value="Roofing" />
-            <option value="Landscaping" />
-            <option value="Real estate" />
-          </datalist>
-        </label>
-      </div>
+    <div className="flex min-w-0 flex-col gap-2">
+      {/* Line 1 — full-width search */}
+      <input
+        type="search"
+        enterKeyHint="search"
+        placeholder="Search business name…"
+        aria-label="Search by business name"
+        defaultValue={sp.get("search") ?? ""}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const v = (e.target as HTMLInputElement).value.trim();
+            set("search", v);
+          }
+        }}
+        className={inp}
+      />
 
-      <div className="grid grid-cols-1 items-end gap-2 sm:grid-cols-2 lg:grid-cols-12 lg:gap-2">
-        <div className="min-w-0 lg:col-span-4">
-          <span className={lab}>Contact status</span>
+      {/* Line 2 — all other filters (scroll on narrow phones) */}
+      <div className={stripScroll}>
+        <input
+          type="text"
+          list="lead-business-types"
+          placeholder="Business type…"
+          aria-label="Business type filter"
+          defaultValue={sp.get("type") ?? ""}
+          onChange={(e) => set("type", e.target.value)}
+          className={`${inp} w-[min(12rem,calc(100vw-4rem))] shrink-0 snap-start sm:col-span-3 sm:w-full`}
+        />
+
+        <div className="w-[min(17rem,calc(100vw-5rem))] shrink-0 snap-start sm:col-span-4 sm:w-full sm:min-w-0">
           <ContactStatusPicker
             compact
             variant="filter"
@@ -90,56 +59,71 @@ function FilterFields({
             onChange={(v) => set("status", v)}
           />
         </div>
-        <label className="min-w-0 lg:col-span-3">
-          <span className={lab}>Lead badge</span>
-          <select
-            value={sp.get("badge") ?? ""}
-            onChange={(e) => set("badge", e.target.value)}
-            className={inp}
-          >
-            <option value="">All badges</option>
-            <option value="HOT">HOT</option>
-            <option value="WARM">WARM</option>
-            <option value="COLD">COLD</option>
-          </select>
-        </label>
-        <label className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2 text-xs font-medium text-slate-700 touch-manipulation dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200 lg:col-span-5">
+
+        <select
+          value={sp.get("badge") ?? ""}
+          onChange={(e) => set("badge", e.target.value)}
+          aria-label="Lead badge"
+          className={`${inp} w-[6.5rem] shrink-0 snap-start sm:col-span-2 sm:w-full`}
+        >
+          <option value="">All</option>
+          <option value="HOT">HOT</option>
+          <option value="WARM">WARM</option>
+          <option value="COLD">COLD</option>
+        </select>
+
+        <label className="flex h-9 w-max shrink-0 snap-start cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/90 px-2.5 text-xs font-medium text-slate-700 touch-manipulation whitespace-nowrap dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200 sm:col-span-1 sm:px-2">
           <input
             type="checkbox"
             checked={sp.get("noWebsite") === "1"}
             onChange={(e) => set("noWebsite", e.target.checked ? "1" : "")}
-            className="h-4 w-4 shrink-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-500"
+            className="h-3.5 w-3.5 shrink-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-500"
           />
-          No website only
+          <span className="sm:hidden">No site</span>
+          <span className="hidden sm:inline">No web</span>
         </label>
+
+        <input
+          type="number"
+          placeholder="Min ★"
+          aria-label="Minimum Google rating"
+          title="Minimum rating (0–5)"
+          min={0}
+          max={5}
+          step={0.5}
+          defaultValue={sp.get("minRating") ?? ""}
+          onChange={(e) => set("minRating", e.target.value)}
+          className={`${inp} w-[4.25rem] shrink-0 snap-start tabular-nums sm:col-span-1 sm:w-full`}
+        />
+        <input
+          type="number"
+          placeholder="Reviews"
+          aria-label="Minimum review count"
+          title="Minimum number of reviews"
+          min={0}
+          defaultValue={sp.get("minReviews") ?? ""}
+          onChange={(e) => set("minReviews", e.target.value)}
+          className={`${inp} w-[4.5rem] shrink-0 snap-start tabular-nums sm:col-span-1 sm:w-full`}
+        />
       </div>
 
-      <div className="grid max-w-lg grid-cols-2 gap-2">
-        <label className="min-w-0">
-          <span className={lab}>Min rating</span>
-          <input
-            type="number"
-            placeholder="0–5"
-            min={0}
-            max={5}
-            step={0.5}
-            defaultValue={sp.get("minRating") ?? ""}
-            onChange={(e) => set("minRating", e.target.value)}
-            className={`${inp} tabular-nums`}
-          />
-        </label>
-        <label className="min-w-0">
-          <span className={lab}>Min reviews</span>
-          <input
-            type="number"
-            placeholder="0+"
-            min={0}
-            defaultValue={sp.get("minReviews") ?? ""}
-            onChange={(e) => set("minReviews", e.target.value)}
-            className={`${inp} tabular-nums`}
-          />
-        </label>
-      </div>
+      <datalist id="lead-business-types">
+        <option value="Auto" />
+        <option value="Auto repair" />
+        <option value="Auto body" />
+        <option value="Salon" />
+        <option value="Hair salon" />
+        <option value="Barber" />
+        <option value="Nail salon" />
+        <option value="Dentist" />
+        <option value="Chiropractor" />
+        <option value="Plumber" />
+        <option value="Electrician" />
+        <option value="HVAC" />
+        <option value="Roofing" />
+        <option value="Landscaping" />
+        <option value="Real estate" />
+      </datalist>
     </div>
   );
 }
@@ -147,7 +131,6 @@ function FilterFields({
 export function LeadsFilters() {
   const router = useRouter();
   const sp = useSearchParams();
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const set = (key: string, value: string) => {
     const next = new URLSearchParams(sp);
@@ -156,42 +139,18 @@ export function LeadsFilters() {
     router.push(`/dashboard/leads?${next.toString()}`);
   };
 
-  const shellClass =
-    "rounded-2xl border border-slate-200/90 bg-white/95 shadow-sm ring-1 ring-slate-900/[0.04] dark:border-slate-700/80 dark:bg-slate-900/90 dark:ring-white/[0.06]";
-
   return (
-    <div className="mb-2 md:mb-6">
-      <div className="md:hidden">
-        <button
-          type="button"
-          onClick={() => setFiltersOpen((o) => !o)}
-          aria-expanded={filtersOpen}
-          className={`flex w-full items-center justify-between gap-3 ${shellClass} px-4 py-3.5 text-left transition active:bg-slate-50 dark:active:bg-slate-800/80`}
-        >
-          <div>
-            <span className="font-semibold text-slate-900 dark:text-white">Search &amp; filters</span>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              {filtersOpen ? "Tap to hide" : "Tap to show filters"}
-            </p>
-          </div>
-          <ChevronToggle open={filtersOpen} />
-        </button>
-        {filtersOpen ? (
-          <div className={`mt-2 ${shellClass} p-3`}>
-            <FilterFields sp={sp} set={set} />
-          </div>
-        ) : null}
+    <div className={`mb-3 md:mb-4 ${shell}`}>
+      <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5 sm:px-0">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Filters
+        </span>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="sm:hidden">Swipe row for more</span>
+          <span className="hidden sm:inline">Enter in search to apply</span>
+        </span>
       </div>
-
-      <div className={`hidden md:block ${shellClass} p-3.5 lg:p-4`}>
-        <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Filters
-          </h2>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">Refine your pipeline</span>
-        </div>
-        <FilterFields sp={sp} set={set} />
-      </div>
+      <FilterToolbar sp={sp} set={set} />
     </div>
   );
 }

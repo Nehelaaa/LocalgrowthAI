@@ -1,30 +1,50 @@
+import { defaultInvoiceTemplateFields, type InvoiceLayoutDensity } from "./invoice-templates";
+
 const STORAGE_KEY = "localleadster-invoice-sender-v1";
 
 export type InvoiceSenderTemplate = {
   businessName: string;
   logoDataUrl: string | null;
+  templateId: string;
+  accentHex: string;
+  density: InvoiceLayoutDensity;
 };
+
+export function defaultInvoiceSenderTemplate(): InvoiceSenderTemplate {
+  const d = defaultInvoiceTemplateFields();
+  return {
+    businessName: "",
+    logoDataUrl: null,
+    templateId: d.templateId,
+    accentHex: d.accentHex,
+    density: d.density,
+  };
+}
 
 export function loadInvoiceSenderTemplate(): InvoiceSenderTemplate {
   if (typeof window === "undefined") {
-    return { businessName: "", logoDataUrl: null };
+    return defaultInvoiceSenderTemplate();
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return { businessName: "", logoDataUrl: null };
+      return defaultInvoiceSenderTemplate();
     }
     const p = JSON.parse(raw) as unknown;
     if (!p || typeof p !== "object") {
-      return { businessName: "", logoDataUrl: null };
+      return defaultInvoiceSenderTemplate();
     }
     const o = p as Record<string, unknown>;
+    const base = defaultInvoiceSenderTemplate();
     return {
-      businessName: typeof o.businessName === "string" ? o.businessName : "",
-      logoDataUrl: typeof o.logoDataUrl === "string" ? o.logoDataUrl : null,
+      businessName: typeof o.businessName === "string" ? o.businessName : base.businessName,
+      logoDataUrl: typeof o.logoDataUrl === "string" ? o.logoDataUrl : base.logoDataUrl,
+      templateId: typeof o.templateId === "string" ? o.templateId : base.templateId,
+      accentHex: typeof o.accentHex === "string" ? o.accentHex : base.accentHex,
+      density: o.density === "compact" || o.density === "comfortable" ? o.density : base.density,
     };
   } catch {
-    return { businessName: "", logoDataUrl: null };
+    return defaultInvoiceSenderTemplate();
   }
 }
 

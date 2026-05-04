@@ -19,6 +19,12 @@ export type InvoiceSnapshot = {
   senderBusinessName?: string;
   /** JPEG/PNG data URL for letterhead logo */
   senderLogoDataUrl?: string | null;
+  /** Visual template for PDF + preview (see `invoice-templates.ts`) */
+  invoiceTemplateId?: string;
+  /** Accent color #RRGGBB */
+  invoiceAccentHex?: string;
+  /** Row / padding density in PDF */
+  invoiceLayoutDensity?: "compact" | "comfortable";
 };
 
 export function invoiceTotals(s: Pick<InvoiceSnapshot, "lineItems" | "taxPercent" | "discountAmount">): {

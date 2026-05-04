@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { isGoogleOAuthConfigured } from "@/lib/google-oauth";
+import { postLoginContinueUrl } from "@/lib/post-login-continue";
 import type { Metadata } from "next";
 import Image from "next/image";
 
@@ -19,7 +20,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const q = await searchParams;
   const callbackUrl = typeof q.callbackUrl === "string" ? q.callbackUrl : "/dashboard";
   const authError = typeof q.error === "string" ? q.error : null;
-  const ownerEmail = process.env.OWNER_EMAIL ?? null;
+  /** After session exists, server decides /owner vs app (ADMIN, OWNER_EMAIL + OWNER_EMAILS). */
+  const afterLoginUrl = postLoginContinueUrl(callbackUrl);
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-slate-100/90 p-4 dark:bg-slate-950">
       <div
@@ -53,10 +55,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
           </p>
         )}
         <LoginForm
-          callbackUrl={callbackUrl}
+          callbackUrl={afterLoginUrl}
           hasGoogle={isGoogleOAuthConfigured()}
           authError={authError}
-          ownerEmail={ownerEmail}
         />
       </div>
     </div>

@@ -31,12 +31,10 @@ export function LoginForm({
   callbackUrl,
   hasGoogle,
   authError,
-  ownerEmail,
 }: {
   callbackUrl: string;
   hasGoogle: boolean;
   authError?: string | null;
-  ownerEmail?: string | null;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -97,11 +95,7 @@ export function LoginForm({
             return;
           }
           if (r?.ok) {
-            const isOwner =
-              ownerEmail &&
-              ownerEmail.trim().length > 0 &&
-              email.trim().toLowerCase() === ownerEmail.trim().toLowerCase();
-            window.location.href = isOwner ? "/owner" : callbackUrl;
+            window.location.href = callbackUrl;
           }
         }}
       >

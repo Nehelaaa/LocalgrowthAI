@@ -141,7 +141,7 @@ export function ContactStatusPicker(props: Props) {
         className={
           "group flex w-full touch-manipulation items-center justify-between gap-2 border border-slate-200/80 bg-white text-left shadow-sm transition " +
           (compact
-            ? "rounded-lg px-3 py-2 text-sm active:scale-[0.995] "
+            ? "h-9 rounded-lg px-2.5 py-0 text-sm leading-none active:scale-[0.995] sm:px-3 "
             : "gap-3 rounded-2xl px-4 py-3 hover:border-slate-300/90 hover:shadow-md active:scale-[0.995] ") +
           "hover:border-slate-300/80 " +
           "focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-0 " +
