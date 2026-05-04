@@ -60,46 +60,91 @@ export function saveInvoiceSenderTemplate(t: InvoiceSenderTemplate): void {
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const MAX_CANVAS_WIDTH = 480;
 
-/**
- * Resize to a reasonable JPEG data URL for localStorage + jsPDF.
- */
-export function fileToInvoiceLogoDataUrl(file: File): Promise<string> {
+function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith("image/")) {
-      reject(new Error("Choose an image file (PNG, JPEG, or WebP)."));
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      reject(new Error("Image is too large. Use one under 4 MB."));
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      try {
-        const scale = Math.min(1, MAX_CANVAS_WIDTH / img.naturalWidth);
-        const w = Math.max(1, Math.round(img.naturalWidth * scale));
-        const h = Math.max(1, Math.round(img.naturalHeight * scale));
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Could not process image."));
-          return;
-        }
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
-        resolve(dataUrl);
-      } catch (e) {
-        reject(e instanceof Error ? e : new Error("Could not process image."));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const r = reader.result;
+      if (typeof r !== "string" || !r.startsWith("data:")) {
+        reject(new Error("Could not read file."));
+        return;
       }
+      if (r.includes("image/svg+xml")) {
+        reject(new Error("SVG logos are not supported. Please use PNG or JPEG."));
+        return;
+      }
+      resolve(r);
     };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Could not read that image."));
-    };
-    img.src = url;
+    reader.onerror = () => reject(new Error("Could not read file."));
+    reader.readAsDataURL(file);
   });
+}
+
+function isProbablyImage(file: File): boolean {
+  if (file.type && file.type.startsWith("image/")) return true;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return ["jpg", "jpeg", "png", "webp", "gif", "pjpeg", "jfif"].includes(ext);
+}
+
+/**
+ * Resize to a JPEG data URL for localStorage + jsPDF.
+ * Prefers createImageBitmap; falls back to FileReader + Image (avoids blob-URL decode issues on some browsers).
+ */
+export async function fileToInvoiceLogoDataUrl(file: File): Promise<string> {
+  if (!isProbablyImage(file)) {
+    throw new Error("Choose an image file (PNG, JPEG, WebP, or GIF).");
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    throw new Error("Image is too large. Use one under 4 MB.");
+  }
+
+  let bmpW = 0;
+  let bmpH = 0;
+  let drawSource: CanvasImageSource | null = null;
+  let bitmap: ImageBitmap | null = null;
+
+  if (typeof createImageBitmap === "function") {
+    try {
+      bitmap = await createImageBitmap(file);
+      bmpW = bitmap.width;
+      bmpH = bitmap.height;
+      drawSource = bitmap;
+    } catch {
+      bitmap = null;
+    }
+  }
+
+  if (!drawSource) {
+    const dataUrl = await readFileAsDataURL(file);
+    drawSource = await new Promise<HTMLImageElement>((res, rej) => {
+      const img = new Image();
+      img.onload = () => res(img);
+      img.onerror = () => rej(new Error("Could not decode image. Try PNG or JPEG."));
+      img.src = dataUrl;
+    });
+    bmpW = drawSource.naturalWidth;
+    bmpH = drawSource.naturalHeight;
+  }
+
+  if (!drawSource || bmpW < 1 || bmpH < 1) {
+    throw new Error("Could not decode image.");
+  }
+
+  const scale = Math.min(1, MAX_CANVAS_WIDTH / bmpW);
+  const w = Math.max(1, Math.round(bmpW * scale));
+  const h = Math.max(1, Math.round(bmpH * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    bitmap?.close();
+    throw new Error("Could not process image.");
+  }
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(drawSource, 0, 0, w, h);
+  bitmap?.close();
+
+  return canvas.toDataURL("image/jpeg", 0.88);
 }

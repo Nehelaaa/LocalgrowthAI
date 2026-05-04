@@ -7,21 +7,21 @@ const solutions = [
     title: "Freelancers",
     desc: "Find local prospects, qualify fast, and keep follow-ups in one clean pipeline.",
     Illustration: IllustrationRadar,
-    bullets: ["Spot weak web presence", "Save + score leads", "Simple follow-up workflow"],
+    bullets: ["Spot weak web presence", "Save + score leads", "Branded PDF quotes from any lead"],
   },
   {
     href: "/for/agencies",
     title: "Agencies & teams",
     desc: "Turn territory searches into predictable meetings — with CRM stages, exports, and secure Pro billing.",
     Illustration: IllustrationPipeline,
-    bullets: ["Team-ready pipeline", "Exports to your stack", "Stripe billing on Pro"],
+    bullets: ["Team-ready pipeline", "Exports + invoices on brand", "Stripe billing on Pro"],
   },
   {
     href: "/for/sales",
     title: "B2B sales & setters",
     desc: "Build targeted lists, segment by signals, and keep your call sheet up to date daily.",
     Illustration: IllustrationOutreach,
-    bullets: ["Daily prospecting", "Prioritize with tiers", "Track outcomes"],
+    bullets: ["Daily prospecting", "Presets + deep filters", "Track outcomes & follow-ups"],
   },
 ] as const;
 

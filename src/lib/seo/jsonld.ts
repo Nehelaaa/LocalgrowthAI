@@ -11,7 +11,7 @@ export function homeJsonLd() {
         name: "LocalLeadster",
         url: site,
         description:
-          "Lead generation and pipeline for selling to local businesses: search, qualify, and close deals faster.",
+          "Lead generation and pipeline for selling to local businesses: search, qualify with presets, CRM with branded PDF invoices, and close deals faster.",
         potentialAction: {
           "@type": "SearchAction",
           target: `${site}/?q={search_term_string}`,
@@ -32,8 +32,10 @@ export function homeJsonLd() {
         },
         featureList: [
           "Google Places business search",
+          "Refine results with presets and stackable filters",
           "Signal-based lead scoring",
-          "CRM pipeline and exports",
+          "CRM pipeline with active leads first",
+          "Branded PDF invoice templates",
           "CSV + JSON exports (Pro)",
         ],
       },
@@ -65,7 +67,7 @@ export function faqJsonLd(items: { q: string; a: string }[]) {
 export const homeMetadata: Metadata = {
   title: "LocalLeadster — Lead Gen + Pipeline for Local B2B",
   description:
-    "Search Google Places, qualify leads with simple signals, run your CRM pipeline, and export to your stack on Pro. Free to start — built for anyone selling to local businesses.",
+    "Search Google Places, qualify with filters and presets, run your CRM, generate branded PDF invoices from any lead, and export on Pro. Free to start.",
   keywords: [
     "local lead generation",
     "local business lead generation",
@@ -75,6 +77,8 @@ export const homeMetadata: Metadata = {
     "crm pipeline",
     "sales pipeline software",
     "follow-up workflow",
+    "invoice generator",
+    "pdf invoice template",
     "agency lead generation",
     "freelancer lead generation",
   ],

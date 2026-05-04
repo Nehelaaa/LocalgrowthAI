@@ -32,7 +32,7 @@ export default function HomePage() {
           >
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-                Local lead generation + CRM pipeline
+                Local lead generation + CRM + branded invoices
               </p>
               <h1
                 id="hero-heading"
@@ -42,8 +42,10 @@ export default function HomePage() {
               </h1>
               <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
                 A Google Places lead generation tool that keeps outreach simple: search a territory, qualify with
-                fast signals, run a CRM pipeline, and close more deals with clear next steps — built for agencies,
-                freelancers, and sales teams selling to local businesses.
+                presets and stackable filters, run a CRM pipeline (active leads stay on top), send{" "}
+                <span className="font-semibold text-slate-800 dark:text-slate-200">branded PDF invoices</span> from any
+                row, and close more deals with clear next steps — built for agencies, freelancers, and sales teams
+                selling to local businesses.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
@@ -115,9 +117,19 @@ export default function HomePage() {
                   icon: "🗺️",
                 },
                 {
+                  t: "Filters & presets",
+                  d: "Refine with tabs for basics, web signals, and fit — plus Easy Wins, High Value, and Fast Closers in one click.",
+                  icon: "🎯",
+                },
+                {
                   t: "Scoring & pipeline",
                   d: "HOT / WARM / COLD, CRM stages, and a dashboard you can read in five seconds.",
                   icon: "📊",
+                },
+                {
+                  t: "Branded PDF invoices",
+                  d: "Multiple templates, logo upload, accent colors, and a live preview. Download from any lead without leaving the CRM.",
+                  icon: "📄",
                 },
                 {
                   t: "Your data, your account",
@@ -126,12 +138,12 @@ export default function HomePage() {
                 },
                 {
                   t: "Close deals & track revenue",
-                  d: "Deal value, close dates, outcomes, and a weekly view so you always know what’s in play.",
+                  d: "Deal value, close dates, outcomes, and a weekly view. Interested & contacted leads sort to the top of your list.",
                   icon: "💰",
                 },
                 {
-                  t: "Close deals with customers",
-                  d: "Keep every conversation moving: notes, follow-ups, and a clear next step until the account says yes — not just a list of names.",
+                  t: "Manual leads + context",
+                  d: "Add a business by hand when you meet someone offline — same notes, follow-ups, and invoice flow as saved search leads.",
                   icon: "🤝",
                 },
               ].map((f) => (

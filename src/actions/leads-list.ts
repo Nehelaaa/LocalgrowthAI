@@ -2,6 +2,7 @@
 
 import { requireUserForAction } from "@/lib/session-user";
 import { prisma } from "@/lib/db";
+import { contactStatusListPriority } from "@/lib/contact-status";
 import type { ContactStatus, LeadBadge } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
@@ -55,14 +56,23 @@ export async function getLeads(filters?: {
     where.business = { is: { AND: businessAnd } };
   }
 
-  return prisma.lead.findMany({
+  const rows = await prisma.lead.findMany({
     where,
     include: {
       business: true,
     },
-    orderBy: [{ leadScore: "desc" }, { createdAt: "desc" }],
     take: 200,
   });
+
+  rows.sort((a, b) => {
+    const pa = contactStatusListPriority(a.contactStatus);
+    const pb = contactStatusListPriority(b.contactStatus);
+    if (pa !== pb) return pa - pb;
+    if (b.leadScore !== a.leadScore) return b.leadScore - a.leadScore;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+
+  return rows;
 }
 
 export async function getLeadById(leadId: string) {

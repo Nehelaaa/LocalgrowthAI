@@ -8,6 +8,22 @@ export const CONTACT_STATUS_ORDER: ContactStatus[] = [
   "CLOSED_LOST",
 ];
 
+/** CRM list: lower = closer to top — active pipeline before cold / closed. */
+export function contactStatusListPriority(status: ContactStatus): number {
+  switch (status) {
+    case "INTERESTED":
+      return 0;
+    case "CONTACTED":
+      return 1;
+    case "NOT_CONTACTED":
+      return 2;
+    case "CLOSED_WON":
+      return 3;
+    case "CLOSED_LOST":
+      return 4;
+  }
+}
+
 export const contactStatusLabel: Record<ContactStatus, string> = {
   NOT_CONTACTED: "Not Contacted",
   CONTACTED: "Contacted",

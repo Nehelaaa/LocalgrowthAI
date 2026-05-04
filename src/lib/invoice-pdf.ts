@@ -13,6 +13,11 @@ function cellPad(snapshot: InvoiceSnapshot): number {
   return snapshot.invoiceLayoutDensity === "compact" ? 2 : 3;
 }
 
+function detectImageFormat(dataUrl: string | null | undefined): "PNG" | "JPEG" {
+  if (dataUrl?.includes("image/png")) return "PNG";
+  return "JPEG";
+}
+
 export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise<Blob> {
   const { jsPDF } = await import("jspdf");
   const { autoTable } = await import("jspdf-autotable");
@@ -35,7 +40,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   });
 
   const pad = cellPad(snapshot);
-  const logoFmt = snapshot.senderLogoDataUrl?.includes("image/png") ? "PNG" : "JPEG";
+  const logoFmt = detectImageFormat(snapshot.senderLogoDataUrl);
 
   const drawLogo = (left: number, top: number, maxW: number, maxH: number): number => {
     if (snapshot.senderLogoDataUrl) {
@@ -80,105 +85,195 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.text(dateLabel, pageW - margin, 22, { align: "right" });
     y = Math.max(30, logoBottom + 8);
     doc.setDrawColor(accent[0], accent[1], accent[2]);
-    doc.setLineWidth(0.4);
+    doc.setLineWidth(0.5);
     doc.line(margin, y, pageW - margin, y);
     y += 8;
   } else if (templateId === "editorial") {
-    doc.setFontSize(22);
-    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(20);
+    doc.setTextColor(41, 37, 36);
     doc.text("INVOICE", pageW / 2, y + 8, { align: "center" });
     doc.setFontSize(11);
-    doc.setTextColor(71, 85, 105);
+    doc.setTextColor(87, 83, 78);
     doc.text(brand, pageW / 2, y + 16, { align: "center" });
     y += 22;
     const lb = drawLogo(pageW / 2 - 14, y, 28, 14);
     y = lb + 6;
     doc.setFontSize(9);
+    doc.setTextColor(120, 113, 108);
     doc.text(snapshot.invoiceNumber, pageW / 2, y, { align: "center" });
     doc.text(dateLabel, pageW / 2, y + 5, { align: "center" });
     y += 14;
     doc.setDrawColor(accent[0], accent[1], accent[2]);
-    doc.setLineWidth(0.5);
-    doc.line(margin + 20, y, pageW - margin - 20, y);
+    doc.setLineWidth(0.35);
+    doc.line(margin + 24, y, pageW - margin - 24, y);
+    y += 8;
+  } else if (templateId === "ledger") {
+    doc.setFillColor(255, 251, 235);
+    doc.rect(0, 0, pageW, 42, "F");
+    doc.setDrawColor(15, 23, 42);
+    doc.setLineWidth(0.35);
+    doc.line(margin, 38, pageW - margin, 38);
+    const logoBottom = drawLogo(margin, 8, 26, 16);
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text("REMITTANCE", margin, 12);
+    doc.setFontSize(15);
+    doc.setTextColor(15, 23, 42);
+    doc.text(brand.toUpperCase(), margin + 32, 22);
+    doc.setFont("courier", "normal");
+    doc.setFontSize(9);
+    doc.text(snapshot.invoiceNumber, pageW - margin, 14, { align: "right" });
+    doc.text(dateLabel.replace(/,/g, ""), pageW - margin, 20, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    y = Math.max(42, logoBottom + 10);
+  } else if (templateId === "accentBar") {
+    const headerTop = y;
+    const logoBottom = drawLogo(margin + 4, headerTop, 30, 16);
+    doc.setFontSize(17);
+    doc.setTextColor(15, 23, 42);
+    const metaBoxW = 52;
+    const metaGap = 6;
+    const brandMaxW = Math.max(36, pageW - margin * 2 - 40 - metaBoxW - metaGap);
+    doc.text(brand, margin + 40, headerTop + 10, { maxWidth: brandMaxW });
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(pageW - margin - 52, headerTop - 1, 52, 22, 2, 2, "F");
+    doc.setDrawColor(accent[0], accent[1], accent[2]);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(pageW - margin - 52, headerTop - 1, 52, 22, 2, 2, "S");
+    doc.setFontSize(7);
+    doc.setTextColor(accent[0], accent[1], accent[2]);
+    doc.text("DUE ON RECEIPT", pageW - margin - 26, headerTop + 4, { align: "center" });
+    doc.setFontSize(9);
+    doc.setTextColor(15, 23, 42);
+    doc.text(snapshot.invoiceNumber, pageW - margin - 26, headerTop + 11, { align: "center" });
+    doc.setFontSize(7);
+    doc.setTextColor(71, 85, 105);
+    doc.text(dateLabel, pageW - margin - 26, headerTop + 17, { align: "center" });
+    y = Math.max(headerTop + 26, logoBottom + 8);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin + 4, y, pageW - margin, y);
     y += 8;
   } else {
+    /* minimal */
     const headerTop = y;
-    let logoBottom = headerTop;
-    if (templateId === "minimal") {
-      logoBottom = drawLogo(margin, headerTop, 32, 16);
-      doc.setFontSize(18);
-      doc.setTextColor(15, 23, 42);
-      doc.text(brand, margin + 36, headerTop + 10);
-    } else if (templateId === "ledger") {
-      logoBottom = drawLogo(margin, headerTop, 30, 15);
-      doc.setFontSize(17);
-      doc.setTextColor(15, 23, 42);
-      doc.text(brand, margin + 34, headerTop + 9);
-      doc.setDrawColor(accent[0], accent[1], accent[2]);
-      doc.setLineWidth(0.6);
-      doc.line(margin, headerTop + 18, margin + 70, headerTop + 18);
-    } else {
-      logoBottom = drawLogo(margin, headerTop, 32, 16);
-      doc.setFontSize(18);
-      doc.setTextColor(15, 23, 42);
-      doc.text(brand, margin + 36, headerTop + 10);
-    }
-
+    const logoBottom = drawLogo(margin, headerTop, 32, 16);
+    doc.setFontSize(18);
+    doc.setTextColor(15, 23, 42);
+    doc.text(brand, margin + 36, headerTop + 10);
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Professional invoice", margin + 36, headerTop + 16);
     doc.setFontSize(10);
     doc.setTextColor(accent[0], accent[1], accent[2]);
     doc.text("INVOICE", pageW - margin, headerTop + 4, { align: "right" });
     doc.setFontSize(9);
     doc.setTextColor(71, 85, 105);
-    doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 10, { align: "right" });
-    doc.text(dateLabel, pageW - margin, headerTop + 16, { align: "right" });
-
+    doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 11, { align: "right" });
+    doc.text(dateLabel, pageW - margin, headerTop + 17, { align: "right" });
     y = Math.max(headerTop + 22, logoBottom + 6);
-    if (templateId === "ledger") {
-      doc.setDrawColor(203, 213, 225);
-      doc.line(margin, y, pageW - margin, y);
-    } else {
-      doc.setDrawColor(226, 232, 240);
-      doc.line(margin, y, pageW - margin, y);
-    }
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin, y, pageW - margin, y);
     y += 8;
   }
 
-  doc.setFontSize(11);
-  doc.setTextColor(15, 23, 42);
-  doc.text("Bill to", margin, y);
-  y += 6;
-  doc.setFontSize(10);
-  doc.setTextColor(51, 65, 85);
-  doc.text(snapshot.clientName, margin, y);
-  y += 5;
-  const addrLines = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - margin * 2 - 40);
-  doc.text(addrLines, margin, y);
-  y += addrLines.length * 5 + 8;
+  /* Bill to */
+  doc.setFont("helvetica", "normal");
+  if (templateId === "ledger") {
+    doc.setDrawColor(15, 23, 42);
+    doc.setLineWidth(0.25);
+    doc.rect(margin, y, pageW - margin * 2, 22);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(margin + 0.3, y + 0.3, pageW - margin * 2 - 0.6, 21.4, "F");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("PAY TO", margin + 3, y + 6);
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text(snapshot.clientName, margin + 3, y + 12);
+    doc.setFont("courier", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(71, 85, 105);
+    const addrOne = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - margin * 2 - 10);
+    doc.text(addrOne, margin + 3, y + 17);
+    doc.setFont("helvetica", "normal");
+    y += 28;
+  } else if (templateId === "editorial") {
+    doc.setFontSize(10);
+    doc.setTextColor(120, 113, 108);
+    doc.text("Bill to", margin, y);
+    y += 5;
+    doc.setFontSize(11);
+    doc.setTextColor(41, 37, 36);
+    doc.text(snapshot.clientName, margin, y);
+    y += 5;
+    doc.setFontSize(10);
+    doc.setTextColor(87, 83, 78);
+    const addrLines = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - margin * 2 - 50);
+    doc.text(addrLines, margin, y);
+    y += addrLines.length * 5 + 8;
+  } else {
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Bill to", margin, y);
+    y += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(51, 65, 85);
+    doc.text(snapshot.clientName, margin, y);
+    y += 5;
+    const addrLines = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - margin * 2 - 40);
+    doc.text(addrLines, margin, y);
+    y += addrLines.length * 5 + 8;
+  }
 
-  const tableBody = snapshot.lineItems.map((li) => [
-    li.description.trim() || "—",
-    formatMoneyUSD(li.amount),
-  ]);
+  const tableBody =
+    templateId === "ledger"
+      ? snapshot.lineItems.map((li, i) => [
+          String(i + 1),
+          li.description.trim() || "—",
+          formatMoneyUSD(li.amount),
+        ])
+      : snapshot.lineItems.map((li) => [li.description.trim() || "—", formatMoneyUSD(li.amount)]);
+
+  const head =
+    templateId === "ledger"
+      ? [["#", "Service", "Amount"]]
+      : [["Description", "Amount"]];
 
   const headFill: [number, number, number] =
-    templateId === "mono" ? [55, 55, 62] : [accent[0], accent[1], accent[2]];
-  const tableTheme = templateId === "ledger" ? "plain" : "striped";
+    templateId === "mono"
+      ? [63, 63, 70]
+      : templateId === "ledger"
+        ? [15, 23, 42]
+        : [accent[0], accent[1], accent[2]];
+
+  const tableTheme =
+    templateId === "ledger" ? "grid" : templateId === "editorial" ? "plain" : "striped";
+
+  const columnStyles: Record<number, { cellWidth?: number; halign?: "left" | "right" }> =
+    templateId === "ledger"
+      ? {
+          0: { cellWidth: 12, halign: "left" },
+          1: { cellWidth: pageW - margin * 2 - 12 - 36 },
+          2: { halign: "right", cellWidth: 36 },
+        }
+      : {
+          0: { cellWidth: pageW - margin * 2 - 36 },
+          1: { halign: "right", cellWidth: 36 },
+        };
 
   autoTable(doc, {
     startY: y,
-    head: [["Description", "Amount"]],
+    head,
     body: tableBody,
     theme: tableTheme,
     headStyles: {
       fillColor: headFill,
-      textColor: 255,
+      textColor: templateId === "ledger" ? 255 : 255,
       fontStyle: "bold",
       fontSize: templateId === "editorial" ? 9 : 10,
     },
-    columnStyles: {
-      0: { cellWidth: pageW - margin * 2 - 36 },
-      1: { halign: "right", cellWidth: 36 },
-    },
+    bodyStyles: { fontSize: templateId === "ledger" ? 9 : 10 },
+    columnStyles,
     margin: { left: margin, right: margin },
     styles: { fontSize: 10, cellPadding: pad },
   });
@@ -188,24 +283,52 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     y + 40;
   let sumY = finalY + 10;
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(71, 85, 105);
-  doc.text("Subtotal", pageW - margin - 50, sumY);
-  doc.text(formatMoneyUSD(subtotal), pageW - margin, sumY, { align: "right" });
-  sumY += 6;
-  doc.text("Discount", pageW - margin - 50, sumY);
-  doc.text(formatMoneyUSD(discount), pageW - margin, sumY, { align: "right" });
-  sumY += 6;
-  doc.text(`Tax (${snapshot.taxPercent}%)`, pageW - margin - 50, sumY);
-  doc.text(formatMoneyUSD(tax), pageW - margin, sumY, { align: "right" });
-  sumY += 8;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(accent[0], accent[1], accent[2]);
-  doc.text("Total due", pageW - margin - 50, sumY);
-  doc.setTextColor(15, 23, 42);
-  doc.text(formatMoneyUSD(total), pageW - margin, sumY, { align: "right" });
-  sumY += 12;
+  if (templateId === "ledger") {
+    doc.setDrawColor(15, 23, 42);
+    doc.setLineWidth(0.35);
+    doc.rect(pageW - margin - 62, sumY - 4, 62, 28);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(pageW - margin - 61.5, sumY - 3.5, 61, 27, "F");
+    doc.setFont("courier", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("BALANCE DUE", pageW - margin - 4, sumY, { align: "right" });
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.text(formatMoneyUSD(total), pageW - margin - 4, sumY + 10, { align: "right" });
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Sub ${formatMoneyUSD(subtotal)}`, pageW - margin - 4, sumY + 18, { align: "right" });
+    doc.text(`Tax ${formatMoneyUSD(tax)}`, pageW - margin - 4, sumY + 23, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    sumY += 34;
+  } else {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text("Subtotal", pageW - margin - 50, sumY);
+    doc.text(formatMoneyUSD(subtotal), pageW - margin, sumY, { align: "right" });
+    sumY += 6;
+    doc.text("Discount", pageW - margin - 50, sumY);
+    doc.text(formatMoneyUSD(discount), pageW - margin, sumY, { align: "right" });
+    sumY += 6;
+    doc.text(`Tax (${snapshot.taxPercent}%)`, pageW - margin - 50, sumY);
+    doc.text(formatMoneyUSD(tax), pageW - margin, sumY, { align: "right" });
+    sumY += 8;
+    doc.setFont("helvetica", "bold");
+    if (templateId === "editorial") {
+      doc.setFontSize(14);
+      doc.setTextColor(41, 37, 36);
+      doc.text("Total", pageW - margin - 50, sumY);
+      doc.text(formatMoneyUSD(total), pageW - margin, sumY, { align: "right" });
+    } else {
+      doc.setTextColor(accent[0], accent[1], accent[2]);
+      doc.text("Total due", pageW - margin - 50, sumY);
+      doc.setTextColor(15, 23, 42);
+      doc.text(formatMoneyUSD(total), pageW - margin, sumY, { align: "right" });
+    }
+    sumY += 12;
+  }
 
   if (snapshot.notes.trim()) {
     doc.setFont("helvetica", "normal");

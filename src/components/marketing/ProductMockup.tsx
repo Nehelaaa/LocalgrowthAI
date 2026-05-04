@@ -4,8 +4,9 @@ import { useState } from "react";
 
 const tabs = [
   { id: "search" as const, label: "Find" },
-  { id: "crm" as const, label: "Score & CRM" },
-  { id: "close" as const, label: "Close & revenue" },
+  { id: "crm" as const, label: "CRM" },
+  { id: "invoice" as const, label: "Invoices" },
+  { id: "close" as const, label: "Close" },
 ];
 
 export function ProductMockup() {
@@ -47,6 +48,7 @@ export function ProductMockup() {
           <div key={tab} className="lgai-mock-fade">
             {tab === "search" && <PanelSearch />}
             {tab === "crm" && <PanelCrm />}
+            {tab === "invoice" && <PanelInvoice />}
             {tab === "close" && <PanelClose />}
           </div>
         </div>
@@ -62,7 +64,13 @@ export function ProductMockup() {
           {tab === "crm" && (
             <>
               <Callout title="Prioritize fast" body="HOT / WARM / COLD tiers + next step." />
-              <Callout title="Never lose context" body="Notes + follow-ups live on the lead." tone="indigo" />
+              <Callout title="Active leads first" body="Interested & contacted rise to the top of your list." tone="indigo" />
+            </>
+          )}
+          {tab === "invoice" && (
+            <>
+              <Callout title="Branded PDFs" body="Layouts, logo, and accent — saved once, used everywhere." />
+              <Callout title="From the lead" body="Open any CRM row → build & download in seconds." tone="indigo" />
             </>
           )}
           {tab === "close" && (
@@ -187,6 +195,45 @@ function PanelSearch() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function PanelInvoice() {
+  return (
+    <div className="space-y-2 text-left text-xs">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        Invoice templates
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {["Minimal", "Ledger", "Statement"].map((x) => (
+          <span
+            key={x}
+            className={
+              "rounded-md px-2 py-0.5 text-[9px] font-semibold " +
+              (x === "Statement"
+                ? "bg-violet-600 text-white"
+                : "border border-slate-200/80 bg-white text-slate-600 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-300")
+            }
+          >
+            {x}
+          </span>
+        ))}
+      </div>
+      <div className="rounded-lg border border-slate-200/80 bg-white p-2 dark:border-slate-700/50 dark:bg-slate-900/50">
+        <p className="text-[10px] font-bold text-slate-900 dark:text-white">Apex Plumbing Co.</p>
+        <p className="text-[9px] text-slate-500">Website build · $1,800</p>
+        <button
+          type="button"
+          className="mt-2 w-full rounded-lg bg-indigo-600 py-1.5 text-[10px] font-bold text-white"
+          disabled
+        >
+          Download PDF
+        </button>
+      </div>
+      <p className="text-[9px] leading-relaxed text-slate-500 dark:text-slate-400">
+        Match your PDF to the template you pick — plus live preview before you send.
+      </p>
     </div>
   );
 }

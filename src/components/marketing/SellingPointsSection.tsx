@@ -12,8 +12,16 @@ const points = [
     desc: "Prioritize the best prospects first — built for daily outreach without spreadsheet chaos.",
   },
   {
+    title: "Deep filters + one-click presets",
+    desc: "Refine results with stackable rules and presets like Easy Wins, High Value, and Fast Closers — then save only the fits.",
+  },
+  {
+    title: "Branded PDF invoices",
+    desc: "Multiple layouts, your logo, accent colors, and a live preview. Generate a polished invoice from any lead in the CRM.",
+  },
+  {
     title: "CRM pipeline that stays simple",
-    desc: "Status, notes, follow-ups, tags, and a clean history on every lead.",
+    desc: "Status, notes, follow-ups, and history on every lead. Active opportunities (Interested, Contacted) float to the top automatically.",
   },
   {
     title: "Close deals & track revenue",

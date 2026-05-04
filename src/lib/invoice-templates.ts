@@ -22,31 +22,31 @@ export const INVOICE_TEMPLATES: InvoiceTemplateDefinition[] = [
   {
     id: "minimal",
     name: "Minimal",
-    tagline: "Clean layout with a soft divider and balanced typography.",
+    tagline: "Soft card, left accent stripe on the table, airy typography.",
     defaultAccentHex: "#4f46e5",
   },
   {
     id: "ledger",
     name: "Ledger",
-    tagline: "Accounting-inspired lines and a confident totals block.",
+    tagline: "Cream band, # / service / amount columns, boxed payee & balance.",
     defaultAccentHex: "#0d9488",
   },
   {
     id: "mono",
     name: "Statement",
-    tagline: "Bold top bar — reads like a premium financial statement.",
+    tagline: "Dark header bar, zebra rows, neutral table — corporate statement look.",
     defaultAccentHex: "#18181b",
   },
   {
     id: "accentBar",
     name: "Accent rail",
-    tagline: "Vertical color rail for instant brand recognition.",
+    tagline: "Bold rail + framed due-date card and strong invoice title.",
     defaultAccentHex: "#7c3aed",
   },
   {
     id: "editorial",
     name: "Editorial",
-    tagline: "Large invoice title with centered hierarchy.",
+    tagline: "Serif headline, stone palette, two-column bill area, refined totals.",
     defaultAccentHex: "#b45309",
   },
 ];
@@ -73,8 +73,19 @@ export function isInvoiceTemplateId(id: string): id is InvoiceTemplateId {
   return (INVOICE_TEMPLATE_IDS as readonly string[]).includes(id);
 }
 
+/** Older builds or manual localStorage may use these keys — map to current ids. */
+const LEGACY_INVOICE_TEMPLATE_IDS: Record<string, InvoiceTemplateId> = {
+  statement: "mono",
+  accentrail: "accentBar",
+  accent_rail: "accentBar",
+};
+
 export function normalizeInvoiceTemplateId(id: string | undefined | null): InvoiceTemplateId {
-  if (id && isInvoiceTemplateId(id)) return id;
+  if (!id) return "minimal";
+  const trimmed = id.trim();
+  if (isInvoiceTemplateId(trimmed)) return trimmed;
+  const legacy = LEGACY_INVOICE_TEMPLATE_IDS[trimmed.toLowerCase()];
+  if (legacy) return legacy;
   return "minimal";
 }
 

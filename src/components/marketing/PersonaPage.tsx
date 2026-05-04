@@ -23,7 +23,8 @@ const personas: Record<
       "Search a city, grab qualified leads, and keep follow-ups organized until you close the deal.",
     bullets: [
       "Find under-served businesses fast",
-      "Prioritize with simple signals",
+      "Prioritize with simple signals & presets",
+      "Branded PDF invoices from any saved lead",
       "Track follow-ups in one pipeline",
       "Great for consultants, creatives, marketers, and local services",
     ],
@@ -43,7 +44,12 @@ const personas: Record<
     title: "Turn territory searches into a predictable pipeline.",
     subtitle:
       "Standardize prospecting across the team, keep context on every lead, and scale outreach without chaos.",
-    bullets: ["Team-ready workflow", "Exports + billing on Pro", "Clean pipeline for daily follow-ups"],
+    bullets: [
+      "Team-ready workflow",
+      "Exports + billing on Pro",
+      "Invoice templates the whole team can reuse",
+      "Clean pipeline — active deals stay on top",
+    ],
     workflow: [
       { t: "Define your ICP", d: "Territory + trade + signals: build a repeatable list-building motion." },
       { t: "Score + stage", d: "Tiers + CRM stages keep everyone aligned on what happens next." },
@@ -60,7 +66,12 @@ const personas: Record<
     title: "Prospect every day with fresh local leads.",
     subtitle:
       "Build lists, segment by signals, and keep a clean call sheet that updates as you work the pipeline.",
-    bullets: ["Targeted prospecting", "Segment by signals", "Track outcomes and follow-ups"],
+    bullets: [
+      "Targeted prospecting",
+      "Segment by signals & presets",
+      "PDF quotes from any pipeline row",
+      "Track outcomes and follow-ups",
+    ],
     workflow: [
       { t: "Build a call list", d: "Search by location + category and save the best targets." },
       { t: "Segment instantly", d: "Use tiers and stages to focus on what’s most likely to convert." },

@@ -20,12 +20,19 @@ const steps = [
   {
     id: 3,
     title: "Run your pipeline",
-    body: "Track contact status, notes, follow-up dates, and value in a built-in CRM. No more scattered spreadsheets for your sales process.",
+    body: "Track contact status, notes, follow-up dates, and value in a built-in CRM. Interested and contacted leads float to the top so you always see who you’re actively working.",
     eyebrow: "Simple CRM pipeline",
     accent: "emerald" as const,
   },
   {
     id: 4,
+    title: "Brand & bill in one click",
+    body: "Pick an invoice layout, logo, and accent color — then generate a client-ready PDF right from any lead. No extra design tool required.",
+    eyebrow: "Branded PDF invoices",
+    accent: "sky" as const,
+  },
+  {
+    id: 5,
     title: "Close deals & track revenue",
     body: "Move opportunities to Won/Lost, set deal value, and see what’s closing this week. Keep your pipeline clean and know exactly how much money is in play.",
     eyebrow: "Closing + revenue",
@@ -69,7 +76,7 @@ export function HowItWorksSection() {
           How LocalLeadster works
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-base text-slate-600 dark:text-slate-400">
-          Four simple steps from search to close. Click a step to explore — use arrow keys too.
+          Five steps from search to close — including branded invoices. Click a step to explore — use arrow keys too.
         </p>
 
         <div className="mt-10 flex flex-col gap-8 lg:flex-row lg:items-start">
@@ -90,7 +97,9 @@ export function HowItWorksSection() {
                       ? "border-emerald-400/35 bg-emerald-50/60 ring-emerald-500/15 dark:border-emerald-500/25 dark:bg-emerald-500/10"
                       : step.accent === "violet"
                         ? "border-violet-400/35 bg-violet-50/60 ring-violet-500/15 dark:border-violet-500/25 dark:bg-violet-500/10"
-                        : "border-indigo-400/35 bg-indigo-50/70 ring-indigo-500/15 dark:border-indigo-500/25 dark:bg-indigo-500/10";
+                        : step.accent === "sky"
+                          ? "border-sky-400/35 bg-sky-50/70 ring-sky-500/15 dark:border-sky-500/25 dark:bg-sky-500/10"
+                          : "border-indigo-400/35 bg-indigo-50/70 ring-indigo-500/15 dark:border-indigo-500/25 dark:bg-indigo-500/10";
 
                 return (
                   <li key={step.id}>
@@ -170,7 +179,8 @@ export function HowItWorksSection() {
                   {s.id === 1 && <Pill>City + radius + category</Pill>}
                   {s.id === 2 && <Pill>Signals + tiers</Pill>}
                   {s.id === 3 && <Pill>Pipeline + follow-ups</Pill>}
-                  {s.id === 4 && <Pill>Won value + revenue</Pill>}
+                  {s.id === 4 && <Pill>Templates + PDF</Pill>}
+                  {s.id === 5 && <Pill>Won value + revenue</Pill>}
                 </div>
               </div>
 
@@ -178,7 +188,8 @@ export function HowItWorksSection() {
                 {s.id === 1 && <VisualSearch />}
                 {s.id === 2 && <VisualScore />}
                 {s.id === 3 && <VisualPipeline />}
-                {s.id === 4 && <VisualClose />}
+                {s.id === 4 && <VisualInvoice />}
+                {s.id === 5 && <VisualClose />}
               </div>
             </div>
           </div>
@@ -374,7 +385,7 @@ function VisualSearch() {
               </div>
             ))}
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-2 text-[11px] text-slate-600 dark:border-slate-700/50 dark:bg-slate-900/20 dark:text-slate-300">
-              Tip: refine by rating/reviews and “no website” to find high-intent prospects faster.
+              Tip: use presets or stack filters (website, opportunity, reviews) to surface the best prospects faster.
             </div>
           </div>
         </div>
@@ -486,6 +497,59 @@ function VisualPipeline() {
             </div>
           </div>
         ))}
+      </div>
+    </Frame>
+  );
+}
+
+function VisualInvoice() {
+  return (
+    <Frame>
+      <div className="grid gap-3 lg:grid-cols-[1fr_1.1fr]">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Invoice templates
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {["Minimal", "Ledger", "Statement", "Accent", "Editorial"].map((name) => (
+              <span
+                key={name}
+                className={
+                  "rounded-lg border px-2 py-1 text-[10px] font-semibold " +
+                  (name === "Statement"
+                    ? "border-violet-400 bg-violet-50 text-violet-900 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-100"
+                    : "border-slate-200/80 bg-white text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-300")
+                }
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+            Logo, accent color, and layout stay saved — every PDF matches your brand.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <div className="rounded-2xl border border-indigo-200/70 bg-gradient-to-br from-white to-indigo-50/80 p-3 shadow-sm dark:border-indigo-500/25 dark:from-slate-900/40 dark:to-indigo-950/20">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-extrabold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                From any lead
+              </p>
+              <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[9px] font-bold text-white">
+                Download PDF
+              </span>
+            </div>
+            <div className="mt-2 rounded-lg border border-slate-200/80 bg-white/95 p-2.5 text-[10px] dark:border-slate-700/50 dark:bg-slate-900/50">
+              <p className="font-bold text-slate-900 dark:text-white">INVOICE</p>
+              <p className="mt-0.5 text-slate-600 dark:text-slate-300">Line items · tax · notes</p>
+              <div className="mt-2 h-1.5 rounded bg-violet-500/85" aria-hidden />
+            </div>
+          </div>
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-2 text-[10px] text-slate-600 dark:border-slate-700/50 dark:bg-slate-800/40 dark:text-slate-300">
+            Also new: refine results with presets (Easy Wins, High Value, Fast Closers) and stackable filters before you
+            save.
+          </div>
+        </div>
       </div>
     </Frame>
   );

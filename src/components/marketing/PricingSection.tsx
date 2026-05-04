@@ -57,6 +57,10 @@ export function PricingSection() {
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
+                <span>Branded invoice PDFs — templates, logo, and colors from the CRM</span>
+              </li>
+              <li className="flex gap-3">
+                <CheckIcon />
                 <span>Upgrade in-app when you need more</span>
               </li>
             </ul>
@@ -92,6 +96,10 @@ export function PricingSection() {
                 <span>
                   <strong className="text-slate-900 dark:text-white">Unlimited</strong> lead saves
                 </span>
+              </li>
+              <li className="flex gap-3">
+                <CheckIcon />
+                <span>Everything in Free, including invoice builder &amp; search presets</span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />

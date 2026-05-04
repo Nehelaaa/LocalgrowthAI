@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
 import { formatMoneyUSD, parseMoneyFromQuote } from "@/lib/invoice-money";
@@ -38,6 +38,19 @@ type Props = {
   initialNotes: string;
 };
 
+/** Template/accent/density from localStorage (invoice templates page) can be newer than React state. */
+function mergeLatestSavedPdfLook(snapshot: InvoiceSnapshot): InvoiceSnapshot {
+  const s = loadInvoiceSenderTemplate();
+  const tid = normalizeInvoiceTemplateId(s.templateId);
+  const tpl = getInvoiceTemplate(tid);
+  return {
+    ...snapshot,
+    invoiceTemplateId: tid,
+    invoiceAccentHex: normalizeHexColor(s.accentHex, tpl.defaultAccentHex),
+    invoiceLayoutDensity: s.density === "compact" ? "compact" : "comfortable",
+  };
+}
+
 export function InvoiceBuilderModal({
   open,
   onClose,
@@ -65,7 +78,7 @@ export function InvoiceBuilderModal({
   const [logoDragOver, setLogoDragOver] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     setErr(null);
     setCopyDone(false);
@@ -112,6 +125,26 @@ export function InvoiceBuilderModal({
     invoiceAccentHex,
     invoiceLayoutDensity,
   ]);
+
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const syncFromStorage = () => {
+      if (document.visibilityState !== "visible") return;
+      const sender = loadInvoiceSenderTemplate();
+      const tid = normalizeInvoiceTemplateId(sender.templateId);
+      setInvoiceTemplateId(tid);
+      setInvoiceAccentHex(
+        normalizeHexColor(sender.accentHex, getInvoiceTemplate(tid).defaultAccentHex)
+      );
+      setInvoiceLayoutDensity(sender.density === "compact" ? "compact" : "comfortable");
+    };
+    document.addEventListener("visibilitychange", syncFromStorage);
+    window.addEventListener("focus", syncFromStorage);
+    return () => {
+      document.removeEventListener("visibilitychange", syncFromStorage);
+      window.removeEventListener("focus", syncFromStorage);
+    };
+  }, [open]);
 
   const snapshot = useMemo(
     (): InvoiceSnapshot => ({
@@ -189,7 +222,7 @@ export function InvoiceBuilderModal({
     }
     setPdfBusy(true);
     try {
-      const blob = await generateInvoicePdfBlob(snapshot);
+      const blob = await generateInvoicePdfBlob(mergeLatestSavedPdfLook(snapshot));
       downloadInvoicePdf(blob, snapshot.invoiceNumber);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not create PDF.");
@@ -201,7 +234,7 @@ export function InvoiceBuilderModal({
   const handleCopyText = useCallback(async () => {
     setErr(null);
     try {
-      const text = formatInvoicePlainText(snapshot);
+      const text = formatInvoicePlainText(mergeLatestSavedPdfLook(snapshot));
       await navigator.clipboard.writeText(text);
       setCopyDone(true);
       window.setTimeout(() => setCopyDone(false), 2000);
@@ -268,8 +301,11 @@ export function InvoiceBuilderModal({
               </Link>
             </div>
             <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-              Logo, name, and PDF layout are saved in this browser. Change the template anytime from the link
-              above — this builder uses your latest design.
+              Logo and name save here; layout and colors follow{" "}
+              <strong className="font-semibold text-slate-800 dark:text-slate-200">
+                {getInvoiceTemplate(normalizeInvoiceTemplateId(invoiceTemplateId)).name}
+              </strong>{" "}
+              from Invoice templates (PDF uses the latest saved look when you download).
             </p>
             <label className="mt-3 block text-sm">
               <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Business name</span>

@@ -31,8 +31,8 @@ export function OutreachProofSection() {
             Built for real outreach — not vanity dashboards
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-600 dark:text-slate-400">
-            Search live businesses, qualify with simple signals, and keep every next step in one pipeline — so you
-            can run local outreach daily without spreadsheet chaos.
+            Search live businesses, qualify with signals and presets, keep every next step in one pipeline, and ship
+            branded PDF invoices from the same lead row — so you can run local outreach daily without spreadsheet chaos.
           </p>
         </div>
 
@@ -49,22 +49,29 @@ export function OutreachProofSection() {
           <div className="text-left">
             <p className="text-slate-600 dark:text-slate-400">
               LocalLeadster ties <span className="font-medium text-slate-800 dark:text-slate-200">search</span>,{" "}
-              <span className="font-medium text-slate-800 dark:text-slate-200">scoring</span>, and{" "}
-              <span className="font-medium text-slate-800 dark:text-slate-200">follow-up</span> together so you always
-              know who to contact next and why.
+              <span className="font-medium text-slate-800 dark:text-slate-200">scoring</span>,{" "}
+              <span className="font-medium text-slate-800 dark:text-slate-200">follow-up</span>, and{" "}
+              <span className="font-medium text-slate-800 dark:text-slate-200">client-ready PDFs</span> together so you
+              always know who to contact next and why.
             </p>
             <ul className="mt-5 space-y-2.5 text-sm text-slate-700 dark:text-slate-300">
               <li className="flex gap-2">
                 <span className="mt-0.5 shrink-0 text-emerald-600" aria-hidden>
                   ✓
                 </span>
-                Live Google Places search in your territory with fast qualification signals.
+                Live Google Places search in your territory with fast qualification signals and optional presets.
               </li>
               <li className="flex gap-2">
                 <span className="mt-0.5 shrink-0 text-emerald-600" aria-hidden>
                   ✓
                 </span>
                 Per-lead history: status, notes, follow-ups, and context in one thread.
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-0.5 shrink-0 text-emerald-600" aria-hidden>
+                  ✓
+                </span>
+                Invoice builder: pick a layout, drop a logo, download a PDF without leaving the lead.
               </li>
               <li className="flex gap-2">
                 <span className="mt-0.5 shrink-0 text-emerald-600" aria-hidden>
