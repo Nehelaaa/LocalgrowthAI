@@ -1,18 +1,19 @@
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import { extractSubscriptionCurrentPeriodEndUnix } from "@/lib/stripe-subscription-period";
 
 const PRO_STATUSES = new Set<Stripe.Subscription.Status>(["active", "trialing", "past_due"]);
 
 /** Maps a Stripe subscription row to User billing fields (matches webhook logic). */
 export function subscriptionToUserData(sub: Stripe.Subscription) {
   const isPro = PRO_STATUSES.has(sub.status);
-  const cpe = (sub as unknown as { current_period_end?: number }).current_period_end;
+  const cpeUnix = extractSubscriptionCurrentPeriodEndUnix(sub);
   return {
     stripeSubscriptionId: sub.id,
     subscriptionStatus: sub.status,
     plan: isPro ? ("pro" as const) : ("free" as const),
-    subscriptionPeriodEnd: typeof cpe === "number" ? new Date(cpe * 1000) : null,
+    subscriptionPeriodEnd: cpeUnix != null ? new Date(cpeUnix * 1000) : null,
   };
 }
 
@@ -50,9 +51,7 @@ export async function syncUserSubscriptionFromStripe(userId: string): Promise<bo
   if (paying.length === 0) return false;
 
   paying.sort(
-    (a, b) =>
-      ((b as unknown as { current_period_end?: number }).current_period_end ?? 0) -
-      ((a as unknown as { current_period_end?: number }).current_period_end ?? 0)
+    (a, b) => (extractSubscriptionCurrentPeriodEndUnix(b) ?? 0) - (extractSubscriptionCurrentPeriodEndUnix(a) ?? 0),
   );
   const best = paying[0]!;
   await prisma.user.update({ where: { id: userId }, data: subscriptionToUserData(best) });

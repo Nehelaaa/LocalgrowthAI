@@ -1,31 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="920" height="240" viewBox="0 0 920 240" role="img" aria-label="Localgrowth logo">
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="360" viewBox="0 0 1240 360" role="img" aria-label="Localleadster logo">
   <defs>
-    <linearGradient id="g" x1="30" y1="18" x2="220" y2="230" gradientUnits="userSpaceOnUse">
+    <linearGradient id="gMark" x1="80" y1="60" x2="440" y2="460" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#7c3aed"/>
       <stop offset="1" stop-color="#2563eb"/>
     </linearGradient>
+    <!-- Soft squircle (~21% corner radius) — pin clipped so nothing spills past the curve. -->
+    <clipPath id="softSq">
+      <rect width="512" height="512" rx="108" ry="108"/>
+    </clipPath>
   </defs>
 
-  <rect x="16" y="16" width="208" height="208" rx="52" fill="url(#g)"/>
-  <!-- pin -->
-  <path
-    d="M120 56c-36 0-62 26-62 62 0 56 62 122 62 122s62-66 62-122c0-36-26-62-62-62Z"
-    fill="#fff"
-    fill-opacity="0.96"
-  />
-  <circle cx="120" cy="118" r="34" fill="url(#g)"/>
-  <circle cx="120" cy="118" r="20" fill="#fff" fill-opacity="0.96"/>
-  <!-- L -->
-  <path
-    d="M106 96c0-4 3-8 8-8h9c5 0 8 4 8 8v58h26c5 0 8 4 8 8v9c0 4-3 8-8 8h-43c-5 0-8-4-8-8V96Z"
-    fill="url(#g)"
-  />
+  <!-- Larger mark for Stripe header; rounded square reads softer than a sharp tile. -->
+  <g transform="translate(18, 21) scale(0.62)">
+    <rect width="512" height="512" rx="108" ry="108" fill="url(#gMark)"/>
+    <g clip-path="url(#softSq)">
+      <g transform="translate(256, 258) scale(0.72) translate(-256, -258)">
+        <path
+          d="M256 128c-76 0-132 56-132 132 0 114 132 248 132 248s132-134 132-248c0-76-56-132-132-132Z"
+          fill="#ffffff"
+          fill-opacity="0.96"
+        />
+        <circle cx="256" cy="260" r="74" fill="url(#gMark)"/>
+        <circle cx="256" cy="260" r="40" fill="#ffffff" fill-opacity="0.96"/>
+      </g>
+    </g>
+  </g>
 
-  <text x="262" y="144" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="76" font-weight="800" fill="#0f172a">
-    Localgrowth
-  </text>
-  <text x="262" y="186" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="24" font-weight="600" fill="#475569">
-    Lead gen + pipeline for local B2B
+  <text
+    x="360"
+    y="232"
+    font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
+    font-size="140"
+    font-weight="800"
+    fill="#ffffff"
+  >
+    Localleadster
   </text>
 </svg>
-

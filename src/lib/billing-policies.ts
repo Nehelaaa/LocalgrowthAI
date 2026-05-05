@@ -45,7 +45,7 @@ export const stripeOperatorChecklist = [
   "Subscribe the webhook to at least the events this app handles (see stripeWebhookEventsRecommended).",
   "Test mode: run a full flow (subscribe → portal → cancel at period end) and confirm /owner/alerts and /owner/churn update.",
   "Refunds: Dashboard → Payments shows refund state; the hosted customer portal invoice list may still show “Paid” on the original invoice. The app’s Plans & billing page lists charge-level status for signed-in customers.",
-  "Hosted branding (Checkout + Customer portal landing): Stripe Dashboard → Settings → Branding — upload a square Icon (≥128px PNG/JPG) and set Accent color (page background tint) and Brand color (buttons) to match your app (defaults in code use violet #f5f3ff / #7c3aed). Set Public business name to “Localgrowth”. Checkout also sends branding from this app (see `src/lib/stripe-branding.ts`); the portal’s “partners with Stripe” screen uses Dashboard branding, not our API.",
+  "Hosted branding (Checkout + Customer portal landing): Stripe Dashboard → Settings → Branding — upload a square Icon (≥128px PNG/JPG) and set Accent color (page background tint) and Brand color (buttons) to match your app (defaults in code use violet #f5f3ff / #7c3aed). Set Public business name to “Localleadster”. Checkout also sends branding from this app (see `src/lib/stripe-branding.ts`); the portal’s “partners with Stripe” screen uses Dashboard branding, not our API.",
   "Optional: create a Customer portal configuration (Billing → Customer portal) and set STRIPE_BILLING_PORTAL_CONFIGURATION_ID so portal sessions use it.",
 ] as const;
 

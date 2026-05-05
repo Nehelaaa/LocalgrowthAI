@@ -35,9 +35,14 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
 
   const brand = snapshot.senderBusinessName?.trim() || defaultInvoiceCompanyName();
   const { subtotal, discount, tax, total } = invoiceTotals(snapshot);
-  const dateLabel = new Date(snapshot.invoiceDate).toLocaleDateString(undefined, {
+  const invoiceDateParsed = new Date(snapshot.invoiceDate);
+  const dateLabel = invoiceDateParsed.toLocaleDateString(undefined, {
     dateStyle: "long",
   });
+  /** Matches InvoiceDocumentPreview Editorial meta (“APR 22, 2026”). */
+  const editorialShortDateUpper = invoiceDateParsed
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    .toUpperCase();
 
   const pad = cellPad(snapshot);
   const logoFmt = detectImageFormat(snapshot.senderLogoDataUrl);
@@ -72,6 +77,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   }
 
   if (templateId === "mono") {
+    doc.setFont("helvetica", "normal");
     doc.setFillColor(24, 24, 27);
     doc.rect(0, 0, pageW, 26, "F");
     const logoBottom = drawLogo(margin, 6, 22, 14);
@@ -89,25 +95,30 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.line(margin, y, pageW - margin, y);
     y += 8;
   } else if (templateId === "editorial") {
+    doc.setFont("times", "normal");
     doc.setFontSize(20);
     doc.setTextColor(41, 37, 36);
     doc.text("INVOICE", pageW / 2, y + 8, { align: "center" });
+    doc.setFont("times", "italic");
     doc.setFontSize(11);
     doc.setTextColor(87, 83, 78);
     doc.text(brand, pageW / 2, y + 16, { align: "center" });
+    doc.setFont("times", "normal");
     y += 22;
     const lb = drawLogo(pageW / 2 - 14, y, 28, 14);
+    doc.setFont("times", "normal");
     y = lb + 6;
+    doc.setFont("courier", "normal");
     doc.setFontSize(9);
     doc.setTextColor(120, 113, 108);
-    doc.text(snapshot.invoiceNumber, pageW / 2, y, { align: "center" });
-    doc.text(dateLabel, pageW / 2, y + 5, { align: "center" });
-    y += 14;
+    doc.text(`${snapshot.invoiceNumber} · ${editorialShortDateUpper}`, pageW / 2, y, { align: "center" });
+    y += 8;
     doc.setDrawColor(accent[0], accent[1], accent[2]);
     doc.setLineWidth(0.35);
     doc.line(margin + 24, y, pageW - margin - 24, y);
     y += 8;
   } else if (templateId === "ledger") {
+    doc.setFont("helvetica", "normal");
     doc.setFillColor(255, 251, 235);
     doc.rect(0, 0, pageW, 42, "F");
     doc.setDrawColor(15, 23, 42);
@@ -127,6 +138,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setFont("helvetica", "normal");
     y = Math.max(42, logoBottom + 10);
   } else if (templateId === "accentBar") {
+    doc.setFont("helvetica", "normal");
     const headerTop = y;
     const logoBottom = drawLogo(margin + 4, headerTop, 30, 16);
     doc.setFontSize(17);
@@ -155,6 +167,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     y += 8;
   } else {
     /* minimal */
+    doc.setFont("helvetica", "normal");
     const headerTop = y;
     const logoBottom = drawLogo(margin, headerTop, 32, 16);
     doc.setFontSize(18);
@@ -177,7 +190,6 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   }
 
   /* Bill to */
-  doc.setFont("helvetica", "normal");
   if (templateId === "ledger") {
     doc.setDrawColor(15, 23, 42);
     doc.setLineWidth(0.25);
@@ -198,6 +210,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setFont("helvetica", "normal");
     y += 28;
   } else if (templateId === "editorial") {
+    doc.setFont("times", "normal");
     doc.setFontSize(10);
     doc.setTextColor(120, 113, 108);
     doc.text("Bill to", margin, y);
@@ -249,6 +262,9 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   const tableTheme =
     templateId === "ledger" ? "grid" : templateId === "editorial" ? "plain" : "striped";
 
+  const tableFont: "helvetica" | "times" | "courier" =
+    templateId === "editorial" ? "times" : templateId === "ledger" ? "courier" : "helvetica";
+
   const columnStyles: Record<number, { cellWidth?: number; halign?: "left" | "right" }> =
     templateId === "ledger"
       ? {
@@ -271,11 +287,15 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
       textColor: templateId === "ledger" ? 255 : 255,
       fontStyle: "bold",
       fontSize: templateId === "editorial" ? 9 : 10,
+      font: tableFont,
     },
-    bodyStyles: { fontSize: templateId === "ledger" ? 9 : 10 },
+    bodyStyles: {
+      fontSize: templateId === "ledger" ? 9 : 10,
+      font: tableFont,
+    },
     columnStyles,
     margin: { left: margin, right: margin },
-    styles: { fontSize: 10, cellPadding: pad },
+    styles: { fontSize: 10, cellPadding: pad, font: tableFont },
   });
 
   const finalY =
@@ -303,7 +323,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setFont("helvetica", "normal");
     sumY += 34;
   } else {
-    doc.setFont("helvetica", "normal");
+    doc.setFont(templateId === "editorial" ? "times" : "helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
     doc.text("Subtotal", pageW - margin - 50, sumY);
@@ -315,7 +335,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.text(`Tax (${snapshot.taxPercent}%)`, pageW - margin - 50, sumY);
     doc.text(formatMoneyUSD(tax), pageW - margin, sumY, { align: "right" });
     sumY += 8;
-    doc.setFont("helvetica", "bold");
+    doc.setFont(templateId === "editorial" ? "times" : "helvetica", "bold");
     if (templateId === "editorial") {
       doc.setFontSize(14);
       doc.setTextColor(41, 37, 36);
@@ -331,7 +351,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   }
 
   if (snapshot.notes.trim()) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont(templateId === "editorial" ? "times" : "helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
     doc.text("Notes", margin, sumY);
@@ -340,6 +360,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.text(noteLines, margin, sumY);
   }
 
+  doc.setFont(templateId === "editorial" ? "times" : "helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
   doc.text("Thank you for your business.", pageW / 2, pageH - 12, { align: "center" });

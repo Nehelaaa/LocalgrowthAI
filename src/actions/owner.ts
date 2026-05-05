@@ -87,22 +87,30 @@ export async function ownerAddOwnerByEmail(email: string) {
 }
 
 export async function ownerDeleteUser(userId: string) {
-  await requireOwnerOrRedirect();
+  const session = await requireOwnerOrRedirect();
   const id = userIdSchema.parse(userId);
+
+  if (session.user?.id === id) {
+    throw new Error("You cannot delete your own account.");
+  }
 
   const u = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, stripeSubscriptionId: true, role: true },
+    select: { id: true, stripeSubscriptionId: true, role: true, disabled: true },
   });
-  if (!u) return;
-
-  // Safety: don't delete owner accounts from the UI (avoid locking yourself out).
-  if (u.role === "ADMIN") {
-    throw new Error("OWNER_DELETE_FORBIDDEN");
+  if (!u) {
+    throw new Error("User not found.");
   }
-  // Safety: require subscription already canceled via Stripe ops if present.
+  if (!u.disabled) {
+    throw new Error("Only disabled accounts can be deleted. Disable the user first.");
+  }
+  if (u.role === "ADMIN") {
+    throw new Error("Owner (ADMIN) accounts cannot be deleted from the dashboard.");
+  }
   if (u.stripeSubscriptionId) {
-    throw new Error("CANCEL_SUBSCRIPTION_FIRST");
+    throw new Error(
+      "This user still has a Stripe subscription on file. Use “Cancel subscription now” (or cancel at period end) in Billing ops, then try delete again.",
+    );
   }
 
   await prisma.user.delete({ where: { id } });

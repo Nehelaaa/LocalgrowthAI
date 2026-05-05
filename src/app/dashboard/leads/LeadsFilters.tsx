@@ -136,6 +136,9 @@ export function LeadsFilters() {
     const next = new URLSearchParams(sp);
     if (value) next.set(key, value);
     else next.delete(key);
+    if (key !== "page" && key !== "perPage") {
+      next.delete("page");
+    }
     router.push(`/dashboard/leads?${next.toString()}`);
   };
 

@@ -5,6 +5,8 @@ import type { BillingControlsMode } from "@/components/dashboard/BillingSubscrip
 import { ManageBillingButton } from "@/components/dashboard/ManageBillingButton";
 import { PlanComparisonGrid } from "@/components/dashboard/plan/PlanComparisonGrid";
 import { PlanCurrentSummaryCard } from "@/components/dashboard/plan/PlanCurrentSummaryCard";
+import { PlanInvoicesPaginated } from "@/components/dashboard/plan/PlanInvoicesPaginated";
+import { PlanPaymentsPaginated } from "@/components/dashboard/plan/PlanPaymentsPaginated";
 import { PlanUsageCard } from "@/components/dashboard/plan/PlanUsageCard";
 import {
   FREE_LEAD_LIMIT,
@@ -19,13 +21,12 @@ import { prisma } from "@/lib/db";
 import { requireDashboardUser } from "@/lib/session-user";
 import { syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";
 import { getSearchUsageState } from "@/lib/search-usage";
+import { formatLongDate } from "@/lib/billing-plan-format";
 import {
   getStripePlanPresentment,
   getProCheckoutPricePresentment,
   listInvoicesForCustomer,
   listPaymentActivityForCustomer,
-  type SafeInvoiceRow,
-  type SafePaymentActivityRow,
 } from "@/lib/stripe-customer-billing";
 import { getSubscriptionDisplayInfo } from "@/lib/stripe-subscription-display";
 import { customerBillingFaq } from "@/lib/billing-policies";
@@ -33,22 +34,6 @@ import { customerBillingFaq } from "@/lib/billing-policies";
 type Props = {
   searchParams: Promise<{ checkout?: string; portal?: string; billing?: string }>;
 };
-
-function formatLongDate(d: Date | null | undefined): string | null {
-  if (!d) return null;
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(d);
-}
-
-function formatInvoiceDate(createdUnix: number): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-    new Date(createdUnix * 1000)
-  );
-}
-
-function formatMoneyMinor(amountPaid: number, currency: string): string {
-  const c = currency.length === 3 ? currency : "USD";
-  return (amountPaid / 100).toLocaleString(undefined, { style: "currency", currency: c });
-}
 
 function subscriptionStatusSummary(status: string | null | undefined): string {
   switch (status) {
@@ -71,88 +56,6 @@ function subscriptionStatusSummary(status: string | null | undefined): string {
     default:
       return status ? `Stripe: ${status.replace(/_/g, " ")}` : "";
   }
-}
-
-function invoiceDownloadHref(inv: SafeInvoiceRow): string | null {
-  return inv.hostedInvoiceUrl ?? inv.invoicePdf;
-}
-
-function paymentStatusBadgeClass(status: SafePaymentActivityRow["statusLabel"]): string {
-  if (status === "Refunded") {
-    return "bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-100";
-  }
-  if (status === "Partially refunded") {
-    return "bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100";
-  }
-  return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
-}
-
-function PaymentActivityBlock({ rows }: { rows: SafePaymentActivityRow[] }) {
-  if (rows.length === 0) {
-    return (
-      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-        No card charges returned from Stripe yet. If you just paid, refresh in a moment.
-      </p>
-    );
-  }
-  return (
-    <div className="mt-4 overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
-      <table className="w-full min-w-[560px] text-left text-sm">
-        <thead className="border-b border-slate-100 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-800/50">
-          <tr>
-            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Date</th>
-            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Status</th>
-            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Charged</th>
-            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Refunded</th>
-            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Net</th>
-            <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300"> </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {rows.map((row) => (
-            <tr key={row.id} className="bg-white dark:bg-slate-900">
-              <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-400">
-                {formatInvoiceDate(row.createdUnix)}
-              </td>
-              <td className="px-3 py-2">
-                <span
-                  className={
-                    "inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold " +
-                    paymentStatusBadgeClass(row.statusLabel)
-                  }
-                >
-                  {row.statusLabel}
-                </span>
-              </td>
-              <td className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-900 dark:text-white">
-                {formatMoneyMinor(row.amount, row.currency)}
-              </td>
-              <td className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-700 dark:text-slate-300">
-                {row.amountRefunded > 0 ? formatMoneyMinor(row.amountRefunded, row.currency) : "—"}
-              </td>
-              <td className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-900 dark:text-white">
-                {formatMoneyMinor(row.netAfterRefunds, row.currency)}
-              </td>
-              <td className="px-3 py-2 text-right">
-                {row.receiptUrl ? (
-                  <a
-                    href={row.receiptUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-medium text-violet-600 hover:underline dark:text-violet-400"
-                  >
-                    Receipt
-                  </a>
-                ) : (
-                  <span className="text-slate-400">—</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 }
 
 export default async function PlanPage({ searchParams }: Props) {
@@ -186,11 +89,11 @@ export default async function PlanPage({ searchParams }: Props) {
     getStripePlanPresentment(user),
     getProCheckoutPricePresentment(),
     user.stripeCustomerId
-      ? listInvoicesForCustomer(user.stripeCustomerId, 30)
-      : Promise.resolve([] as SafeInvoiceRow[]),
+      ? listInvoicesForCustomer(user.stripeCustomerId, 60)
+      : Promise.resolve([]),
     user.stripeCustomerId
-      ? listPaymentActivityForCustomer(user.stripeCustomerId, 30)
-      : Promise.resolve([] as SafePaymentActivityRow[]),
+      ? listPaymentActivityForCustomer(user.stripeCustomerId, 60)
+      : Promise.resolve([]),
     getSearchUsageState(user),
   ]);
 
@@ -440,7 +343,7 @@ export default async function PlanPage({ searchParams }: Props) {
                 <li key={line}>{line}</li>
               ))}
             </ul>
-            <PaymentActivityBlock rows={paymentActivity} />
+            <PlanPaymentsPaginated rows={paymentActivity} />
           </div>
 
           {paidInvoices.length === 0 ? (
@@ -452,55 +355,8 @@ export default async function PlanPage({ searchParams }: Props) {
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Recent invoices
               </p>
-              <div className="mt-3 overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
-                <table className="w-full min-w-[480px] text-left text-sm">
-                  <thead className="border-b border-slate-100 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-800/50">
-                    <tr>
-                      <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Date</th>
-                      <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Invoice</th>
-                      <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Amount</th>
-                      <th className="px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300"> </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {paidInvoices.map((inv) => {
-                      const href = invoiceDownloadHref(inv);
-                      return (
-                        <tr key={inv.id} className="bg-white dark:bg-slate-900">
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-400">
-                            {formatInvoiceDate(inv.createdUnix)}
-                          </td>
-                          <td className="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">
-                            {inv.number ?? `${inv.id.slice(0, 12)}…`}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-900 dark:text-white">
-                            <span className="block">{formatMoneyMinor(inv.amountPaid, inv.currency)}</span>
-                            {inv.postPaymentCreditNotesAmount > 0 ? (
-                              <span className="mt-1 block text-xs font-medium text-amber-800 dark:text-amber-200">
-                                Credit note{" "}
-                                {formatMoneyMinor(inv.postPaymentCreditNotesAmount, inv.currency)}
-                              </span>
-                            ) : null}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {href ? (
-                              <a
-                                href={href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs font-medium text-violet-600 hover:underline dark:text-violet-400"
-                              >
-                                PDF
-                              </a>
-                            ) : (
-                              <span className="text-slate-400">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="mt-3">
+                <PlanInvoicesPaginated invoices={paidInvoices} />
               </div>
             </div>
           )}
@@ -517,7 +373,7 @@ export default async function PlanPage({ searchParams }: Props) {
               <li key={line}>{line}</li>
             ))}
           </ul>
-          <PaymentActivityBlock rows={paymentActivity} />
+          <PlanPaymentsPaginated rows={paymentActivity} />
         </section>
       )}
 

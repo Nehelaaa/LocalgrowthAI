@@ -53,8 +53,14 @@ export function PlaceResults({
   const router = useRouter();
   const [saving, setSaving] = useState<string | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const selectAllRef = useRef<HTMLInputElement>(null);
+
+  const showFeedback = (msg: string) => {
+    setFeedback(msg);
+    window.setTimeout(() => setFeedback(null), 4000);
+  };
 
   const filtered = places;
 
@@ -129,7 +135,8 @@ export function PlaceResults({
       setSaving(null);
       return;
     }
-    router.push("/dashboard/leads");
+    showFeedback(`"${place.name}" added to CRM.`);
+    router.refresh();
     setSaving(null);
   };
 
@@ -159,7 +166,8 @@ export function PlaceResults({
       }
       if (saved > 0) {
         setSelected(new Set());
-        router.push("/dashboard/leads");
+        showFeedback(saved === 1 ? "1 lead added to CRM." : `${saved} leads added to CRM.`);
+        router.refresh();
       }
     } finally {
       setBulkSaving(false);
@@ -171,6 +179,14 @@ export function PlaceResults({
 
   return (
     <div className="mt-8 space-y-4">
+      {feedback ? (
+        <p
+          className="rounded-xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-100"
+          role="status"
+        >
+          {feedback}
+        </p>
+      ) : null}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           Results ({filtered.length}

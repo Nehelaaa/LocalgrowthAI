@@ -1,26 +1,35 @@
 /**
  * Hosted Stripe Checkout can be themed per session via `checkoutBrandingSettings()`.
  *
- * **Customer Portal** (the “… partners with Stripe for simplified billing” page) is **not**
- * themeable from this codebase — Stripe renders it. Customize it here:
- * [Dashboard → Settings → Branding](https://dashboard.stripe.com/settings/branding)
- * — Icon (square), Logo (optional wider asset), Accent color, Brand color, and **Public business name**
- * (that name appears in the portal header next to the logo).
+ * ## Making it look clean (like polished SaaS billing pages)
  *
- * The **Sandbox** badge and names like “Localgrowth sandbox” come from **test mode** and your
- * Stripe account / business profile settings, not from env vars.
+ * 1. **Never use the same hex for “Brand color” and “Accent”** in Stripe’s preview — you get one
+ *    flat purple slab. Pick **one calm field** and **one strong CTA color**:
+ *    - *Cursor-like (dark rail)*: Brand `#0f172a` or `#1e293b`, Accent `#7c3aed` or `#2563eb`.
+ *    - *Light + airy*: Brand `#f1f5f9` or `#e2e8f0`, Accent `#2563eb` or `#7c3aed`.
+ * 2. **Dashboard** → **Settings** → **Brand elements** → tab **Checkout & Payment Links** — set
+ *    Icon (square) + Logo (wide) to **different** assets; only check **Prefer logo over icon** if
+ *    the wide logo looks better than the square mark.
+ * 3. **Customer portal** uses the same global branding area (not these env vars for layout):
+ *    [Settings → Branding](https://dashboard.stripe.com/settings/branding). Stripe controls the
+ *    exact layout (you can’t fully clone Cursor’s HTML), but logo, name, and a restrained palette
+ *    still read as “designed.”
+ *
+ * **Test mode “Sandbox” twice:** Stripe often shows both (a) your business name with a
+ *   **“sandbox”** suffix in the header and (b) the **Sandbox** pill. That pairing is controlled by
+ *   Stripe for test checkouts — this app cannot remove it. **Live mode** checkouts drop the test
+ *   treatment; use test mode only while integrating.
  *
  * Optional: [Billing → Customer portal](https://dashboard.stripe.com/settings/billing/portal)
- * to define which actions customers can do; put the configuration id in
- * `STRIPE_BILLING_PORTAL_CONFIGURATION_ID`. See `stripeOperatorChecklist` in `billing-policies.ts`.
+ * for allowed actions; set `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` when you use a custom config.
  *
- * Defaults below match the app’s violet/indigo palette (see `public/logo.svg` gradient).
+ * Defaults: neutral checkout surface + indigo CTA so the purple pin mark stays the hero color.
  */
-const DEFAULT_DISPLAY_NAME = "Localgrowth";
-/** Light violet page background (similar to violet-50) */
-const DEFAULT_CHECKOUT_BG = "#f5f3ff";
-/** Violet-600 — primary actions */
-const DEFAULT_CHECKOUT_BUTTON = "#7c3aed";
+const DEFAULT_DISPLAY_NAME = "Localleadster";
+/** Neutral slate (clean form / summary feel; avoids full-screen violet). */
+const DEFAULT_CHECKOUT_BG = "#f1f5f9";
+/** Indigo-600 — pay CTA; pairs with `public/logo.svg` gradient without duplicating icon purple. */
+const DEFAULT_CHECKOUT_BUTTON = "#4f46e5";
 
 /**
  * @param publicOrigin Your deployed app origin with no trailing slash (e.g. https://app.example.com).

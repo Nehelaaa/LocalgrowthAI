@@ -11,7 +11,7 @@ import { OwnerUserActions } from "./OwnerUserActions";
 type Props = { params: Promise<{ id: string }> };
 
 export default async function OwnerUserDetailPage({ params }: Props) {
-  await requireOwnerOrRedirect();
+  const session = await requireOwnerOrRedirect();
   const { id } = await params;
   const day = getUtcDayString();
 
@@ -45,53 +45,53 @@ export default async function OwnerUserDetailPage({ params }: Props) {
         ← All users
       </Link>
 
-      <header className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <header className="rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.04] dark:border-slate-700/90 dark:bg-slate-900/85 dark:ring-white/[0.06]">
+        <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-bold text-slate-900 dark:text-white">
+            <h1 className="truncate text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               {user.name || user.email}
             </h1>
-            <p className="truncate text-sm text-slate-600 dark:text-slate-400">
-              {user.email}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-lg bg-slate-100 px-2 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                plan: {user.plan}
+            <p className="mt-0.5 truncate text-sm text-slate-600 dark:text-slate-400">{user.email}</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="rounded-full border border-slate-200/90 bg-slate-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200">
+                {user.plan}
               </span>
               {user.role === "ADMIN" && (
-                <span className="rounded-lg bg-amber-50 px-2 py-1 font-semibold text-amber-900 dark:bg-amber-950/20 dark:text-amber-200">
-                  owner
+                <span className="rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100">
+                  Owner
                 </span>
               )}
               {user.subscriptionStatus && (
-                <span className="rounded-lg bg-indigo-50 px-2 py-1 font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200">
+                <span className="rounded-full border border-indigo-200/80 bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-950/40 dark:text-indigo-100">
                   {user.subscriptionStatus}
                 </span>
               )}
               {user.disabled && (
-                <span className="rounded-lg bg-rose-50 px-2 py-1 font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-200">
-                  disabled
+                <span className="rounded-full border border-rose-200/80 bg-rose-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-100">
+                  Disabled
                 </span>
               )}
               {user.profession && (
-                <span className="rounded-lg bg-amber-50 px-2 py-1 font-semibold text-amber-900 dark:bg-amber-950/20 dark:text-amber-200">
+                <span className="rounded-full border border-violet-200/70 bg-violet-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-violet-900 dark:border-violet-500/25 dark:bg-violet-950/35 dark:text-violet-100">
                   {user.profession}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="sm:pt-1">
+          <div className="min-w-0 w-full shrink-0 border-t border-slate-100 pt-3 sm:border-t-0 sm:border-l sm:pl-5 sm:pt-0 dark:border-slate-800">
             <OwnerUserActions
               userId={user.id}
+              currentUserId={session.user.id}
               disabled={user.disabled}
               plan={(user.plan === "pro" ? "pro" : "free") as "free" | "pro"}
               role={user.role}
+              stripeSubscriptionId={user.stripeSubscriptionId}
             />
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-px border-t border-slate-100 bg-slate-100 sm:grid-cols-2 dark:border-slate-800 dark:bg-slate-800">
           <MiniStat label="Leads" value={user.leads.length} />
           <MiniStat label="Searches today" value={user.searchDayUsages[0]?.count ?? 0} />
         </div>
@@ -111,7 +111,7 @@ export default async function OwnerUserDetailPage({ params }: Props) {
       />
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700/90 dark:bg-slate-900/85 dark:ring-white/[0.05]">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
             Recent leads
           </h2>
@@ -137,7 +137,7 @@ export default async function OwnerUserDetailPage({ params }: Props) {
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
+        <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700/90 dark:bg-slate-900/85 dark:ring-white/[0.05]">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
             Recent activity
           </h2>
@@ -165,13 +165,11 @@ export default async function OwnerUserDetailPage({ params }: Props) {
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 p-3 dark:border-slate-800/70 dark:bg-slate-950/20">
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+    <div className="bg-white px-5 py-4 dark:bg-slate-900/90">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {label}
       </p>
-      <p className="mt-1 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
-        {value}
-      </p>
+      <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{value}</p>
     </div>
   );
 }
