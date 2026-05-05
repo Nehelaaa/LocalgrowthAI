@@ -5,7 +5,8 @@ import { hasActiveStripeSubscription } from "@/lib/entitlements";
 import { getStripe, isStripeConfigured, proPriceId, stripeProPriceIdResolved } from "@/lib/stripe";
 import { billingPortalConfigurationId, checkoutBrandingSettings } from "@/lib/stripe-branding";
 import { subscriptionToUserData } from "@/lib/stripe-subscription-sync";
-import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
+import { enforceSameOrigin, rateLimitOr429 } from "@/lib/api-security";
+import { stripeIntegrationPublicError } from "@/lib/stripe-integration-error";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -182,6 +183,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: checkout.url });
   } catch (e) {
     console.error("[api/stripe/checkout]", e);
-    return NextResponse.json({ error: safeErrorMessage() }, { status: 502 });
+    return NextResponse.json({ error: stripeIntegrationPublicError(e) }, { status: 502 });
   }
 }

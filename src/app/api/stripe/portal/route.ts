@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { billingPortalConfigurationId } from "@/lib/stripe-branding";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
-import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
+import { enforceSameOrigin, rateLimitOr429 } from "@/lib/api-security";
+import { stripeIntegrationPublicError } from "@/lib/stripe-integration-error";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -71,6 +72,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: portal.url });
   } catch (e) {
     console.error("[api/stripe/portal]", e);
-    return NextResponse.json({ error: safeErrorMessage() }, { status: 502 });
+    return NextResponse.json({ error: stripeIntegrationPublicError(e) }, { status: 502 });
   }
 }
