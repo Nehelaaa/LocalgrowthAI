@@ -3,6 +3,8 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { consumeInvoicePdfSlot } from "@/actions/invoice-pdf-quota";
+import { FREE_INVOICE_PDF_LIMIT } from "@/lib/entitlements";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
 import { formatMoneyUSD, parseMoneyFromQuote } from "@/lib/invoice-money";
@@ -17,6 +19,7 @@ import {
   normalizeHexColor,
   normalizeInvoiceTemplateId,
 } from "@/lib/invoice-templates";
+import { sanitizeInvoiceDocumentTitle, sanitizeInvoiceFooterPhrase } from "@/lib/invoice-wording";
 import type { InvoiceLineItem, InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
 
@@ -48,6 +51,8 @@ function mergeLatestSavedPdfLook(snapshot: InvoiceSnapshot): InvoiceSnapshot {
     invoiceTemplateId: tid,
     invoiceAccentHex: normalizeHexColor(s.accentHex, tpl.defaultAccentHex),
     invoiceLayoutDensity: s.density === "compact" ? "compact" : "comfortable",
+    invoiceDocumentTitle: sanitizeInvoiceDocumentTitle(s.documentTitle),
+    invoiceFooterPhrase: sanitizeInvoiceFooterPhrase(s.footerPhrase),
   };
 }
 
@@ -105,7 +110,9 @@ export function InvoiceBuilderModal({
   useEffect(() => {
     if (!open) return;
     const id = window.setTimeout(() => {
+      const cur = loadInvoiceSenderTemplate();
       saveInvoiceSenderTemplate({
+        ...cur,
         businessName: senderBusinessName,
         logoDataUrl: senderLogoDataUrl,
         templateId: normalizeInvoiceTemplateId(invoiceTemplateId),
@@ -146,8 +153,9 @@ export function InvoiceBuilderModal({
     };
   }, [open]);
 
-  const snapshot = useMemo(
-    (): InvoiceSnapshot => ({
+  const snapshot = useMemo((): InvoiceSnapshot => {
+    const senderSnap = loadInvoiceSenderTemplate();
+    return {
       invoiceNumber,
       invoiceDate,
       clientName,
@@ -164,23 +172,24 @@ export function InvoiceBuilderModal({
         getInvoiceTemplate(invoiceTemplateId).defaultAccentHex
       ),
       invoiceLayoutDensity,
-    }),
-    [
-      invoiceNumber,
-      invoiceDate,
-      clientName,
-      clientAddress,
-      lineItems,
-      notes,
-      taxPercent,
-      discountAmount,
-      senderBusinessName,
-      senderLogoDataUrl,
-      invoiceTemplateId,
-      invoiceAccentHex,
-      invoiceLayoutDensity,
-    ]
-  );
+      invoiceDocumentTitle: sanitizeInvoiceDocumentTitle(senderSnap.documentTitle),
+      invoiceFooterPhrase: sanitizeInvoiceFooterPhrase(senderSnap.footerPhrase),
+    };
+  }, [
+    invoiceNumber,
+    invoiceDate,
+    clientName,
+    clientAddress,
+    lineItems,
+    notes,
+    taxPercent,
+    discountAmount,
+    senderBusinessName,
+    senderLogoDataUrl,
+    invoiceTemplateId,
+    invoiceAccentHex,
+    invoiceLayoutDensity,
+  ]);
 
   const applyLogoFile = useCallback(async (file: File | undefined) => {
     if (!file) return;
@@ -222,6 +231,17 @@ export function InvoiceBuilderModal({
     }
     setPdfBusy(true);
     try {
+      const quota = await consumeInvoicePdfSlot();
+      if (!quota.ok) {
+        if (quota.code === "LIMIT") {
+          setErr(
+            `Free plan includes ${FREE_INVOICE_PDF_LIMIT} invoice PDFs. Upgrade to Pro on Plan & billing to generate more.`
+          );
+          return;
+        }
+        setErr("Sign in again to download invoices.");
+        return;
+      }
       const blob = await generateInvoicePdfBlob(mergeLatestSavedPdfLook(snapshot));
       downloadInvoicePdf(blob, snapshot.invoiceNumber);
     } catch (e) {

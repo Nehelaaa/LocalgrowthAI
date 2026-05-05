@@ -27,19 +27,31 @@ export function RegisterForm({
   const [state, action, pending] = useActionState(registerUser, init);
   const router = useRouter();
   const signed = useRef(false);
+  /** Must not read from the DOM after success — the form unmounts when we show “Signing you in…”. */
+  const credsRef = useRef({ email: "", password: "" });
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!pending || !formRef.current) return;
+    const fd = new FormData(formRef.current);
+    credsRef.current.email = String(fd.get("email") ?? "").trim();
+    credsRef.current.password = String(fd.get("password") ?? "");
+  }, [pending]);
 
   useEffect(() => {
     if (!state?.success || signed.current) return;
-    const form = document.getElementById("register-form") as HTMLFormElement;
-    if (!form) return;
-    const email = (form.querySelector('input[name="email"]') as HTMLInputElement)?.value;
-    const password = (form.querySelector('input[name="password"]') as HTMLInputElement)?.value;
-    if (!email || !password) return;
+    const email = credsRef.current.email.trim();
+    const password = credsRef.current.password;
+    if (!email || !password) {
+      signed.current = true;
+      window.location.href = "/login?registered=1";
+      return;
+    }
     signed.current = true;
     void (async () => {
       const r = await signIn("credentials", { email, password, redirect: false });
       if (r?.ok) {
-        router.push(postLoginContinueUrl("/onboarding"));
+        router.push(postLoginContinueUrl("/dashboard"));
         router.refresh();
       } else {
         window.location.href = "/login?registered=1";
@@ -57,7 +69,7 @@ export function RegisterForm({
     <div className="mt-6 space-y-5">
       {!hasGoogle && <GoogleSetupHint />}
 
-      <form id="register-form" className="space-y-4" action={action}>
+      <form ref={formRef} id="register-form" className="space-y-4" action={action}>
         {state?.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
         <div>
           <label
@@ -115,6 +127,9 @@ export function RegisterForm({
             type="email"
             autoComplete="email"
             required
+            onChange={(e) => {
+              credsRef.current.email = e.target.value;
+            }}
             className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />
           {state?.fieldErrors?.email && (
@@ -135,6 +150,9 @@ export function RegisterForm({
             autoComplete="new-password"
             required
             minLength={8}
+            onChange={(e) => {
+              credsRef.current.password = e.target.value;
+            }}
             className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />
           {state?.fieldErrors?.password && (

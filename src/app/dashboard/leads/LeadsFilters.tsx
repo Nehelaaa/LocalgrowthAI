@@ -1,6 +1,7 @@
 "use client";
 
 import { ContactStatusPicker } from "@/components/ContactStatusPicker";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const shell =
@@ -13,6 +14,55 @@ const inp =
 const stripScroll =
   "flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch] sm:grid sm:snap-none sm:grid-cols-12 sm:gap-x-2 sm:gap-y-0 sm:overflow-visible sm:pb-0";
 
+function BusinessNameSearchFilter({
+  urlValue,
+  set,
+}: {
+  urlValue: string;
+  set: (key: string, value: string) => void;
+}) {
+  const [value, setValue] = useState(urlValue);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setValue(urlValue);
+  }, [urlValue]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const scheduleApply = (v: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => set("search", v.trim()), 320);
+  };
+
+  return (
+    <input
+      type="search"
+      enterKeyHint="search"
+      placeholder="Search business name…"
+      aria-label="Search by business name"
+      value={value}
+      onChange={(e) => {
+        const v = e.target.value;
+        setValue(v);
+        scheduleApply(v);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (debounceRef.current) clearTimeout(debounceRef.current);
+          set("search", value.trim());
+        }
+      }}
+      className={inp}
+    />
+  );
+}
+
 function FilterToolbar({
   sp,
   set,
@@ -23,21 +73,7 @@ function FilterToolbar({
   return (
     <div className="flex min-w-0 flex-col gap-2">
       {/* Line 1 — full-width search */}
-      <input
-        type="search"
-        enterKeyHint="search"
-        placeholder="Search business name…"
-        aria-label="Search by business name"
-        defaultValue={sp.get("search") ?? ""}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            const v = (e.target as HTMLInputElement).value.trim();
-            set("search", v);
-          }
-        }}
-        className={inp}
-      />
+      <BusinessNameSearchFilter urlValue={sp.get("search") ?? ""} set={set} />
 
       {/* Line 2 — all other filters (scroll on narrow phones) */}
       <div className={stripScroll}>
@@ -150,7 +186,7 @@ export function LeadsFilters() {
         </span>
         <span className="text-[11px] text-slate-400 dark:text-slate-500">
           <span className="sm:hidden">Swipe row for more</span>
-          <span className="hidden sm:inline">Enter in search to apply</span>
+          <span className="hidden sm:inline">Search updates as you type</span>
         </span>
       </div>
       <FilterToolbar sp={sp} set={set} />

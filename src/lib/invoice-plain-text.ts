@@ -2,6 +2,7 @@ import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { formatMoneyUSD } from "@/lib/invoice-money";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
+import { sanitizeInvoiceDocumentTitle, sanitizeInvoiceFooterPhrase } from "@/lib/invoice-wording";
 
 export function formatInvoicePlainText(snapshot: InvoiceSnapshot): string {
   const { subtotal, discount, tax, total } = invoiceTotals(snapshot);
@@ -11,10 +12,13 @@ export function formatInvoicePlainText(snapshot: InvoiceSnapshot): string {
 
   const companyName = snapshot.senderBusinessName?.trim() || defaultInvoiceCompanyName();
 
+  const docTitle = sanitizeInvoiceDocumentTitle(snapshot.invoiceDocumentTitle);
+  const footerLine = sanitizeInvoiceFooterPhrase(snapshot.invoiceFooterPhrase);
+
   const lines: string[] = [
     companyName,
     "",
-    `INVOICE ${snapshot.invoiceNumber}`,
+    `${docTitle.toUpperCase()} ${snapshot.invoiceNumber}`,
     `Date: ${dateLabel}`,
     "",
     "Bill to:",
@@ -40,6 +44,8 @@ export function formatInvoicePlainText(snapshot: InvoiceSnapshot): string {
   if (snapshot.notes.trim()) {
     lines.push("Notes:", snapshot.notes.trim(), "");
   }
+
+  lines.push("", footerLine);
 
   return lines.join("\n");
 }

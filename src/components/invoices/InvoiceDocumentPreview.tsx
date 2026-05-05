@@ -7,6 +7,7 @@ import {
   normalizeInvoiceTemplateId,
   type InvoiceLayoutDensity,
 } from "@/lib/invoice-templates";
+import { sanitizeInvoiceDocumentTitle, sanitizeInvoiceFooterPhrase } from "@/lib/invoice-wording";
 
 const SAMPLE_LINES = [
   { description: "Website design & build", amount: 3500 },
@@ -29,6 +30,12 @@ function InvoicePreviewLogo({
   return <div className={className}>Logo</div>;
 }
 
+function PreviewFooter({ phrase }: { phrase: string }) {
+  return (
+    <p className="mt-3 text-center text-[10px] leading-snug text-slate-400 dark:text-slate-500">{phrase}</p>
+  );
+}
+
 type Props = {
   templateId: string;
   accentHex: string;
@@ -36,6 +43,8 @@ type Props = {
   logoDataUrl: string | null;
   density: InvoiceLayoutDensity;
   compact?: boolean;
+  documentTitle?: string;
+  footerPhrase?: string;
 };
 
 export function InvoiceDocumentPreview({
@@ -45,10 +54,14 @@ export function InvoiceDocumentPreview({
   logoDataUrl,
   density,
   compact,
+  documentTitle: rawDocTitle,
+  footerPhrase: rawFooter,
 }: Props) {
   const tid = normalizeInvoiceTemplateId(rawTid);
   const accent = normalizeHexColor(rawAccent, "#4f46e5");
   const brand = businessName.trim() || defaultInvoiceCompanyName();
+  const docTitle = sanitizeInvoiceDocumentTitle(rawDocTitle);
+  const foot = sanitizeInvoiceFooterPhrase(rawFooter);
   const pad = density === "compact" ? "p-3" : "p-4";
   const scale = compact ? "scale-[0.92] origin-top" : "";
 
@@ -69,7 +82,7 @@ export function InvoiceDocumentPreview({
               <p className="truncate text-sm font-semibold tracking-tight">{brand}</p>
             </div>
             <div className="text-right text-[10px] leading-tight text-zinc-400">
-              <p className="font-medium text-zinc-200">INVOICE</p>
+              <p className="font-medium text-zinc-200">{docTitle.toUpperCase()}</p>
               <p>INV-2026-0142</p>
               <p>April 22, 2026</p>
             </div>
@@ -79,6 +92,7 @@ export function InvoiceDocumentPreview({
           <BillToBlock variant="mono" />
           <PreviewTable variant="mono" accent={accent} density={density} />
           <PreviewTotals variant="mono" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
         </div>
       </div>
     );
@@ -91,7 +105,7 @@ export function InvoiceDocumentPreview({
       >
         <div className={`${pad} text-center`}>
           <p className="font-serif text-2xl font-light tracking-[0.2em] text-stone-800 dark:text-stone-100">
-            INVOICE
+            {docTitle.toUpperCase()}
           </p>
           <p className="mt-2 font-serif text-sm italic text-stone-600 dark:text-stone-400">{brand}</p>
           <div className="mt-4 flex justify-center">
@@ -115,6 +129,7 @@ export function InvoiceDocumentPreview({
           </div>
           <PreviewTable variant="editorial" accent={accent} density={density} />
           <PreviewTotals variant="editorial" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
         </div>
       </div>
     );
@@ -149,6 +164,7 @@ export function InvoiceDocumentPreview({
           <BillToBlock variant="ledger" />
           <PreviewTable variant="ledger" accent={accent} density={density} />
           <PreviewTotals variant="ledger" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
         </div>
       </div>
     );
@@ -174,7 +190,7 @@ export function InvoiceDocumentPreview({
               <div className="min-w-0 flex-1 pr-1">
                 <p className="truncate text-lg font-black tracking-tight text-slate-900 dark:text-white">{brand}</p>
                 <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Sales invoice
+                  {docTitle}
                 </p>
               </div>
             </div>
@@ -205,6 +221,175 @@ export function InvoiceDocumentPreview({
           </div>
           <PreviewTable variant="accentBar" accent={accent} density={density} />
           <PreviewTotals variant="accentBar" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
+        </div>
+      </div>
+    );
+  }
+
+  if (tid === "horizon") {
+    return (
+      <div
+        className={`relative overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:bg-slate-900 dark:ring-white/[0.06] ${scale}`}
+      >
+        <div className="px-4 py-3 sm:px-5" style={{ backgroundColor: `${accent}24` }}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <InvoicePreviewLogo
+                logoDataUrl={logoDataUrl}
+                className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg bg-white/90 object-contain text-[9px] text-slate-400 shadow-sm dark:bg-slate-800"
+              />
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold text-slate-900 dark:text-white">{brand}</p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">{docTitle}</p>
+              </div>
+            </div>
+            <div className="shrink-0 text-right text-[10px] text-slate-600 dark:text-slate-400">
+              <p className="font-semibold" style={{ color: accent }}>
+                {docTitle.toUpperCase()}
+              </p>
+              <p className="font-medium text-slate-800 dark:text-slate-200">INV-2026-0142</p>
+              <p>Apr 22, 2026</p>
+            </div>
+          </div>
+        </div>
+        <div className={pad}>
+          <BillToBlock variant="minimal" />
+          <PreviewTable variant="minimal" accent={accent} density={density} />
+          <PreviewTotals variant="minimal" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
+        </div>
+      </div>
+    );
+  }
+
+  if (tid === "sidebar") {
+    return (
+      <div
+        className={`relative flex min-h-[14rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md dark:border-slate-700 dark:bg-slate-900 ${scale}`}
+      >
+        <div
+          className="flex w-[30%] min-w-[6.5rem] flex-col border-y border-r border-slate-200/90 border-l-4 bg-slate-50/95 p-3 dark:border-slate-700 dark:bg-slate-800/40"
+          style={{ borderLeftColor: accent }}
+        >
+          <InvoicePreviewLogo
+            logoDataUrl={logoDataUrl}
+            className="mx-auto mb-2 flex h-10 w-full max-w-[5rem] items-center justify-center rounded-md bg-white object-contain text-[9px] text-slate-400 dark:bg-slate-900"
+          />
+          <p className="text-center text-[11px] font-bold leading-tight text-slate-900 dark:text-white">{brand}</p>
+          <p className="mt-2 text-center text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {docTitle.toUpperCase()}
+          </p>
+        </div>
+        <div className={`min-w-0 flex-1 ${pad}`}>
+          <div className="mb-3 flex justify-end text-right text-[10px] text-slate-600 dark:text-slate-400">
+            <div>
+              <p className="font-mono font-semibold text-slate-900 dark:text-white">INV-2026-0142</p>
+              <p>Apr 22, 2026</p>
+            </div>
+          </div>
+          <BillToBlock variant="accentBar" />
+          <PreviewTable variant="accentBar" accent={accent} density={density} />
+          <PreviewTotals variant="accentBar" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
+        </div>
+      </div>
+    );
+  }
+
+  if (tid === "blueprint") {
+    return (
+      <div
+        className={`relative overflow-hidden rounded-lg border-2 border-blue-900/25 bg-[#f1f5f9] shadow-md dark:border-blue-400/20 dark:bg-slate-900 ${scale}`}
+      >
+        <div className={`${pad} border-b border-blue-900/15 dark:border-slate-600`}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="flex h-12 w-[4.5rem] items-center justify-center rounded border-2 border-blue-900/40 bg-white dark:border-blue-400/30 dark:bg-slate-950">
+                <InvoicePreviewLogo logoDataUrl={logoDataUrl} className="max-h-10 max-w-full object-contain text-[9px]" />
+              </div>
+              <div>
+                <p className="font-mono text-sm font-bold text-slate-900 dark:text-white">{brand}</p>
+                <p className="font-mono text-[10px] uppercase text-blue-900/70 dark:text-blue-300/80">{docTitle}</p>
+              </div>
+            </div>
+            <div className="text-right font-mono text-[10px] text-slate-600 dark:text-slate-400">
+              <p className="font-bold text-slate-900 dark:text-white">{docTitle.toUpperCase()}</p>
+              <p>INV-2026-0142</p>
+              <p>2026-04-22</p>
+            </div>
+          </div>
+        </div>
+        <div className={pad}>
+          <BillToBlock variant="blueprint" />
+          <PreviewTable variant="blueprint" accent={accent} density={density} />
+          <PreviewTotals variant="blueprint" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
+        </div>
+      </div>
+    );
+  }
+
+  if (tid === "studio") {
+    return (
+      <div
+        className={`relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 ${scale}`}
+      >
+        <div className={pad}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <InvoicePreviewLogo
+                logoDataUrl={logoDataUrl}
+                className="flex h-11 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 object-contain text-[9px] dark:bg-slate-800"
+              />
+              <div>
+                <p className="text-base font-bold text-slate-900 dark:text-white">{brand}</p>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">{docTitle}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-black tabular-nums tracking-tight text-slate-900 dark:text-white">
+                INV-2026-0142
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Apr 22, 2026</p>
+            </div>
+          </div>
+          <div className="my-3 h-1 w-full rounded-full" style={{ backgroundColor: accent }} aria-hidden />
+          <BillToBlock variant="accentBar" />
+          <PreviewTable variant="accentBar" accent={accent} density={density} />
+          <PreviewTotals variant="accentBar" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+          <PreviewFooter phrase={foot} />
+        </div>
+      </div>
+    );
+  }
+
+  if (tid === "classic") {
+    return (
+      <div
+        className={`relative overflow-hidden rounded-lg border-2 border-amber-900/25 bg-[#fffdf8] p-1 shadow-md ring-1 ring-amber-900/10 dark:border-amber-700/40 dark:bg-stone-950 dark:ring-amber-900/20 ${scale}`}
+      >
+        <div className={`rounded-md border border-amber-900/20 bg-[#fffdf8] dark:border-amber-800/50 dark:bg-stone-950 ${pad}`}>
+          <div className="text-center">
+            <p className="font-serif text-xl font-light tracking-[0.18em] text-amber-950 dark:text-amber-100">
+              {docTitle.toUpperCase()}
+            </p>
+            <p className="mt-2 font-serif text-sm italic text-stone-600 dark:text-stone-400">{brand}</p>
+            <div className="mt-3 flex justify-center">
+              <InvoicePreviewLogo
+                logoDataUrl={logoDataUrl}
+                className="flex h-11 w-28 items-center justify-center rounded border border-stone-200 bg-white object-contain text-[10px] text-stone-400 dark:border-stone-600 dark:bg-stone-900"
+              />
+            </div>
+            <p className="mt-2 font-mono text-[11px] text-stone-500 dark:text-stone-400">INV-2026-0142 · APR 22, 2026</p>
+            <div className="mx-auto mt-3 h-px max-w-xs bg-amber-800/30 dark:bg-amber-500/30" aria-hidden />
+          </div>
+          <div className="mt-4 space-y-3">
+            <BillToBlock variant="editorial" />
+            <PreviewTable variant="editorial" accent={accent} density={density} />
+            <PreviewTotals variant="editorial" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+            <PreviewFooter phrase={foot} />
+          </div>
         </div>
       </div>
     );
@@ -224,12 +409,12 @@ export function InvoiceDocumentPreview({
               <p className="truncate text-base font-semibold tracking-tight text-slate-900 dark:text-white">
                 {brand}
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Professional services</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{docTitle}</p>
             </div>
           </div>
           <div className="shrink-0 text-right">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              Invoice
+              {docTitle.toUpperCase()}
             </p>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200">INV-2026-0142</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">Apr 22, 2026</p>
@@ -239,12 +424,13 @@ export function InvoiceDocumentPreview({
         <BillToBlock variant="minimal" />
         <PreviewTable variant="minimal" accent={accent} density={density} />
         <PreviewTotals variant="minimal" accent={accent} subtotal={subtotal} tax={tax} total={total} />
+        <PreviewFooter phrase={foot} />
       </div>
     </div>
   );
 }
 
-function BillToBlock({ variant }: { variant: "minimal" | "ledger" | "mono" | "accentBar" | "editorial" }) {
+function BillToBlock({ variant }: { variant: string }) {
   if (variant === "ledger") {
     return (
       <div className="mb-3 border border-slate-800 bg-white p-2 dark:border-slate-300 dark:bg-slate-950">
@@ -272,6 +458,17 @@ function BillToBlock({ variant }: { variant: "minimal" | "ledger" | "mono" | "ac
       </div>
     );
   }
+  if (variant === "blueprint") {
+    return (
+      <div className="mb-3 border border-blue-900/35 bg-white p-2 dark:border-blue-400/25 dark:bg-slate-950">
+        <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-blue-900/70 dark:text-blue-300/90">
+          Bill to
+        </p>
+        <p className="font-mono text-sm font-semibold text-slate-900 dark:text-white">Sample Client LLC</p>
+        <p className="font-mono text-[10px] text-slate-600 dark:text-slate-400">123 Main St · Austin, TX 78701</p>
+      </div>
+    );
+  }
   return (
     <div className="mb-3">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Bill to</p>
@@ -286,7 +483,7 @@ function PreviewTable({
   accent,
   density,
 }: {
-  variant: "minimal" | "ledger" | "mono" | "accentBar" | "editorial";
+  variant: string;
   accent: string;
   density: InvoiceLayoutDensity;
 }) {
@@ -374,6 +571,29 @@ function PreviewTable({
     );
   }
 
+  if (variant === "blueprint") {
+    return (
+      <table className="w-full border-2 border-blue-900/35 font-mono text-slate-800 dark:border-blue-400/30 dark:text-slate-200">
+        <thead>
+          <tr className="bg-blue-900 text-left text-white dark:bg-blue-950">
+            <th className={`${cell} font-bold`}>Description</th>
+            <th className={`${cell} w-20 text-right font-bold`}>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {SAMPLE_LINES.map((row, i) => (
+            <tr key={row.description} className={i % 2 === 0 ? "bg-white dark:bg-slate-950" : "bg-slate-100/80 dark:bg-slate-900/60"}>
+              <td className={`${cell} border-t border-blue-900/15 dark:border-slate-600`}>{row.description}</td>
+              <td className={`${cell} border-t border-blue-900/15 text-right tabular-nums dark:border-slate-600`}>
+                {formatMoneyUSD(row.amount)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
   if (variant === "accentBar") {
     return (
       <table className="w-full overflow-hidden rounded-lg shadow-inner ring-1 ring-slate-200 dark:ring-slate-600">
@@ -426,12 +646,31 @@ function PreviewTotals({
   tax,
   total,
 }: {
-  variant: "minimal" | "ledger" | "mono" | "accentBar" | "editorial";
+  variant: string;
   accent: string;
   subtotal: number;
   tax: number;
   total: number;
 }) {
+  if (variant === "blueprint") {
+    return (
+      <div className="mt-3 space-y-1 border border-blue-900/30 bg-white p-2 text-right font-mono text-[11px] dark:border-blue-400/25 dark:bg-slate-950">
+        <div className="flex justify-end gap-6 text-slate-600 dark:text-slate-400">
+          <span>Subtotal</span>
+          <span className="w-16 tabular-nums text-slate-900 dark:text-white">{formatMoneyUSD(subtotal)}</span>
+        </div>
+        <div className="flex justify-end gap-6 text-slate-600 dark:text-slate-400">
+          <span>Tax (0%)</span>
+          <span className="w-16 tabular-nums">{formatMoneyUSD(tax)}</span>
+        </div>
+        <div className="flex justify-end gap-6 border-t border-blue-900/25 pt-1.5 font-bold text-slate-900 dark:border-slate-600 dark:text-white">
+          <span style={{ color: accent }}>Total due</span>
+          <span className="w-16 tabular-nums">{formatMoneyUSD(total)}</span>
+        </div>
+      </div>
+    );
+  }
+
   if (variant === "ledger") {
     return (
       <div className="mt-3 border-2 border-slate-900 bg-slate-50 p-3 dark:border-slate-200 dark:bg-slate-900">

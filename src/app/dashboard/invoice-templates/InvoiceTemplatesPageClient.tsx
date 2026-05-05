@@ -18,6 +18,10 @@ import {
   normalizeHexColor,
   normalizeInvoiceTemplateId,
 } from "@/lib/invoice-templates";
+import {
+  INVOICE_DOCUMENT_TITLE_OPTIONS,
+  INVOICE_FOOTER_PHRASE_OPTIONS,
+} from "@/lib/invoice-wording";
 
 function IconPhone({ className }: { className?: string }) {
   return (
@@ -203,6 +207,8 @@ export function InvoiceTemplatesPageClient() {
                         logoDataUrl={t.logoDataUrl}
                         density="compact"
                         compact
+                        documentTitle={t.documentTitle}
+                        footerPhrase={t.footerPhrase}
                       />
                     </div>
                   </div>
@@ -363,6 +369,42 @@ export function InvoiceTemplatesPageClient() {
                 </button>
               ))}
             </div>
+
+            <label className="mt-5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Document title
+            </label>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              Shown in the PDF header (Invoice, Tax invoice, Quote, etc.).
+            </p>
+            <select
+              value={t.documentTitle}
+              onChange={(e) => patch({ documentTitle: e.target.value })}
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-inner shadow-slate-900/5 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            >
+              {INVOICE_DOCUMENT_TITLE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="mt-5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Closing line
+            </label>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              One short line at the bottom of every PDF.
+            </p>
+            <select
+              value={t.footerPhrase}
+              onChange={(e) => patch({ footerPhrase: e.target.value })}
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-inner shadow-slate-900/5 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            >
+              {INVOICE_FOOTER_PHRASE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-5 shadow-md ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/25 dark:ring-white/[0.04]">
@@ -417,6 +459,8 @@ export function InvoiceTemplatesPageClient() {
                   businessName={t.businessName}
                   logoDataUrl={t.logoDataUrl}
                   density={t.density}
+                  documentTitle={t.documentTitle}
+                  footerPhrase={t.footerPhrase}
                 />
               </div>
             </div>
@@ -463,6 +507,8 @@ export function InvoiceTemplatesPageClient() {
                     businessName={t.businessName}
                     logoDataUrl={t.logoDataUrl}
                     density={t.density}
+                    documentTitle={t.documentTitle}
+                    footerPhrase={t.footerPhrase}
                   />
                 </div>
               </div>

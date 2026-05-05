@@ -4,6 +4,11 @@ export const INVOICE_TEMPLATE_IDS = [
   "mono",
   "accentBar",
   "editorial",
+  "horizon",
+  "sidebar",
+  "blueprint",
+  "studio",
+  "classic",
 ] as const;
 
 export type InvoiceTemplateId = (typeof INVOICE_TEMPLATE_IDS)[number];
@@ -48,6 +53,36 @@ export const INVOICE_TEMPLATES: InvoiceTemplateDefinition[] = [
     name: "Editorial",
     tagline: "Serif headline, stone palette, two-column bill area, refined totals.",
     defaultAccentHex: "#b45309",
+  },
+  {
+    id: "horizon",
+    name: "Horizon",
+    tagline: "Soft tinted header band, airy layout, calm professional feel.",
+    defaultAccentHex: "#2563eb",
+  },
+  {
+    id: "sidebar",
+    name: "Sidebar",
+    tagline: "Accent rail + soft panel for your brand; details read like a brief.",
+    defaultAccentHex: "#059669",
+  },
+  {
+    id: "blueprint",
+    name: "Blueprint",
+    tagline: "Technical sheet vibe — monospace grid, crisp borders, builder-friendly.",
+    defaultAccentHex: "#0369a1",
+  },
+  {
+    id: "studio",
+    name: "Studio",
+    tagline: "Bold invoice number, underline accent, creative-studio energy.",
+    defaultAccentHex: "#c026d3",
+  },
+  {
+    id: "classic",
+    name: "Classic",
+    tagline: "Formal ruled frame, serif body, timeless letter-style invoice.",
+    defaultAccentHex: "#92400e",
   },
 ];
 

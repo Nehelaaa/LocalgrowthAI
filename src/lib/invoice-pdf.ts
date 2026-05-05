@@ -6,6 +6,10 @@ import {
   normalizeHexColor,
   normalizeInvoiceTemplateId,
 } from "@/lib/invoice-templates";
+import {
+  invoiceDocumentTitleForPdfStyle,
+  sanitizeInvoiceFooterPhrase,
+} from "@/lib/invoice-wording";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
 
@@ -47,6 +51,17 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   const pad = cellPad(snapshot);
   const logoFmt = detectImageFormat(snapshot.senderLogoDataUrl);
 
+  const footerPhrase = sanitizeInvoiceFooterPhrase(snapshot.invoiceFooterPhrase);
+  const titleUpper = invoiceDocumentTitleForPdfStyle(snapshot.invoiceDocumentTitle, "upper");
+  const titleMixed = invoiceDocumentTitleForPdfStyle(snapshot.invoiceDocumentTitle, "title");
+  const contentLeft = templateId === "sidebar" ? 52 : margin;
+
+  const tintBand = (w: number): [number, number, number] => [
+    Math.round(accent[0] * w + 255 * (1 - w)),
+    Math.round(accent[1] * w + 255 * (1 - w)),
+    Math.round(accent[2] * w + 255 * (1 - w)),
+  ];
+
   const drawLogo = (left: number, top: number, maxW: number, maxH: number): number => {
     if (snapshot.senderLogoDataUrl) {
       try {
@@ -76,6 +91,25 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.rect(0, 0, 4, pageH, "F");
   }
 
+  if (templateId === "sidebar") {
+    const sb = tintBand(0.07);
+    doc.setFillColor(sb[0], sb[1], sb[2]);
+    doc.rect(0, 0, 46, pageH, "F");
+    doc.setFillColor(accent[0], accent[1], accent[2]);
+    doc.rect(0, 0, 4.2, pageH, "F");
+  }
+
+  if (templateId === "blueprint") {
+    doc.setFillColor(239, 243, 249);
+    doc.rect(0, 0, pageW, pageH, "F");
+  }
+
+  if (templateId === "horizon") {
+    const band = tintBand(0.19);
+    doc.setFillColor(band[0], band[1], band[2]);
+    doc.rect(0, 0, pageW, 35, "F");
+  }
+
   if (templateId === "mono") {
     doc.setFont("helvetica", "normal");
     doc.setFillColor(24, 24, 27);
@@ -86,7 +120,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.text(brand, margin + 28, 14);
     doc.setFontSize(8);
     doc.setTextColor(200, 200, 210);
-    doc.text("INVOICE", pageW - margin, 10, { align: "right" });
+    doc.text(titleUpper, pageW - margin, 10, { align: "right" });
     doc.text(snapshot.invoiceNumber, pageW - margin, 16, { align: "right" });
     doc.text(dateLabel, pageW - margin, 22, { align: "right" });
     y = Math.max(30, logoBottom + 8);
@@ -98,7 +132,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setFont("times", "normal");
     doc.setFontSize(20);
     doc.setTextColor(41, 37, 36);
-    doc.text("INVOICE", pageW / 2, y + 8, { align: "center" });
+    doc.text(titleMixed.toUpperCase(), pageW / 2, y + 8, { align: "center", maxWidth: pageW - margin * 2 });
     doc.setFont("times", "italic");
     doc.setFontSize(11);
     doc.setTextColor(87, 83, 78);
@@ -165,6 +199,107 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setDrawColor(226, 232, 240);
     doc.line(margin + 4, y, pageW - margin, y);
     y += 8;
+  } else if (templateId === "horizon") {
+    doc.setFont("helvetica", "normal");
+    const headerTop = margin + 3;
+    const logoBottom = drawLogo(margin, headerTop, 30, 14);
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.text(brand, margin + 34, headerTop + 9);
+    doc.setFontSize(8);
+    doc.setTextColor(accent[0], accent[1], accent[2]);
+    doc.text(titleUpper, pageW - margin, headerTop + 5, { align: "right" });
+    doc.setTextColor(71, 85, 105);
+    doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 11, { align: "right" });
+    doc.text(dateLabel, pageW - margin, headerTop + 17, { align: "right" });
+    y = Math.max(headerTop + 24, logoBottom + 4);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin, y, pageW - margin, y);
+    y += 8;
+  } else if (templateId === "sidebar") {
+    doc.setFont("helvetica", "normal");
+    const headerTop = margin + 2;
+    const logoBottom = drawLogo(10, headerTop, 24, 12);
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text(brand, 10, Math.max(headerTop + 16, logoBottom + 2), { maxWidth: 34 });
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text(titleUpper, 10, Math.max(headerTop + 28, logoBottom + 10));
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 7, { align: "right" });
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(dateLabel, pageW - margin, headerTop + 15, { align: "right" });
+    y = margin + 32;
+    doc.setDrawColor(226, 232, 240);
+    doc.line(contentLeft, y, pageW - margin, y);
+    y += 8;
+  } else if (templateId === "blueprint") {
+    doc.setFont("courier", "normal");
+    const headerTop = margin;
+    doc.setDrawColor(30, 58, 138);
+    doc.setLineWidth(0.35);
+    doc.rect(margin, headerTop, 34, 17);
+    const logoBottom = drawLogo(margin + 1, headerTop + 1, 32, 15);
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+    doc.text(brand, margin + 38, headerTop + 11);
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(titleUpper, pageW - margin, headerTop + 6, { align: "right" });
+    doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 12, { align: "right" });
+    doc.text(dateLabel, pageW - margin, headerTop + 18, { align: "right" });
+    y = Math.max(headerTop + 24, logoBottom + 8);
+    doc.setDrawColor(100, 116, 139);
+    doc.setLineWidth(0.25);
+    doc.line(margin, y, pageW - margin, y);
+    y += 8;
+  } else if (templateId === "studio") {
+    doc.setFont("helvetica", "normal");
+    const headerTop = margin;
+    const logoBottom = drawLogo(margin, headerTop, 28, 14);
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+    doc.text(brand, margin + 32, headerTop + 10);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(titleUpper, margin + 32, headerTop + 16);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(19);
+    doc.setTextColor(15, 23, 42);
+    doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 13, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(dateLabel, pageW - margin, headerTop + 20, { align: "right" });
+    y = Math.max(headerTop + 22, logoBottom + 6);
+    doc.setDrawColor(accent[0], accent[1], accent[2]);
+    doc.setLineWidth(0.9);
+    doc.line(margin, y, pageW - margin, y);
+    y += 8;
+  } else if (templateId === "classic") {
+    doc.setFont("times", "normal");
+    const headerTop = margin;
+    doc.setFontSize(17);
+    doc.setTextColor(55, 48, 40);
+    doc.text(titleMixed.toUpperCase(), pageW / 2, headerTop + 6, {
+      align: "center",
+      maxWidth: pageW - margin * 2,
+    });
+    doc.setFontSize(11);
+    doc.setTextColor(87, 83, 78);
+    doc.text(brand, pageW / 2, headerTop + 14, { align: "center" });
+    const lb = drawLogo(pageW / 2 - 14, headerTop + 17, 28, 12);
+    doc.setFontSize(9);
+    doc.setTextColor(120, 113, 108);
+    doc.text(`${snapshot.invoiceNumber} · ${dateLabel}`, pageW / 2, lb + 5, { align: "center" });
+    y = lb + 12;
+    doc.setDrawColor(accent[0], accent[1], accent[2]);
+    doc.setLineWidth(0.35);
+    doc.line(margin + 18, y, pageW - margin - 18, y);
+    y += 10;
   } else {
     /* minimal */
     doc.setFont("helvetica", "normal");
@@ -175,10 +310,10 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.text(brand, margin + 36, headerTop + 10);
     doc.setFontSize(9);
     doc.setTextColor(100, 116, 139);
-    doc.text("Professional invoice", margin + 36, headerTop + 16);
+    doc.text(titleMixed, margin + 36, headerTop + 16);
     doc.setFontSize(10);
     doc.setTextColor(accent[0], accent[1], accent[2]);
-    doc.text("INVOICE", pageW - margin, headerTop + 4, { align: "right" });
+    doc.text(titleUpper, pageW - margin, headerTop + 4, { align: "right" });
     doc.setFontSize(9);
     doc.setTextColor(71, 85, 105);
     doc.text(snapshot.invoiceNumber, pageW - margin, headerTop + 11, { align: "right" });
@@ -209,32 +344,54 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.text(addrOne, margin + 3, y + 17);
     doc.setFont("helvetica", "normal");
     y += 28;
-  } else if (templateId === "editorial") {
+  } else if (templateId === "editorial" || templateId === "classic") {
     doc.setFont("times", "normal");
     doc.setFontSize(10);
     doc.setTextColor(120, 113, 108);
-    doc.text("Bill to", margin, y);
+    doc.text("Bill to", contentLeft, y);
     y += 5;
     doc.setFontSize(11);
     doc.setTextColor(41, 37, 36);
-    doc.text(snapshot.clientName, margin, y);
+    doc.text(snapshot.clientName, contentLeft, y);
     y += 5;
     doc.setFontSize(10);
     doc.setTextColor(87, 83, 78);
-    const addrLines = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - margin * 2 - 50);
-    doc.text(addrLines, margin, y);
+    const addrLines = doc.splitTextToSize(
+      snapshot.clientAddress || "—",
+      pageW - contentLeft - margin - 10,
+    );
+    doc.text(addrLines, contentLeft, y);
     y += addrLines.length * 5 + 8;
+  } else if (templateId === "blueprint") {
+    doc.setDrawColor(100, 116, 139);
+    doc.setLineWidth(0.25);
+    doc.rect(contentLeft, y, pageW - contentLeft - margin, 22);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(contentLeft + 0.3, y + 0.3, pageW - contentLeft - margin - 0.6, 21.4, "F");
+    doc.setFont("courier", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text("BILL TO", contentLeft + 3, y + 6);
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text(snapshot.clientName, contentLeft + 3, y + 12);
+    doc.setFontSize(9);
+    doc.setTextColor(51, 65, 85);
+    const addrOne = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - contentLeft - margin - 8);
+    doc.text(addrOne, contentLeft + 3, y + 17);
+    doc.setFont("helvetica", "normal");
+    y += 28;
   } else {
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
-    doc.text("Bill to", margin, y);
+    doc.text("Bill to", contentLeft, y);
     y += 6;
     doc.setFontSize(10);
     doc.setTextColor(51, 65, 85);
-    doc.text(snapshot.clientName, margin, y);
+    doc.text(snapshot.clientName, contentLeft, y);
     y += 5;
-    const addrLines = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - margin * 2 - 40);
-    doc.text(addrLines, margin, y);
+    const addrLines = doc.splitTextToSize(snapshot.clientAddress || "—", pageW - contentLeft - margin - 10);
+    doc.text(addrLines, contentLeft, y);
     y += addrLines.length * 5 + 8;
   }
 
@@ -257,23 +414,33 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
       ? [63, 63, 70]
       : templateId === "ledger"
         ? [15, 23, 42]
-        : [accent[0], accent[1], accent[2]];
+        : templateId === "blueprint"
+          ? [30, 58, 138]
+          : [accent[0], accent[1], accent[2]];
 
   const tableTheme =
-    templateId === "ledger" ? "grid" : templateId === "editorial" ? "plain" : "striped";
+    templateId === "ledger" || templateId === "blueprint"
+      ? "grid"
+      : templateId === "editorial" || templateId === "classic"
+        ? "plain"
+        : "striped";
 
   const tableFont: "helvetica" | "times" | "courier" =
-    templateId === "editorial" ? "times" : templateId === "ledger" ? "courier" : "helvetica";
+    templateId === "editorial" || templateId === "classic"
+      ? "times"
+      : templateId === "ledger" || templateId === "blueprint"
+        ? "courier"
+        : "helvetica";
 
   const columnStyles: Record<number, { cellWidth?: number; halign?: "left" | "right" }> =
     templateId === "ledger"
-      ? {
+        ? {
           0: { cellWidth: 12, halign: "left" },
-          1: { cellWidth: pageW - margin * 2 - 12 - 36 },
+          1: { cellWidth: pageW - contentLeft - margin - 12 - 36 },
           2: { halign: "right", cellWidth: 36 },
         }
       : {
-          0: { cellWidth: pageW - margin * 2 - 36 },
+          0: { cellWidth: pageW - contentLeft - margin - 36 },
           1: { halign: "right", cellWidth: 36 },
         };
 
@@ -286,7 +453,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
       fillColor: headFill,
       textColor: templateId === "ledger" ? 255 : 255,
       fontStyle: "bold",
-      fontSize: templateId === "editorial" ? 9 : 10,
+      fontSize: templateId === "editorial" || templateId === "classic" ? 9 : 10,
       font: tableFont,
     },
     bodyStyles: {
@@ -294,7 +461,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
       font: tableFont,
     },
     columnStyles,
-    margin: { left: margin, right: margin },
+    margin: { left: contentLeft, right: margin },
     styles: { fontSize: 10, cellPadding: pad, font: tableFont },
   });
 
@@ -323,7 +490,14 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setFont("helvetica", "normal");
     sumY += 34;
   } else {
-    doc.setFont(templateId === "editorial" ? "times" : "helvetica", "normal");
+    doc.setFont(
+      templateId === "editorial" || templateId === "classic"
+        ? "times"
+        : templateId === "blueprint"
+          ? "courier"
+          : "helvetica",
+      "normal",
+    );
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
     doc.text("Subtotal", pageW - margin - 50, sumY);
@@ -335,8 +509,15 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.text(`Tax (${snapshot.taxPercent}%)`, pageW - margin - 50, sumY);
     doc.text(formatMoneyUSD(tax), pageW - margin, sumY, { align: "right" });
     sumY += 8;
-    doc.setFont(templateId === "editorial" ? "times" : "helvetica", "bold");
-    if (templateId === "editorial") {
+    doc.setFont(
+      templateId === "editorial" || templateId === "classic"
+        ? "times"
+        : templateId === "blueprint"
+          ? "courier"
+          : "helvetica",
+      "bold",
+    );
+    if (templateId === "editorial" || templateId === "classic") {
       doc.setFontSize(14);
       doc.setTextColor(41, 37, 36);
       doc.text("Total", pageW - margin - 50, sumY);
@@ -351,19 +532,41 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   }
 
   if (snapshot.notes.trim()) {
-    doc.setFont(templateId === "editorial" ? "times" : "helvetica", "normal");
+    doc.setFont(
+      templateId === "editorial" || templateId === "classic"
+        ? "times"
+        : templateId === "blueprint"
+          ? "courier"
+          : "helvetica",
+      "normal",
+    );
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
-    doc.text("Notes", margin, sumY);
+    doc.text("Notes", contentLeft, sumY);
     sumY += 5;
-    const noteLines = doc.splitTextToSize(snapshot.notes.trim(), pageW - margin * 2);
-    doc.text(noteLines, margin, sumY);
+    const noteLines = doc.splitTextToSize(snapshot.notes.trim(), pageW - contentLeft - margin);
+    doc.text(noteLines, contentLeft, sumY);
   }
 
-  doc.setFont(templateId === "editorial" ? "times" : "helvetica", "normal");
+  doc.setFont(
+    templateId === "editorial" || templateId === "classic"
+      ? "times"
+      : templateId === "blueprint"
+        ? "courier"
+        : "helvetica",
+    "normal",
+  );
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
-  doc.text("Thank you for your business.", pageW / 2, pageH - 12, { align: "center" });
+  doc.text(footerPhrase, pageW / 2, pageH - 12, { align: "center", maxWidth: pageW - margin * 2 });
+
+  if (templateId === "classic") {
+    doc.setDrawColor(120, 90, 60);
+    doc.setLineWidth(0.3);
+    doc.rect(11, 11, pageW - 22, pageH - 22, "S");
+    doc.setLineWidth(0.15);
+    doc.rect(11.6, 11.6, pageW - 23.2, pageH - 23.2, "S");
+  }
 
   return doc.output("blob");
 }

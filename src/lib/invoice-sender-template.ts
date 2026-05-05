@@ -1,4 +1,10 @@
 import { defaultInvoiceTemplateFields, type InvoiceLayoutDensity } from "./invoice-templates";
+import {
+  INVOICE_DOCUMENT_TITLE_OPTIONS,
+  INVOICE_FOOTER_PHRASE_OPTIONS,
+  sanitizeInvoiceDocumentTitle,
+  sanitizeInvoiceFooterPhrase,
+} from "./invoice-wording";
 
 const STORAGE_KEY = "localleadster-invoice-sender-v1";
 
@@ -8,6 +14,10 @@ export type InvoiceSenderTemplate = {
   templateId: string;
   accentHex: string;
   density: InvoiceLayoutDensity;
+  /** Shown in PDF header (preset or short custom via templates UI). */
+  documentTitle: string;
+  /** One-line closing under totals. */
+  footerPhrase: string;
 };
 
 export function defaultInvoiceSenderTemplate(): InvoiceSenderTemplate {
@@ -18,6 +28,8 @@ export function defaultInvoiceSenderTemplate(): InvoiceSenderTemplate {
     templateId: d.templateId,
     accentHex: d.accentHex,
     density: d.density,
+    documentTitle: INVOICE_DOCUMENT_TITLE_OPTIONS[0].value,
+    footerPhrase: INVOICE_FOOTER_PHRASE_OPTIONS[0].value,
   };
 }
 
@@ -36,12 +48,16 @@ export function loadInvoiceSenderTemplate(): InvoiceSenderTemplate {
     }
     const o = p as Record<string, unknown>;
     const base = defaultInvoiceSenderTemplate();
+    const rawTitle = typeof o.documentTitle === "string" ? o.documentTitle : base.documentTitle;
+    const rawFooter = typeof o.footerPhrase === "string" ? o.footerPhrase : base.footerPhrase;
     return {
       businessName: typeof o.businessName === "string" ? o.businessName : base.businessName,
       logoDataUrl: typeof o.logoDataUrl === "string" ? o.logoDataUrl : base.logoDataUrl,
       templateId: typeof o.templateId === "string" ? o.templateId : base.templateId,
       accentHex: typeof o.accentHex === "string" ? o.accentHex : base.accentHex,
       density: o.density === "compact" || o.density === "comfortable" ? o.density : base.density,
+      documentTitle: sanitizeInvoiceDocumentTitle(rawTitle),
+      footerPhrase: sanitizeInvoiceFooterPhrase(rawFooter),
     };
   } catch {
     return defaultInvoiceSenderTemplate();

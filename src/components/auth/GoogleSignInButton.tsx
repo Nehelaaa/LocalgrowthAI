@@ -93,9 +93,19 @@ export function GoogleSignInButton({
             try {
               // Only sign out when a session exists. Unconditional signOut adds a slow extra round-trip
               // before every Google sign-in (feels like a hang on slow networks).
-              const session = await getSession();
-              if (session?.user) {
-                await signOut({ redirect: false });
+              // getSession() uses fetch(); during Turbopack/HMR or a briefly-down API route it can throw
+              // ClientFetchError — treat as "no session" so Google sign-in still runs.
+              try {
+                const session = await getSession();
+                if (session?.user) {
+                  try {
+                    await signOut({ redirect: false });
+                  } catch {
+                    /* ignore */
+                  }
+                }
+              } catch {
+                /* ignore */
               }
               const csrfRes = await fetch("/api/auth/csrf", { credentials: "same-origin" });
               if (!csrfRes.ok) throw new Error("csrf");

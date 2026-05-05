@@ -58,6 +58,8 @@ model User {
   lifetimeLeadsCreated Int   @default(0)
   /// Total live Google Places API searches used (Starter lifetime cap). Cache hits do not increment.
   lifetimeGoogleSearches Int @default(0)
+  /// CRM branded invoice PDF downloads (Free plan lifetime cap; Pro unlimited).
+  lifetimeInvoicePdfsGenerated Int @default(0)
   /// web_agency | real_estate | trades | sales | freelance | agency | other
   profession     String?
   accounts      Account[]

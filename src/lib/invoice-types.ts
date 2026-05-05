@@ -25,6 +25,10 @@ export type InvoiceSnapshot = {
   invoiceAccentHex?: string;
   /** Row / padding density in PDF */
   invoiceLayoutDensity?: "compact" | "comfortable";
+  /** Header document label (e.g. Invoice, Tax invoice) — from saved sender template */
+  invoiceDocumentTitle?: string;
+  /** Single closing line above page footer */
+  invoiceFooterPhrase?: string;
 };
 
 export function invoiceTotals(s: Pick<InvoiceSnapshot, "lineItems" | "taxPercent" | "discountAmount">): {

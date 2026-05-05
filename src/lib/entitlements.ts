@@ -4,6 +4,8 @@ import type { User } from "@prisma/client";
 export const FREE_LEAD_LIMIT = 5;
 /** Starter: lifetime cap on live Google Places searches (cache hits never consume). */
 export const FREE_SEARCHES_LIFETIME = 10;
+/** Free plan: max branded invoice PDF downloads from the CRM invoice builder (lifetime). */
+export const FREE_INVOICE_PDF_LIMIT = 3;
 /** Pro: daily cap on live Google Places searches. */
 export const PRO_SEARCHES_PER_DAY = 100;
 export const PRO_PLAN = "pro" as const;

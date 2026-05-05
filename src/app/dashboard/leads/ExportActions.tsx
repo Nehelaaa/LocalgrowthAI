@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 export function ExportActions({
   totalLeads,
   canExport,
+  triggerClassName = "",
 }: {
   totalLeads: number;
   canExport: boolean;
+  triggerClassName?: string;
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -38,30 +39,17 @@ export function ExportActions({
   };
 
   return (
-    <div className="space-y-3">
-      {!canExport && (
-        <p className="rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-200">
-          CSV export is a Pro feature. Open{" "}
-          <Link className="font-medium text-indigo-600 underline dark:text-indigo-400" href="/dashboard/plan">
-            Plan &amp; billing
-          </Link>{" "}
-          to upgrade, or see{" "}
-          <Link className="font-medium text-indigo-600 underline dark:text-indigo-400" href="/#pricing">
-            pricing
-          </Link>
-          .
-        </p>
-      )}
-      <div className="flex flex-wrap gap-4">
-        <button
-          type="button"
-          onClick={() => void downloadCsv()}
-          disabled={loading || totalLeads === 0 || !canExport}
-          className="rounded-lg bg-indigo-600 px-6 py-2.5 font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-        >
-          {loading ? "Preparing…" : "Download CSV"}
-        </button>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={() => void downloadCsv()}
+      disabled={loading || totalLeads === 0}
+      title={!canExport ? "Upgrade to Pro to export CSV" : undefined}
+      className={
+        "inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-violet-300 hover:bg-violet-50/80 hover:text-violet-900 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-violet-500/40 dark:hover:bg-violet-950/30 dark:hover:text-white " +
+        triggerClassName
+      }
+    >
+      {loading ? "Exporting…" : "Export"}
+    </button>
   );
 }

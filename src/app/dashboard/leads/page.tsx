@@ -69,40 +69,16 @@ export default async function LeadsPage({
             Track prospects, pricing, and follow-ups.
           </p>
         </div>
-        <AddManualLeadDialog triggerClassName="w-full sm:w-auto justify-center" />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+          <AddManualLeadDialog triggerClassName="w-full sm:w-auto justify-center" />
+          <ExportActions
+            totalLeads={totalLeadsForExport}
+            canExport={canExportCsv}
+            triggerClassName="w-full sm:w-auto justify-center"
+          />
+        </div>
       </div>
       <LeadsFilters />
-      <section
-        id="export"
-        className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6"
-        aria-labelledby="crm-export-heading"
-      >
-        <h2
-          id="crm-export-heading"
-          className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-        >
-          Export leads
-        </h2>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Download your full lead list as CSV ({totalLeadsForExport} saved), or use the JSON API with integrations.
-        </p>
-        <div className="mt-4">
-          <ExportActions totalLeads={totalLeadsForExport} canExport={canExportCsv} />
-        </div>
-        <div className="mt-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 p-4 dark:bg-slate-800/40">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">API export</h3>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            GET{" "}
-            <code className="rounded bg-slate-100 px-1 py-0.5 text-xs dark:bg-slate-900">
-              /api/export/leads
-            </code>{" "}
-            returns all leads as JSON. Pair with Zapier, Make, or Google Sheets apps.
-          </p>
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">
-            Webhooks: POST new-lead payloads to your URL when configured via environment variables.
-          </p>
-        </div>
-      </section>
       <LeadsPagination
         total={leadsResult.total}
         page={leadsResult.page}
