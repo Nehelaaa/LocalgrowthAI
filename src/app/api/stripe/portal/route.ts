@@ -5,6 +5,7 @@ import { billingPortalConfigurationId } from "@/lib/stripe-branding";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { enforceSameOrigin, rateLimitOr429 } from "@/lib/api-security";
 import { stripeIntegrationPublicError } from "@/lib/stripe-integration-error";
+import { clearUserStripeBilling, isStripeResourceMissingError } from "@/lib/stripe-stale-customer";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -45,29 +46,72 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripe();
-    const cust = await stripe.customers.retrieve(u.stripeCustomerId);
-    if (!cust.deleted) {
-      const owner = cust.metadata?.userId;
-      if (owner && owner !== u.id) {
+    let cust: Awaited<ReturnType<typeof stripe.customers.retrieve>>;
+    try {
+      cust = await stripe.customers.retrieve(u.stripeCustomerId);
+    } catch (e) {
+      if (isStripeResourceMissingError(e)) {
+        await clearUserStripeBilling(u.id);
         return NextResponse.json(
-          { error: "Billing account could not be verified." },
-          { status: 403 }
+          {
+            error:
+              "Your saved billing account is not in live mode (for example it was created in Stripe test). We reset billing on your profile — open Plan & billing and use Upgrade to Pro to subscribe in production.",
+            code: "STRIPE_CUSTOMER_STALE",
+          },
+          { status: 409 }
         );
       }
-      if (!owner) {
-        await stripe.customers.update(u.stripeCustomerId, {
-          metadata: { userId: u.id },
-        });
-      }
+      throw e;
+    }
+
+    if (cust.deleted) {
+      await clearUserStripeBilling(u.id);
+      return NextResponse.json(
+        {
+          error:
+            "That billing profile was removed in Stripe. Use Upgrade to Pro on Plan & billing to set up live billing again.",
+          code: "STRIPE_CUSTOMER_STALE",
+        },
+        { status: 409 }
+      );
+    }
+
+    const owner = cust.metadata?.userId;
+    if (owner && owner !== u.id) {
+      return NextResponse.json(
+        { error: "Billing account could not be verified." },
+        { status: 403 }
+      );
+    }
+    if (!owner) {
+      await stripe.customers.update(u.stripeCustomerId, {
+        metadata: { userId: u.id },
+      });
     }
 
     const origin = appOrigin(request);
     const cfg = billingPortalConfigurationId();
-    const portal = await stripe.billingPortal.sessions.create({
-      customer: u.stripeCustomerId,
-      return_url: `${origin}/dashboard/plan?portal=return`,
-      ...(cfg ? { configuration: cfg } : {}),
-    });
+    let portal: Awaited<ReturnType<typeof stripe.billingPortal.sessions.create>>;
+    try {
+      portal = await stripe.billingPortal.sessions.create({
+        customer: u.stripeCustomerId,
+        return_url: `${origin}/dashboard/plan?portal=return`,
+        ...(cfg ? { configuration: cfg } : {}),
+      });
+    } catch (e) {
+      if (isStripeResourceMissingError(e)) {
+        await clearUserStripeBilling(u.id);
+        return NextResponse.json(
+          {
+            error:
+              "Could not open the billing portal for this account. Billing was reset — use Upgrade to Pro on Plan & billing to connect live Stripe.",
+            code: "STRIPE_CUSTOMER_STALE",
+          },
+          { status: 409 }
+        );
+      }
+      throw e;
+    }
 
     return NextResponse.json({ url: portal.url });
   } catch (e) {

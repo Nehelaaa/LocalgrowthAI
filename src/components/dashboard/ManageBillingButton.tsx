@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { readResponseJson } from "@/lib/fetch-json";
 
@@ -18,6 +19,7 @@ export function ManageBillingButton({
   variant = "outline",
   label,
 }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const outlineStyles =
     "rounded-lg border border-slate-200/80 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800/80";
@@ -40,9 +42,18 @@ export function ManageBillingButton({
             method: "POST",
             credentials: "same-origin",
           });
-          const j = await readResponseJson<{ url?: string; error?: string }>(r);
+          const j = await readResponseJson<{
+            url?: string;
+            error?: string;
+            code?: string;
+          }>(r);
           if (j?.url) window.location.href = j.url;
-          else if (j?.error) window.alert(j.error);
+          else if (j?.error) {
+            if (r.status === 409 && j.code === "STRIPE_CUSTOMER_STALE") {
+              router.refresh();
+            }
+            window.alert(j.error);
+          }
           else {
             window.alert(
               r.status === 401

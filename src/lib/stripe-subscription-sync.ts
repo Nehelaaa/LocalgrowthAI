@@ -2,6 +2,11 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { extractSubscriptionCurrentPeriodEndUnix } from "@/lib/stripe-subscription-period";
+import {
+  clearUserStripeBilling,
+  clearUserStripeSubscription,
+  isStripeResourceMissingError,
+} from "@/lib/stripe-stale-customer";
 
 const PRO_STATUSES = new Set<Stripe.Subscription.Status>(["active", "trialing", "past_due"]);
 
@@ -36,16 +41,27 @@ export async function syncUserSubscriptionFromStripe(userId: string): Promise<bo
         await prisma.user.update({ where: { id: userId }, data: subscriptionToUserData(sub) });
         return true;
       }
-    } catch {
+    } catch (e) {
+      if (isStripeResourceMissingError(e)) {
+        await clearUserStripeSubscription(userId);
+      }
       // fall through to list
     }
   }
 
-  const list = await stripe.subscriptions.list({
-    customer: u.stripeCustomerId,
-    status: "all",
-    limit: 20,
-  });
+  let list: Stripe.ApiList<Stripe.Subscription>;
+  try {
+    list = await stripe.subscriptions.list({
+      customer: u.stripeCustomerId,
+      status: "all",
+      limit: 20,
+    });
+  } catch (e) {
+    if (isStripeResourceMissingError(e)) {
+      await clearUserStripeBilling(userId);
+    }
+    return false;
+  }
 
   const paying = list.data.filter((s) => PRO_STATUSES.has(s.status));
   if (paying.length === 0) return false;

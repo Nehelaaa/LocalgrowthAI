@@ -7,6 +7,11 @@ import { billingPortalConfigurationId, checkoutBrandingSettings } from "@/lib/st
 import { subscriptionToUserData } from "@/lib/stripe-subscription-sync";
 import { enforceSameOrigin, rateLimitOr429 } from "@/lib/api-security";
 import { stripeIntegrationPublicError } from "@/lib/stripe-integration-error";
+import {
+  clearUserStripeBilling,
+  clearUserStripeSubscription,
+  isStripeResourceMissingError,
+} from "@/lib/stripe-stale-customer";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const u = await prisma.user.findUnique({ where: { id: session.user.id } });
+    let u = await prisma.user.findUnique({ where: { id: session.user.id } });
     if (!u) {
       return NextResponse.json({ error: "User not found" }, { status: 400 });
     }
@@ -74,23 +79,31 @@ export async function POST(request: NextRequest) {
     let customerId = u.stripeCustomerId;
 
     if (customerId) {
-      const cust = await stripe.customers.retrieve(customerId);
-      if (cust.deleted) {
-        await prisma.user.update({
-          where: { id: u.id },
-          data: { stripeCustomerId: null },
-        });
-        customerId = null;
-      } else {
-        const owner = cust.metadata?.userId;
-        if (owner && owner !== u.id) {
-          return NextResponse.json(
-            { error: "Billing account could not be verified. Please contact support." },
-            { status: 409 }
-          );
+      try {
+        const cust = await stripe.customers.retrieve(customerId);
+        if (cust.deleted) {
+          await clearUserStripeBilling(u.id);
+          customerId = null;
+          u = (await prisma.user.findUnique({ where: { id: u.id } }))!;
+        } else {
+          const owner = cust.metadata?.userId;
+          if (owner && owner !== u.id) {
+            return NextResponse.json(
+              { error: "Billing account could not be verified. Please contact support." },
+              { status: 409 }
+            );
+          }
+          if (!owner) {
+            await stripe.customers.update(customerId, { metadata: { userId: u.id } });
+          }
         }
-        if (!owner) {
-          await stripe.customers.update(customerId, { metadata: { userId: u.id } });
+      } catch (e) {
+        if (isStripeResourceMissingError(e)) {
+          await clearUserStripeBilling(u.id);
+          customerId = null;
+          u = (await prisma.user.findUnique({ where: { id: u.id } }))!;
+        } else {
+          throw e;
         }
       }
     }
@@ -124,13 +137,38 @@ export async function POST(request: NextRequest) {
             { status: 409 }
           );
         }
-      } catch {
-        // ignore and fall through to list
+      } catch (e) {
+        if (isStripeResourceMissingError(e)) {
+          await clearUserStripeSubscription(u.id);
+          u = (await prisma.user.findUnique({ where: { id: u.id } }))!;
+        }
+        // else fall through to list
       }
     }
 
     // If any subscription exists for this customer, do NOT start a new checkout session.
-    const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
+    let subs: Awaited<ReturnType<typeof stripe.subscriptions.list>>;
+    try {
+      subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
+    } catch (e) {
+      if (isStripeResourceMissingError(e)) {
+        await clearUserStripeBilling(u.id);
+        u = (await prisma.user.findUnique({ where: { id: u.id } }))!;
+        const c = await stripe.customers.create({
+          email: u.email,
+          name: u.name ?? undefined,
+          metadata: { userId: u.id },
+        });
+        customerId = c.id;
+        await prisma.user.update({
+          where: { id: u.id },
+          data: { stripeCustomerId: customerId },
+        });
+        subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
+      } else {
+        throw e;
+      }
+    }
     const existing = subs.data.find((s) => isBlockingSubscriptionStatus(s.status));
     if (existing) {
       await prisma.user.update({ where: { id: u.id }, data: subscriptionToUserData(existing) });
