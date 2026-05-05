@@ -41,6 +41,12 @@ if (direct.includes("-pooler.")) {
   process.exit(1);
 }
 
+if (pooled === direct) {
+  console.warn(
+    "[migrate] DATABASE_URL and DIRECT_URL are the same string. Use Neon’s pooled connection for DATABASE_URL (host contains “-pooler”) and the direct connection for DIRECT_URL (no “-pooler”) so serverless + migrations stay healthy."
+  );
+}
+
 const env = { ...process.env, DATABASE_URL: direct };
 const result = spawnSync("npx", ["prisma", "migrate", "deploy"], {
   stdio: "inherit",

@@ -1,9 +1,13 @@
-import Stripe from "stripe";
 import { prisma } from "@/lib/db";
 
-/** Stripe live vs test mismatch, deleted account, or stale DB — customer/subscription id not in this mode. */
+/**
+ * Stripe live vs test mismatch, deleted account, or stale DB — customer/subscription id not in this mode.
+ * Uses duck-typing so production bundles still match (multiple Stripe copies can break `instanceof`).
+ */
 export function isStripeResourceMissingError(e: unknown): boolean {
-  return e instanceof Stripe.errors.StripeInvalidRequestError && e.code === "resource_missing";
+  if (!e || typeof e !== "object") return false;
+  const o = e as { code?: unknown };
+  return o.code === "resource_missing";
 }
 
 /**

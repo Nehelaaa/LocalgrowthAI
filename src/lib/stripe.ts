@@ -39,10 +39,27 @@ export function isStripeConfigured(): boolean {
 
 /** Prefer `STRIPE_PRICE_ID_PRO`; `STRIPE_PRICE_ID_PRO_LIVE` is a supported alias. */
 export function stripeProPriceIdResolved(): string | undefined {
-  return (
+  const raw =
     process.env.STRIPE_PRICE_ID_PRO?.trim() ||
-    process.env.STRIPE_PRICE_ID_PRO_LIVE?.trim()
-  );
+    process.env.STRIPE_PRICE_ID_PRO_LIVE?.trim();
+  if (!raw) return undefined;
+  // Product ids are a common mis-copy from Stripe Dashboard.
+  if (raw.startsWith("prod_")) return undefined;
+  return raw;
+}
+
+/**
+ * If set, return a user-facing misconfiguration message (e.g. prod_ pasted instead of price_).
+ */
+export function stripePriceProConfigurationError(): string | null {
+  const raw =
+    process.env.STRIPE_PRICE_ID_PRO?.trim() ||
+    process.env.STRIPE_PRICE_ID_PRO_LIVE?.trim();
+  if (!raw) return null;
+  if (raw.startsWith("prod_")) {
+    return "STRIPE_PRICE_ID_PRO (or STRIPE_PRICE_ID_PRO_LIVE) is a Product id (prod_…). Checkout needs the recurring Price id (price_…): Stripe Dashboard → Products → your product → Pricing → copy the Price id (starts with price_).";
+  }
+  return null;
 }
 
 export function proPriceId(): string {
