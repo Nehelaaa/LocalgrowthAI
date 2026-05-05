@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasActiveStripeSubscription } from "@/lib/entitlements";
-import { getStripe, isStripeConfigured, proPriceId } from "@/lib/stripe";
+import { getStripe, isStripeConfigured, proPriceId, stripeProPriceIdResolved } from "@/lib/stripe";
 import { billingPortalConfigurationId, checkoutBrandingSettings } from "@/lib/stripe-branding";
 import { subscriptionToUserData } from "@/lib/stripe-subscription-sync";
 import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const originErr = enforceSameOrigin(request);
     if (originErr) return originErr;
 
-    if (!isStripeConfigured() || !process.env.STRIPE_PRICE_ID_PRO?.trim()) {
+    if (!isStripeConfigured() || !stripeProPriceIdResolved()) {
       return NextResponse.json(
         { error: "Stripe is not fully configured (STRIPE_SECRET_KEY and STRIPE_PRICE_ID_PRO)." },
         { status: 503 }

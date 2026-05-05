@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import { getStripe, isStripeConfigured, stripeSecretKeyResolved } from "@/lib/stripe";
 
 export type OwnerStripeInvoiceRow = {
   id: string;
@@ -72,7 +72,7 @@ export async function getOwnerStripeCustomerBilling(
 }
 
 export function stripeDashboardCustomerUrl(customerId: string): string {
-  const test = process.env.STRIPE_SECRET_KEY?.trim().startsWith("sk_test");
+  const test = stripeSecretKeyResolved()?.startsWith("sk_test");
   const base = test ? "https://dashboard.stripe.com/test" : "https://dashboard.stripe.com";
   return `${base}/customers/${customerId}`;
 }

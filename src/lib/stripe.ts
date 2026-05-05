@@ -1,9 +1,19 @@
 import Stripe from "stripe";
 
+/** Prefer `STRIPE_SECRET_KEY`; `STRIPE_SECRET_KEY_LIVE` is supported for hosts that use that name (e.g. Vercel). */
+export function stripeSecretKeyResolved(): string | undefined {
+  return (
+    process.env.STRIPE_SECRET_KEY?.trim() ||
+    process.env.STRIPE_SECRET_KEY_LIVE?.trim()
+  );
+}
+
 function requireSecret(): string {
-  const k = process.env.STRIPE_SECRET_KEY?.trim();
+  const k = stripeSecretKeyResolved();
   if (!k) {
-    throw new Error("STRIPE_SECRET_KEY is not configured on the server.");
+    throw new Error(
+      "STRIPE_SECRET_KEY is not configured on the server. Set STRIPE_SECRET_KEY (or alias STRIPE_SECRET_KEY_LIVE)."
+    );
   }
   return k;
 }
@@ -24,13 +34,31 @@ export function getStripe(): Stripe {
 }
 
 export function isStripeConfigured(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+  return Boolean(stripeSecretKeyResolved());
+}
+
+/** Prefer `STRIPE_PRICE_ID_PRO`; `STRIPE_PRICE_ID_PRO_LIVE` is a supported alias. */
+export function stripeProPriceIdResolved(): string | undefined {
+  return (
+    process.env.STRIPE_PRICE_ID_PRO?.trim() ||
+    process.env.STRIPE_PRICE_ID_PRO_LIVE?.trim()
+  );
 }
 
 export function proPriceId(): string {
-  const p = process.env.STRIPE_PRICE_ID_PRO?.trim();
+  const p = stripeProPriceIdResolved();
   if (!p) {
-    throw new Error("STRIPE_PRICE_ID_PRO is not set.");
+    throw new Error(
+      "STRIPE_PRICE_ID_PRO is not set. Set STRIPE_PRICE_ID_PRO (or alias STRIPE_PRICE_ID_PRO_LIVE)."
+    );
   }
   return p;
+}
+
+/** Prefer `STRIPE_WEBHOOK_SECRET`; `STRIPE_WEBHOOK_SECRET_LIVE` is a supported alias. */
+export function stripeWebhookSecretResolved(): string | undefined {
+  return (
+    process.env.STRIPE_WEBHOOK_SECRET?.trim() ||
+    process.env.STRIPE_WEBHOOK_SECRET_LIVE?.trim()
+  );
 }

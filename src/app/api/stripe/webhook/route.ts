@@ -5,7 +5,7 @@ import {
   createOwnerBillingEvent,
   findUserIdByStripeCustomerId,
 } from "@/lib/owner-billing-events";
-import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import { getStripe, isStripeConfigured, stripeWebhookSecretResolved } from "@/lib/stripe";
 import { subscriptionToUserData, syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";
 import type Stripe from "stripe";
 
@@ -54,7 +54,8 @@ async function resolveStripeCustomerIdForCharge(
 }
 
 export async function POST(request: Request) {
-  if (!isStripeConfigured() || !process.env.STRIPE_WEBHOOK_SECRET) {
+  const webhookSecret = stripeWebhookSecretResolved();
+  if (!isStripeConfigured() || !webhookSecret) {
     return NextResponse.json(
       { error: "Stripe webhook is not configured" },
       { status: 500 }
@@ -71,11 +72,7 @@ export async function POST(request: Request) {
   const stripe = getStripe();
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
     console.error("Stripe signature verification failed", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
