@@ -189,6 +189,9 @@ function NavList({
   );
 }
 
+const brandWordmarkClass =
+  "block bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text font-bold leading-tight tracking-tight text-transparent dark:from-violet-300 dark:to-indigo-300";
+
 function BrandBlock({ small }: { small?: boolean }) {
   return (
     <Link
@@ -205,13 +208,8 @@ function BrandBlock({ small }: { small?: boolean }) {
         height={small ? 32 : 36}
         priority
       />
-      <span>
-        <span
-          className={
-            (small ? "text-[15px] " : "text-[15px] ") +
-            "block font-bold leading-tight tracking-tight text-slate-900 dark:text-white"
-          }
-        >
+      <span className="min-w-0">
+        <span className={small ? "text-[15px] " + brandWordmarkClass : "text-[15px] md:text-base " + brandWordmarkClass}>
           LocalLeadster
         </span>
         {!small && <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline</span>}

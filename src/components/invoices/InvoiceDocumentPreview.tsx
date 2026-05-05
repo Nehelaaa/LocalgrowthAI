@@ -3,6 +3,7 @@
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { formatMoneyUSD } from "@/lib/invoice-money";
 import {
+  INVOICE_CLASSIC_FRAME_HEX,
   normalizeHexColor,
   normalizeInvoiceTemplateId,
   type InvoiceLayoutDensity,
@@ -365,13 +366,21 @@ export function InvoiceDocumentPreview({
   }
 
   if (tid === "classic") {
+    const frame = INVOICE_CLASSIC_FRAME_HEX;
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border-2 border-amber-900/25 bg-[#fffdf8] p-1 shadow-md ring-1 ring-amber-900/10 dark:border-amber-700/40 dark:bg-stone-950 dark:ring-amber-900/20 ${scale}`}
+        className={`relative overflow-hidden rounded-lg border-2 bg-[#fffdf8] p-1 shadow-md dark:bg-stone-950 ${scale}`}
+        style={{
+          borderColor: `${frame}73`,
+          boxShadow: `0 0 0 1px ${frame}26`,
+        }}
       >
-        <div className={`rounded-md border border-amber-900/20 bg-[#fffdf8] dark:border-amber-800/50 dark:bg-stone-950 ${pad}`}>
+        <div
+          className={`rounded-md border bg-[#fffdf8] dark:bg-stone-950 ${pad}`}
+          style={{ borderColor: `${frame}59` }}
+        >
           <div className="text-center">
-            <p className="font-serif text-xl font-light tracking-[0.18em] text-amber-950 dark:text-amber-100">
+            <p className="font-serif text-xl font-light tracking-[0.18em] text-stone-900 dark:text-stone-100">
               {docTitle.toUpperCase()}
             </p>
             <p className="mt-2 font-serif text-sm italic text-stone-600 dark:text-stone-400">{brand}</p>
@@ -382,7 +391,11 @@ export function InvoiceDocumentPreview({
               />
             </div>
             <p className="mt-2 font-mono text-[11px] text-stone-500 dark:text-stone-400">INV-2026-0142 · APR 22, 2026</p>
-            <div className="mx-auto mt-3 h-px max-w-xs bg-amber-800/30 dark:bg-amber-500/30" aria-hidden />
+            <div
+              className="mx-auto mt-3 h-px max-w-xs"
+              style={{ backgroundColor: `${frame}59` }}
+              aria-hidden
+            />
           </div>
           <div className="mt-4 space-y-3">
             <BillToBlock variant="editorial" />

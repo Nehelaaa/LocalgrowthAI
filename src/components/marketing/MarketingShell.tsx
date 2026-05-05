@@ -27,12 +27,20 @@ export function MarketingShell({
             <Image
               src="/favicon.svg"
               alt="LocalLeadster"
-              className="h-9 w-9 rounded-xl shadow-md"
+              className="h-9 w-9 rounded-xl shadow-md sm:hidden"
               width={36}
               height={36}
               priority
             />
-            <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+            <Image
+              src="/logo.svg"
+              alt="LocalLeadster"
+              className="hidden h-10 w-auto max-w-[min(240px,52vw)] rounded-lg sm:block"
+              width={240}
+              height={70}
+              priority
+            />
+            <span className="bg-gradient-to-r from-violet-700 via-indigo-600 to-blue-600 bg-clip-text text-lg font-bold tracking-tight text-transparent dark:from-violet-300 dark:via-indigo-300 dark:to-sky-300 sm:hidden">
               LocalLeadster
             </span>
           </Link>

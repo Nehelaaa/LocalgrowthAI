@@ -15,6 +15,9 @@ export type InvoiceTemplateId = (typeof INVOICE_TEMPLATE_IDS)[number];
 
 export type InvoiceLayoutDensity = "compact" | "comfortable";
 
+/** Ruled frame + header divider for Classic template (PDF + preview). Accent color does not override this. */
+export const INVOICE_CLASSIC_FRAME_HEX = "#785a3c";
+
 export type InvoiceTemplateDefinition = {
   id: InvoiceTemplateId;
   name: string;

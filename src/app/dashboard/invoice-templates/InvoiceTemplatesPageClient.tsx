@@ -162,7 +162,9 @@ export function InvoiceTemplatesPageClient() {
             <div>
               <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">Choose a template</h2>
               <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                Active uses your accent; hover any card for a closer look. Full fidelity is in{" "}
+                Templates use your accent for colored rails and headers —{" "}
+                <span className="font-medium text-slate-700 dark:text-slate-300">Classic</span> keeps fixed bronze
+                rules so PDF and preview match the thumbnail. Full fidelity is in{" "}
                 <span className="font-medium text-slate-700 dark:text-slate-300">Live preview</span>.
               </p>
             </div>
@@ -307,6 +309,11 @@ export function InvoiceTemplatesPageClient() {
             <p className="mt-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Accent color
             </p>
+            {tid === "classic" ? (
+              <p className="mt-1.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                Classic invoices ignore accent for the frame, divider, and table — downloaded PDFs match the preview.
+              </p>
+            ) : null}
             <div className="mt-2 flex flex-wrap gap-2">
               {INVOICE_ACCENT_PRESETS.map((p) => (
                 <button

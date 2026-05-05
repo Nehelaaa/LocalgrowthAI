@@ -1,36 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="360" viewBox="0 0 1240 360" role="img" aria-label="Localleadster logo">
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="380" viewBox="0 0 420 380" role="img" aria-label="Localleadster">
   <defs>
-    <linearGradient id="gMark" x1="80" y1="60" x2="440" y2="460" gradientUnits="userSpaceOnUse">
+    <linearGradient id="gMarkPortal" x1="80" y1="60" x2="440" y2="460" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#7c3aed"/>
       <stop offset="1" stop-color="#2563eb"/>
     </linearGradient>
-    <!-- Soft squircle (~21% corner radius) — pin clipped so nothing spills past the curve. -->
-    <clipPath id="softSq">
+    <clipPath id="softSqPortal">
       <rect width="512" height="512" rx="108" ry="108"/>
     </clipPath>
   </defs>
-
-  <!-- Larger mark for Stripe header; rounded square reads softer than a sharp tile. -->
-  <g transform="translate(18, 21) scale(0.62)">
-    <rect width="512" height="512" rx="108" ry="108" fill="url(#gMark)"/>
-    <g clip-path="url(#softSq)">
+  <!-- Stacked lockup for Stripe Customer Portal: narrower canvas so width caps shrink less. -->
+  <g transform="translate(210, 118) scale(0.405) translate(-256, -256)">
+    <rect width="512" height="512" rx="108" ry="108" fill="url(#gMarkPortal)"/>
+    <g clip-path="url(#softSqPortal)">
       <g transform="translate(256, 258) scale(0.72) translate(-256, -258)">
         <path
           d="M256 128c-76 0-132 56-132 132 0 114 132 248 132 248s132-134 132-248c0-76-56-132-132-132Z"
           fill="#ffffff"
           fill-opacity="0.96"
         />
-        <circle cx="256" cy="260" r="74" fill="url(#gMark)"/>
+        <circle cx="256" cy="260" r="74" fill="url(#gMarkPortal)"/>
         <circle cx="256" cy="260" r="40" fill="#ffffff" fill-opacity="0.96"/>
       </g>
     </g>
   </g>
-
   <text
-    x="360"
-    y="232"
+    text-anchor="middle"
+    x="210"
+    y="298"
     font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
-    font-size="140"
+    font-size="68"
     font-weight="800"
     fill="#312e81"
   >

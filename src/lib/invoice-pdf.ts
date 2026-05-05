@@ -3,6 +3,7 @@ import { formatMoneyUSD } from "@/lib/invoice-money";
 import {
   getInvoiceTemplate,
   hexToRgb,
+  INVOICE_CLASSIC_FRAME_HEX,
   normalizeHexColor,
   normalizeInvoiceTemplateId,
 } from "@/lib/invoice-templates";
@@ -61,6 +62,11 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     Math.round(accent[1] * w + 255 * (1 - w)),
     Math.round(accent[2] * w + 255 * (1 - w)),
   ];
+
+  /** Classic double-rule frame — keep dividers aligned with PDF border, not user accent. */
+  const classicFrameRgb: [number, number, number] = hexToRgb(INVOICE_CLASSIC_FRAME_HEX);
+  /** Editorial / classic ruled tables — neutral hairlines like the in-app preview (no accent fill). */
+  const editorialRuleRgb: [number, number, number] = [168, 162, 158];
 
   const drawLogo = (left: number, top: number, maxW: number, maxH: number): number => {
     if (snapshot.senderLogoDataUrl) {
@@ -147,7 +153,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setTextColor(120, 113, 108);
     doc.text(`${snapshot.invoiceNumber} · ${editorialShortDateUpper}`, pageW / 2, y, { align: "center" });
     y += 8;
-    doc.setDrawColor(accent[0], accent[1], accent[2]);
+    doc.setDrawColor(editorialRuleRgb[0], editorialRuleRgb[1], editorialRuleRgb[2]);
     doc.setLineWidth(0.35);
     doc.line(margin + 24, y, pageW - margin - 24, y);
     y += 8;
@@ -296,7 +302,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     doc.setTextColor(120, 113, 108);
     doc.text(`${snapshot.invoiceNumber} · ${dateLabel}`, pageW / 2, lb + 5, { align: "center" });
     y = lb + 12;
-    doc.setDrawColor(accent[0], accent[1], accent[2]);
+    doc.setDrawColor(classicFrameRgb[0], classicFrameRgb[1], classicFrameRgb[2]);
     doc.setLineWidth(0.35);
     doc.line(margin + 18, y, pageW - margin - 18, y);
     y += 10;
@@ -416,7 +422,12 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
         ? [15, 23, 42]
         : templateId === "blueprint"
           ? [30, 58, 138]
-          : [accent[0], accent[1], accent[2]];
+          : templateId === "classic" || templateId === "editorial"
+            ? [255, 255, 255]
+            : [accent[0], accent[1], accent[2]];
+
+  const headTextRgb: [number, number, number] | null =
+    templateId === "classic" || templateId === "editorial" ? [41, 37, 36] : null;
 
   const tableTheme =
     templateId === "ledger" || templateId === "blueprint"
@@ -451,10 +462,16 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
     theme: tableTheme,
     headStyles: {
       fillColor: headFill,
-      textColor: templateId === "ledger" ? 255 : 255,
+      textColor: headTextRgb ?? 255,
       fontStyle: "bold",
       fontSize: templateId === "editorial" || templateId === "classic" ? 9 : 10,
       font: tableFont,
+      ...(templateId === "classic" || templateId === "editorial"
+        ? {
+            lineColor: editorialRuleRgb,
+            lineWidth: 0.15,
+          }
+        : {}),
     },
     bodyStyles: {
       fontSize: templateId === "ledger" ? 9 : 10,
@@ -561,7 +578,7 @@ export async function generateInvoicePdfBlob(snapshot: InvoiceSnapshot): Promise
   doc.text(footerPhrase, pageW / 2, pageH - 12, { align: "center", maxWidth: pageW - margin * 2 });
 
   if (templateId === "classic") {
-    doc.setDrawColor(120, 90, 60);
+    doc.setDrawColor(classicFrameRgb[0], classicFrameRgb[1], classicFrameRgb[2]);
     doc.setLineWidth(0.3);
     doc.rect(11, 11, pageW - 22, pageH - 22, "S");
     doc.setLineWidth(0.15);

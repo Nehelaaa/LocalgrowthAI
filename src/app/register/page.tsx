@@ -30,7 +30,9 @@ export default function RegisterPage() {
             height={36}
             priority
           />
-          <span className="text-lg font-bold text-slate-900 dark:text-white">LocalLeadster</span>
+          <span className="bg-gradient-to-r from-violet-700 via-indigo-600 to-blue-600 bg-clip-text text-lg font-bold text-transparent dark:from-violet-300 dark:via-indigo-300 dark:to-sky-300">
+            LocalLeadster
+          </span>
           </div>
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Create an account

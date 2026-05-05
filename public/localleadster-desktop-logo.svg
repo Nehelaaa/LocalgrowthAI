@@ -4,7 +4,7 @@
       <stop offset="0" stop-color="#7c3aed"/>
       <stop offset="1" stop-color="#2563eb"/>
     </linearGradient>
-    <!-- Soft squircle (~21% corner radius) — pin clipped so nothing spills past the curve. -->
+    <!-- Soft squircle (~21% corner radius)  pin clipped so nothing spills past the curve. -->
     <clipPath id="softSq">
       <rect width="512" height="512" rx="108" ry="108"/>
     </clipPath>
