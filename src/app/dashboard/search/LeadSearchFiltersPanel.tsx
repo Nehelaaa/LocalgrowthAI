@@ -21,6 +21,8 @@ type Props = {
   onChange: (next: PlaceFilterState) => void;
   visibleCount: number;
   totalCount: number;
+  /** When true, render without the outer card — parent provides container. */
+  embedded?: boolean;
 };
 
 const inputClass =
@@ -121,6 +123,7 @@ export function LeadSearchFiltersPanel({
   onChange,
   visibleCount,
   totalCount,
+  embedded,
 }: Props) {
   const patch = (p: Partial<PlaceFilterState>) => onChange({ ...filters, ...p });
 
@@ -350,7 +353,13 @@ export function LeadSearchFiltersPanel({
   };
 
   return (
-    <div className="mt-3 rounded-xl border border-slate-200/80 bg-white/95 p-3 shadow-sm dark:border-slate-800/90 dark:bg-slate-900/90 sm:mt-4 sm:p-3.5">
+    <div
+      className={
+        embedded
+          ? "space-y-0"
+          : "mt-3 rounded-xl border border-slate-200/80 bg-white/95 p-3 shadow-sm dark:border-slate-800/90 dark:bg-slate-900/90 sm:mt-4 sm:p-3.5"
+      }
+    >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">Refine results</h2>

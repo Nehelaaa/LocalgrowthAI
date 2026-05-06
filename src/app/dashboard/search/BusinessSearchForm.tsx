@@ -30,9 +30,11 @@ type Props = {
     businessType: string;
   }) => Promise<void>;
   loading: boolean;
+  /** When true, render without the outer card — parent provides container. */
+  embedded?: boolean;
 };
 
-export function BusinessSearchForm({ onSearch, loading }: Props) {
+export function BusinessSearchForm({ onSearch, loading, embedded }: Props) {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [radiusMiles, setRadiusMiles] = useState(10);
@@ -40,7 +42,11 @@ export function BusinessSearchForm({ onSearch, loading }: Props) {
 
   return (
     <form
-      className="w-full min-w-0 max-w-2xl space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6"
+      className={
+        embedded
+          ? "w-full min-w-0 max-w-2xl space-y-4"
+          : "w-full min-w-0 max-w-2xl space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6"
+      }
       onSubmit={(e) => {
         e.preventDefault();
         onSearch({ city, state, radiusMiles, businessType });

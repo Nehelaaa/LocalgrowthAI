@@ -121,7 +121,21 @@ export default function SearchPage() {
           raises the cap.
         </p>
       )}
-      <BusinessSearchForm onSearch={onSearch} loading={loading} />
+      <section className="w-full min-w-0 max-w-4xl rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-6">
+        <BusinessSearchForm onSearch={onSearch} loading={loading} embedded />
+        {results.length > 0 && (
+          <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/80">
+            <LeadSearchFiltersPanel
+              lastSearch={lastSearch}
+              filters={filters}
+              onChange={setFilters}
+              visibleCount={filteredPlaces.length}
+              totalCount={results.length}
+              embedded
+            />
+          </div>
+        )}
+      </section>
       {error && (
         <div className="mt-4 space-y-2 rounded-lg bg-red-50 dark:bg-red-900/20 px-4 py-3 text-red-700 dark:text-red-300">
           <p>{error}</p>
@@ -131,15 +145,6 @@ export default function SearchPage() {
         <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
           Served from your recent cache — no new Google request.
         </p>
-      )}
-      {results.length > 0 && (
-        <LeadSearchFiltersPanel
-          lastSearch={lastSearch}
-          filters={filters}
-          onChange={setFilters}
-          visibleCount={filteredPlaces.length}
-          totalCount={results.length}
-        />
       )}
       <PlaceResults
         places={filteredPlaces}
