@@ -24,8 +24,11 @@ export function MarketingShell({
         Skip to main content
       </a>
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/90">
-        <div className="mx-auto flex max-w-6xl flex-row items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6 sm:py-3.5">
-          <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none sm:max-w-none">
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-4 sm:px-6 sm:py-3.5">
+          <Link
+            href="/"
+            className="relative z-10 flex min-w-0 items-center gap-2 overflow-visible sm:col-start-1 sm:w-auto sm:max-w-[min(280px,38vw)] sm:shrink-0"
+          >
             <Image
               src="/favicon.svg"
               alt="LocalLeadster"
@@ -37,31 +40,31 @@ export function MarketingShell({
             <Image
               src="/logo.svg"
               alt="LocalLeadster"
-              className="hidden h-10 w-auto max-w-[min(280px,58vw)] rounded-lg sm:block"
+              className="hidden h-10 w-auto max-w-full rounded-lg sm:block"
               width={240}
               height={70}
               priority
             />
             <span className={`min-w-0 flex-1 truncate sm:hidden ${BRAND_WORDMARK_LG}`}>LocalLeadster</span>
           </Link>
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <nav
-              className="mr-1 hidden items-center gap-1 text-sm font-medium text-slate-600 sm:flex sm:mr-0 dark:text-slate-300"
-              aria-label="Page sections"
-            >
-              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#how-it-works">
-                How it works
-              </Link>
-              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#features">
-                Features
-              </Link>
-              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#solutions">
-                Solutions
-              </Link>
-              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#pricing">
-                Pricing
-              </Link>
-            </nav>
+          <nav
+            className="col-start-2 row-start-1 hidden items-center justify-center gap-1 self-center text-sm font-medium text-slate-600 sm:flex sm:min-w-0 dark:text-slate-300"
+            aria-label="Page sections"
+          >
+            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#how-it-works">
+              How it works
+            </Link>
+            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#features">
+              Features
+            </Link>
+            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#solutions">
+              Solutions
+            </Link>
+            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#pricing">
+              Pricing
+            </Link>
+          </nav>
+          <div className="col-start-2 flex shrink-0 items-center justify-self-end gap-1 sm:col-start-3 sm:gap-2">
             <ThemeToggle hideCaption iconOnly />
             <Link
               className="min-h-[40px] shrink-0 rounded-lg px-2 py-2 text-xs font-medium text-slate-700 sm:px-3 sm:text-sm dark:text-slate-200"
