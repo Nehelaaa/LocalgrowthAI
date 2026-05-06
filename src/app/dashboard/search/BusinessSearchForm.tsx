@@ -40,6 +40,8 @@ type Props = {
   initialRadiusMiles?: number;
   /** Optional prefill (used for marketing previews). */
   initialBusinessType?: string;
+  /** Optional id on the submit control (marketing pointer / tests). */
+  submitButtonId?: string;
 };
 
 export function BusinessSearchForm({
@@ -50,6 +52,7 @@ export function BusinessSearchForm({
   initialState = "",
   initialRadiusMiles = 10,
   initialBusinessType = "",
+  submitButtonId,
 }: Props) {
   const [city, setCity] = useState(initialCity);
   const [state, setState] = useState(initialState);
@@ -197,6 +200,7 @@ export function BusinessSearchForm({
       </div>
 
       <button
+        id={submitButtonId}
         type="submit"
         disabled={loading}
         className="w-full min-h-[44px] touch-manipulation rounded-lg bg-indigo-600 px-6 py-2.5 text-center text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50 sm:w-auto"

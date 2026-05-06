@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BusinessSearchForm } from "@/app/dashboard/search/BusinessSearchForm";
 import {
   defaultPlaceFilterState,
@@ -10,6 +10,9 @@ import {
 } from "@/lib/place-search-scoring";
 import { contactStatusLabel, contactStatusPillClass } from "@/lib/contact-status";
 import { InvoiceDocumentPreview } from "@/components/invoices/InvoiceDocumentPreview";
+import { ScaledPreview } from "@/components/ui/ScaledPreview";
+
+const HOW_STEP1_SUBMIT_ID = "lgai-how-step1-submit";
 
 const steps = [
   {
@@ -234,6 +237,8 @@ function Frame({ children }: { children: React.ReactNode }) {
 
 function VisualSearch() {
   const [filters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
+  const searchCardRef = useRef<HTMLDivElement | null>(null);
+  const [searchPointerAnchor, setSearchPointerAnchor] = useState<{ left: number; top: number } | null>(null);
 
   const places = useMemo<PlaceRow[]>(
     () => [
@@ -291,10 +296,92 @@ function VisualSearch() {
 
   const filteredPlaces = useMemo(() => filterAndSortPlaces(places, filters), [places, filters]);
 
+  useLayoutEffect(() => {
+    const wrap = searchCardRef.current;
+    const btn = document.getElementById(HOW_STEP1_SUBMIT_ID);
+    if (!wrap || !btn) return;
+
+    const update = () => {
+      const wr = wrap.getBoundingClientRect();
+      const br = btn.getBoundingClientRect();
+      // Cursor hotspot ≈ tip of arrow in the 34px SVG (viewBox 24×24).
+      const hotspotX = (5.2 * 34) / 24;
+      const hotspotY = (3.8 * 34) / 24;
+      setSearchPointerAnchor({
+        left: br.left + br.width / 2 - wr.left - hotspotX,
+        top: br.top + br.height / 2 - wr.top - hotspotY,
+      });
+    };
+
+    update();
+    const ro = new ResizeObserver(() => update());
+    ro.observe(wrap);
+    ro.observe(btn);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <Frame>
       <div className="space-y-3">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-4">
+        <style jsx>{`
+          @keyframes lgaiSearchPointerMove {
+            0% {
+              transform: translate(220px, -60px) scale(1);
+              opacity: 0;
+            }
+            12% {
+              opacity: 1;
+            }
+            62% {
+              transform: translate(6px, -4px) scale(1);
+              opacity: 1;
+            }
+            74% {
+              transform: translate(0px, 0px) scale(1);
+            }
+            82% {
+              transform: translate(2px, 3px) scale(0.96);
+            }
+            90% {
+              transform: translate(0px, 0px) scale(1);
+            }
+            100% {
+              transform: translate(220px, -60px) scale(1);
+              opacity: 0;
+            }
+          }
+
+          @keyframes lgaiSearchClickRing {
+            0%,
+            74% {
+              opacity: 0;
+              transform: translate(-50%, -50%) scale(0.6);
+            }
+            82% {
+              opacity: 0.5;
+              transform: translate(-50%, -50%) scale(0.75);
+            }
+            92% {
+              opacity: 0;
+              transform: translate(-50%, -50%) scale(1.25);
+            }
+            100% {
+              opacity: 0;
+              transform: translate(-50%, -50%) scale(1.25);
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .lgai-search-demo-pointer {
+              display: none;
+            }
+          }
+        `}</style>
+
+        <div
+          ref={searchCardRef}
+          className="relative rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-4"
+        >
           <BusinessSearchForm
             onSearch={async () => {}}
             loading={false}
@@ -303,10 +390,48 @@ function VisualSearch() {
             initialState="TX"
             initialRadiusMiles={10}
             initialBusinessType="plumber"
+            submitButtonId={HOW_STEP1_SUBMIT_ID}
           />
+
+          {/* Demo pointer click on "Search" (preview-only; position follows real submit button) */}
+          {searchPointerAnchor ? (
+          <div
+            className="lgai-search-demo-pointer pointer-events-none absolute z-10 hidden sm:block"
+            style={{
+              left: searchPointerAnchor.left,
+              top: searchPointerAnchor.top,
+              animation: "lgaiSearchPointerMove 3.2s cubic-bezier(0.2, 0.85, 0.2, 1) infinite",
+            }}
+            aria-hidden
+          >
+            <div className="relative">
+              <div
+                className="absolute left-[24px] top-[31px] h-6 w-6 rounded-full border border-indigo-300/70 dark:border-indigo-200/35"
+                style={{ animation: "lgaiSearchClickRing 3.2s ease-in-out infinite" }}
+              />
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" className="drop-shadow-sm">
+                <path
+                  d="M4.5 3.5L19 13.6c.8.5.5 1.7-.5 1.8l-5.3.6 1.9 5.2c.2.6-.1 1.2-.7 1.4l-1.1.4c-.6.2-1.2-.1-1.4-.7l-1.9-5.2-4 3.5c-.7.6-1.9.2-2-.8L3 4.5c-.1-.8.8-1.5 1.5-1z"
+                  fill="rgba(255,255,255,0.95)"
+                  className="dark:fill-[rgba(15,23,42,0.9)]"
+                />
+                <path
+                  d="M4.5 3.5L19 13.6c.8.5.5 1.7-.5 1.8l-5.3.6 1.9 5.2c.2.6-.1 1.2-.7 1.4l-1.1.4c-.6.2-1.2-.1-1.4-.7l-1.9-5.2-4 3.5c-.7.6-1.9.2-2-.8L3 4.5c-.1-.8.8-1.5 1.5-1z"
+                  stroke="rgba(15,23,42,0.55)"
+                  strokeWidth="0.9"
+                  className="dark:stroke-[rgba(226,232,240,0.35)]"
+                />
+              </svg>
+            </div>
+          </div>
+          ) : null}
         </div>
 
-        <ReadonlyResultsPreview places={filteredPlaces.slice(0, 2)} totalBeforeFilters={places.length} />
+        <ReadonlyResultsPreview
+          places={filteredPlaces.slice(0, 2)}
+          totalBeforeFilters={places.length}
+          showDemoAddPointer={false}
+        />
       </div>
     </Frame>
   );
@@ -557,20 +682,22 @@ function VisualInvoice() {
               </div>
             </div>
             <div className="bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
-              <div className="w-full overflow-x-auto">
-                <div className="mx-auto w-[800px] min-h-[650px] rounded-xl bg-white p-8 shadow-lg ring-1 ring-slate-900/10">
-                  <InvoiceDocumentPreview
-                    templateId="minimal"
-                    accentHex={accentHex}
-                    businessName="Apex Plumbing Co."
-                    logoDataUrl={null}
-                    density="comfortable"
-                    documentTitle="Invoice"
-                    footerPhrase="Thanks for your business"
-                    className="w-full overflow-visible !rounded-none !border-0 !shadow-none !ring-0"
-                  />
-                </div>
-              </div>
+              <ScaledPreview
+                designWidth={800}
+                maxHeight={600}
+                pageClassName="rounded-xl p-8 shadow-lg ring-1 ring-slate-900/10 dark:ring-white/10"
+              >
+                <InvoiceDocumentPreview
+                  templateId="minimal"
+                  accentHex={accentHex}
+                  businessName="Apex Plumbing Co."
+                  logoDataUrl={null}
+                  density="comfortable"
+                  documentTitle="Invoice"
+                  footerPhrase="Thanks for your business"
+                  className="w-full overflow-visible !rounded-none !border-0 !shadow-none !ring-0"
+                />
+              </ScaledPreview>
             </div>
           </div>
       </div>
@@ -582,57 +709,133 @@ function VisualClose() {
   return (
     <Frame>
       <div className="grid gap-3 lg:grid-cols-2">
-        <div className="rounded-2xl border border-violet-200/60 bg-violet-50/70 p-3 dark:border-violet-500/25 dark:bg-violet-500/10">
-          <p className="text-[11px] font-extrabold uppercase tracking-wide text-violet-700 dark:text-violet-200">
-            Revenue view
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-slate-800 dark:text-slate-100">
-            Track deal value as you move leads through the pipeline. See what’s likely to close soon, and how much
-            revenue you’ve won this month.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-violet-800 dark:text-violet-200">
-            {["Deal value", "Close date", "Won/Lost", "Totals"].map((x) => (
-              <span key={x} className="rounded-full bg-white/80 px-3 py-1 dark:bg-slate-900/40">
-                {x}
-              </span>
-            ))}
-          </div>
-        </div>
         <div className="space-y-3">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
-            <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Closing this week
-            </p>
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/40">
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">Lakeview Dental</span>
-                <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200">
-                  $2,400
-                </span>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/30">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Revenue
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">Won + closing totals</p>
               </div>
-              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/40">
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">Austin Roofing Co</span>
-                <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
-                  $3,200
-                </span>
+              <span className="shrink-0 rounded-full border border-slate-200/80 bg-white px-3 py-1 text-[10px] font-semibold text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200">
+                This month
+              </span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {[
+                { k: "Won", v: "$3.1k", tone: "emerald" },
+                { k: "Closing", v: "$5.6k", tone: "amber" },
+                { k: "Pipeline", v: "$12.8k", tone: "indigo" },
+                { k: "Follow-ups", v: "7", tone: "slate" },
+              ].map((m) => (
+                <div
+                  key={m.k}
+                  className="rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 dark:border-slate-700/60 dark:bg-slate-800/30"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{m.k}</p>
+                    <span
+                      className={
+                        "h-1.5 w-1.5 rounded-full " +
+                        (m.tone === "emerald"
+                          ? "bg-emerald-500"
+                          : m.tone === "amber"
+                            ? "bg-amber-500"
+                            : m.tone === "indigo"
+                              ? "bg-indigo-500"
+                              : "bg-slate-400")
+                      }
+                      aria-hidden
+                    />
+                  </div>
+                  <p className="mt-1 text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    {m.v}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                <span>Momentum</span>
+                <span>Last 6 weeks</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Prioritize the biggest deals and keep momentum with next steps.
-              </p>
+              <div className="mt-2 grid grid-cols-6 items-end gap-1.5">
+                {[28, 36, 22, 48, 40, 55].map((h, i) => (
+                  <div
+                    key={i}
+                    className="rounded-md bg-slate-200 dark:bg-slate-700/60"
+                    style={{ height: `${h}px` }}
+                    aria-hidden
+                  />
+                ))}
+              </div>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
+        </div>
+
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/30">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Closing this week
+                </p>
+                <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">Biggest deals with next steps</p>
+              </div>
+              <span className="shrink-0 rounded-full border border-slate-200/80 bg-white px-3 py-1 text-[10px] font-semibold text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200">
+                Won value + revenue
+              </span>
+            </div>
+
+            <div className="mt-3 space-y-2">
+              {[
+                { name: "Lakeview Dental", value: "$2,400", tone: "emerald" as const },
+                { name: "Austin Roofing Co", value: "$3,200", tone: "amber" as const },
+              ].map((d) => (
+                <div
+                  key={d.name}
+                  className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 dark:border-slate-700/60 dark:bg-slate-800/30"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{d.name}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">Next: follow up</p>
+                  </div>
+                  <span
+                    className={
+                      "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold " +
+                      (d.tone === "emerald"
+                        ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200"
+                        : "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200")
+                    }
+                  >
+                    {d.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/30">
             <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Snapshot
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {["Pipeline: $12.8k", "Closing: $5.6k", "Won: $3.1k", "Follow-ups: 7"].map((x) => (
-                <span
-                  key={x}
-                  className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-[10px] font-semibold text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200"
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] font-semibold">
+              {[
+                { k: "Pipeline", v: "$12.8k" },
+                { k: "Closing", v: "$5.6k" },
+                { k: "Won", v: "$3.1k" },
+                { k: "Follow-ups", v: "7" },
+              ].map((x) => (
+                <div
+                  key={x.k}
+                  className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-200"
                 >
-                  {x}
-                </span>
+                  <span className="text-slate-500 dark:text-slate-400">{x.k}</span>
+                  <span className="font-extrabold text-slate-900 dark:text-white">{x.v}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -645,9 +848,12 @@ function VisualClose() {
 function ReadonlyResultsPreview({
   places,
   totalBeforeFilters,
+  showDemoAddPointer = true,
 }: {
   places: PlaceRow[];
   totalBeforeFilters: number;
+  /** Step 1 uses its own “Search” pointer; hide the “Add to leads” demo here. */
+  showDemoAddPointer?: boolean;
 }) {
   if (places.length === 0) {
     return (
@@ -659,6 +865,54 @@ function ReadonlyResultsPreview({
 
   return (
     <div className="space-y-3">
+      <style jsx>{`
+        @keyframes lgaiPointerMove {
+          0% {
+            transform: translate(-160px, -36px) scale(1);
+          }
+          64% {
+            transform: translate(-10px, -2px) scale(1);
+          }
+          76% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          84% {
+            transform: translate(2px, 3px) scale(0.96);
+          }
+          92% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          100% {
+            transform: translate(-160px, -36px) scale(1);
+          }
+        }
+
+        @keyframes lgaiClickRing {
+          0%,
+          78% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.6);
+          }
+          84% {
+            opacity: 0.5;
+            transform: translate(-50%, -50%) scale(0.75);
+          }
+          92% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.25);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.25);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .lgai-demo-pointer {
+            display: none;
+          }
+        }
+      `}</style>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-slate-900 dark:text-white">
           Results ({places.length}
@@ -670,10 +924,10 @@ function ReadonlyResultsPreview({
       </div>
 
       <div className="space-y-3">
-        {places.map((place) => (
+        {places.map((place, idx) => (
           <div
             key={place.placeId}
-            className="flex flex-col sm:flex-row gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
+            className="relative flex flex-col sm:flex-row gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
           >
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-slate-900 dark:text-white">{place.name}</h3>
@@ -702,6 +956,41 @@ function ReadonlyResultsPreview({
                 Add to leads
               </span>
             </div>
+
+            {/* Demo pointer click animation (preview-only) */}
+            {idx === 0 && showDemoAddPointer ? (
+              <div
+                className="lgai-demo-pointer pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 sm:block"
+                style={{ animation: "lgaiPointerMove 3.1s cubic-bezier(0.2, 0.85, 0.2, 1) infinite" }}
+                aria-hidden
+              >
+                <div className="relative">
+                  <div
+                    className="absolute left-[24px] top-[31px] h-6 w-6 rounded-full border border-indigo-300/70 dark:border-indigo-200/35"
+                    style={{ animation: "lgaiClickRing 3.1s ease-in-out infinite" }}
+                  />
+                  <svg
+                    width="34"
+                    height="34"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="drop-shadow-sm"
+                  >
+                    <path
+                      d="M4.5 3.5L19 13.6c.8.5.5 1.7-.5 1.8l-5.3.6 1.9 5.2c.2.6-.1 1.2-.7 1.4l-1.1.4c-.6.2-1.2-.1-1.4-.7l-1.9-5.2-4 3.5c-.7.6-1.9.2-2-.8L3 4.5c-.1-.8.8-1.5 1.5-1z"
+                      fill="rgba(255,255,255,0.95)"
+                      className="dark:fill-[rgba(15,23,42,0.9)]"
+                    />
+                    <path
+                      d="M4.5 3.5L19 13.6c.8.5.5 1.7-.5 1.8l-5.3.6 1.9 5.2c.2.6-.1 1.2-.7 1.4l-1.1.4c-.6.2-1.2-.1-1.4-.7l-1.9-5.2-4 3.5c-.7.6-1.9.2-2-.8L3 4.5c-.1-.8.8-1.5 1.5-1z"
+                      stroke="rgba(15,23,42,0.55)"
+                      strokeWidth="0.9"
+                      className="dark:stroke-[rgba(226,232,240,0.35)]"
+                    />
+                  </svg>
+                </div>
+              </div>
+            ) : null}
           </div>
         ))}
       </div>

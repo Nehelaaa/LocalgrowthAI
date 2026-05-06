@@ -10,6 +10,7 @@ import {
 } from "@/lib/place-search-scoring";
 import { contactStatusLabel, contactStatusPillClass } from "@/lib/contact-status";
 import { InvoiceDocumentPreview } from "@/components/invoices/InvoiceDocumentPreview";
+import { ScaledPreview } from "@/components/ui/ScaledPreview";
 
 const tabs = [
   { id: "search" as const, label: "Find" },
@@ -161,21 +162,22 @@ function PanelInvoice() {
           </div>
         </div>
         <div className="bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
-          {/* Desktop-sized invoice page; scroll horizontally on small screens */}
-          <div className="w-full overflow-x-auto">
-            <div className="mx-auto w-[800px] min-h-[650px] rounded-xl bg-white p-8 shadow-lg ring-1 ring-slate-900/10">
-              <InvoiceDocumentPreview
-                templateId="minimal"
-                accentHex={accentHex}
-                businessName="Apex Plumbing Co."
-                logoDataUrl={null}
-                density="comfortable"
-                documentTitle="Invoice"
-                footerPhrase="Thanks for your business"
-                className="w-full overflow-visible !rounded-none !border-0 !shadow-none !ring-0"
-              />
-            </div>
-          </div>
+          <ScaledPreview
+            designWidth={800}
+            maxHeight={600}
+            pageClassName="rounded-xl p-8 shadow-lg ring-1 ring-slate-900/10 dark:ring-white/10"
+          >
+            <InvoiceDocumentPreview
+              templateId="minimal"
+              accentHex={accentHex}
+              businessName="Apex Plumbing Co."
+              logoDataUrl={null}
+              density="comfortable"
+              documentTitle="Invoice"
+              footerPhrase="Thanks for your business"
+              className="w-full overflow-visible !rounded-none !border-0 !shadow-none !ring-0"
+            />
+          </ScaledPreview>
         </div>
       </div>
     </div>
