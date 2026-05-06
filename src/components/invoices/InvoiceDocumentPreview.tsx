@@ -13,6 +13,9 @@ import { sanitizeInvoiceDocumentTitle, sanitizeInvoiceFooterPhrase } from "@/lib
 const SAMPLE_LINES = [
   { description: "Website design & build", amount: 3500 },
   { description: "Monthly hosting (1 yr)", amount: 480 },
+  { description: "Google Business Profile setup", amount: 250 },
+  { description: "Local SEO audit + recommendations", amount: 350 },
+  { description: "Lead follow-up automation setup", amount: 300 },
 ];
 
 function InvoicePreviewLogo({

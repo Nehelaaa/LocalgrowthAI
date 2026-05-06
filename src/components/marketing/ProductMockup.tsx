@@ -163,9 +163,9 @@ function PanelInvoice() {
         <div className="bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
           {/* Desktop-sized invoice page; scroll horizontally on small screens */}
           <div className="w-full overflow-x-auto">
-            <div className="mx-auto w-[800px] min-h-[1050px] rounded-xl bg-white p-6 shadow-lg ring-1 ring-slate-900/10">
+            <div className="mx-auto w-[800px] min-h-[650px] rounded-xl bg-white p-8 shadow-lg ring-1 ring-slate-900/10">
               <InvoiceDocumentPreview
-                templateId="statement"
+                templateId="minimal"
                 accentHex={accentHex}
                 businessName="Apex Plumbing Co."
                 logoDataUrl={null}
