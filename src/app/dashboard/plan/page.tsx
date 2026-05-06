@@ -9,6 +9,7 @@ import { PlanInvoicesPaginated } from "@/components/dashboard/plan/PlanInvoicesP
 import { PlanPaymentsPaginated } from "@/components/dashboard/plan/PlanPaymentsPaginated";
 import { PlanUsageCard } from "@/components/dashboard/plan/PlanUsageCard";
 import {
+  FREE_INVOICE_PDF_LIMIT,
   FREE_LEAD_LIMIT,
   FREE_SEARCHES_LIFETIME,
   PRO_SEARCHES_PER_DAY,
@@ -138,10 +139,12 @@ export default async function PlanPage({ searchParams }: Props) {
     ? [
         `${FREE_SEARCHES_LIFETIME} discovery searches total (lifetime)`,
         `Up to ${FREE_LEAD_LIMIT} leads saved total (lifetime)`,
+        `${FREE_INVOICE_PDF_LIMIT} invoice PDFs total (lifetime)`,
       ]
     : [
         `${PRO_SEARCHES_PER_DAY} discovery searches per day`,
         "Unlimited leads (fair use) and full Pro features",
+        "Unlimited invoice PDF generation",
       ];
 
   const billingControlsMode: BillingControlsMode = !isPro

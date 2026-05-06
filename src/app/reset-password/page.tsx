@@ -1,3 +1,4 @@
+import { AuthThemeCorner } from "@/components/theme/AuthThemeCorner";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -18,7 +19,8 @@ export default async function ResetPasswordPage({
   const token = typeof q.token === "string" ? q.token : "";
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-100/90 p-4 dark:bg-slate-950">
+    <div className="relative flex min-h-[100dvh] items-center justify-center bg-slate-100/90 p-4 dark:bg-slate-950">
+      <AuthThemeCorner />
       <div
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.18),transparent)] dark:bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.12),transparent)]"
         aria-hidden

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const items = [
   { href: "/owner", label: "Overview" },
@@ -56,7 +57,10 @@ export function AdminShell({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="w-[min(9.75rem,40vw)] shrink-0 sm:w-[10.5rem]">
+              <ThemeToggle hideCaption compact />
+            </div>
             {impersonating ? (
               <div className="hidden items-center gap-2 rounded-full border border-amber-200/80 bg-amber-50/70 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 sm:flex">
                 <span className="font-semibold">Impersonating</span>

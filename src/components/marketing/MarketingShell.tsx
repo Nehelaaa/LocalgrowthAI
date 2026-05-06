@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { supportMailtoHref } from "@/lib/support-inbox";
 
 export function MarketingShell({
   children,
@@ -61,9 +63,12 @@ export function MarketingShell({
               Pricing
             </Link>
           </nav>
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-2">
+            <div className="w-[min(9.75rem,34vw)] shrink-0 sm:w-[10.5rem]">
+              <ThemeToggle hideCaption compact />
+            </div>
             <Link
-              className="min-h-[40px] rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 sm:px-3 dark:text-slate-200"
+              className="min-h-[40px] shrink-0 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 sm:px-3 dark:text-slate-200"
               href="/login"
             >
               Sign in
@@ -111,6 +116,12 @@ export function MarketingShell({
             <Link href="/#pricing" className="hover:underline">
               Pricing
             </Link>
+            <a
+              href={supportMailtoHref()}
+              className="text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Contact customer support
+            </a>
           </nav>
         </div>
       </footer>

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { ManageBillingButton } from "./ManageBillingButton";
 import { UpgradeButton } from "./UpgradeButton";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const nav: {
   href: string;
@@ -96,6 +97,21 @@ const ownerItem: (typeof nav)[0] = {
   ),
 };
 
+const supportNavItem: (typeof nav)[0] = {
+  href: "/dashboard/support",
+  label: "Contact support",
+  shortLabel: "Support",
+  icon: ({ className }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+      />
+    </svg>
+  ),
+};
+
 function buildNavItems(showTrades: boolean, showOwner: boolean) {
   const out = [...nav];
   if (showTrades) {
@@ -112,6 +128,7 @@ function buildNavItems(showTrades: boolean, showOwner: boolean) {
     const [billing] = out.splice(billingIdx, 1);
     out.push(billing);
   }
+  out.push(supportNavItem);
   if (!showTrades && !showOwner) return out;
   return out;
 }
@@ -335,6 +352,9 @@ export function DashboardNav({
             <div className="min-h-0 flex-1 overflow-y-auto">
               <NavList pathname={pathname} onNavigate={close} compact items={navItems} />
             </div>
+            <div className="shrink-0 border-t border-slate-200/80 p-3 dark:border-slate-800/80">
+              <ThemeToggle compact />
+            </div>
             <FooterHome user={user} />
           </aside>
         </div>
@@ -346,6 +366,9 @@ export function DashboardNav({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
           <NavList pathname={pathname} items={navItems} />
+        </div>
+        <div className="shrink-0 border-t border-slate-200/80 p-3 dark:border-slate-800/80">
+          <ThemeToggle />
         </div>
         <FooterHome user={user} />
       </aside>

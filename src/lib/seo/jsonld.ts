@@ -36,7 +36,7 @@ export function homeJsonLd() {
           "Signal-based lead scoring",
           "CRM pipeline with active leads first",
           "Branded PDF invoice templates",
-          "CSV + JSON exports (Pro)",
+          "Unlimited lead saves (Pro)",
         ],
       },
       {
@@ -67,7 +67,7 @@ export function faqJsonLd(items: { q: string; a: string }[]) {
 export const homeMetadata: Metadata = {
   title: "LocalLeadster — Lead Gen + Pipeline for Local B2B",
   description:
-    "Search Google Places, qualify with filters and presets, run your CRM, generate branded PDF invoices from any lead, and export on Pro. Free to start.",
+    "Search Google Places, qualify with filters and presets, run your CRM, generate branded PDF invoices from any lead, and scale on Pro. Free to start.",
   keywords: [
     "local lead generation",
     "local business lead generation",

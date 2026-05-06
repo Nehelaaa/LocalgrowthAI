@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { UpgradeButton } from "@/components/dashboard/UpgradeButton";
 import {
+  FREE_INVOICE_PDF_LIMIT,
   FREE_LEAD_LIMIT,
   FREE_SEARCHES_LIFETIME,
   PRO_SEARCHES_PER_DAY,
@@ -18,6 +18,7 @@ const starterBullets = [
   `${FREE_SEARCHES_LIFETIME} discovery searches total (lifetime)`,
   "CRM & pipeline basics",
   "Limited Pro features",
+  `${FREE_INVOICE_PDF_LIMIT} invoice PDFs total (lifetime)`,
 ];
 
 const proBullets = [
@@ -25,6 +26,7 @@ const proBullets = [
   `${PRO_SEARCHES_PER_DAY} discovery searches per day`,
   "Full Pro feature access",
   "Higher limits for growth workflows",
+  "Unlimited invoice PDF generation",
 ];
 
 export function PlanComparisonGrid({ isPro, hasStripeSub, proPriceLabel }: Props) {
@@ -141,14 +143,6 @@ export function PlanComparisonGrid({ isPro, hasStripeSub, proPriceLabel }: Props
           </div>
         </div>
       </div>
-
-      <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-        Full comparison on the{" "}
-        <Link href="/#pricing" className="font-medium text-violet-600 hover:underline dark:text-violet-400">
-          marketing site
-        </Link>
-        .
-      </p>
     </div>
   );
 }

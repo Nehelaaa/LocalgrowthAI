@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
+import {
+  FREE_INVOICE_PDF_LIMIT,
+  FREE_LEAD_LIMIT,
+  FREE_SEARCHES_LIFETIME,
+} from "@/lib/entitlements";
 
 function CheckIcon() {
   return (
@@ -25,8 +29,7 @@ export function PricingSection() {
             Simple, honest pricing
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 sm:text-lg dark:text-slate-400">
-            Start free. Upgrade in the app when you want exports and unlimited leads — billed securely through
-            Stripe.
+            Start free. Upgrade in the app for unlimited leads and higher limits — billed securely through Stripe.
           </p>
         </div>
 
@@ -49,19 +52,29 @@ export function PricingSection() {
             <ul className="mt-8 flex-1 space-y-3.5 text-sm text-slate-700 dark:text-slate-300">
               <li className="flex gap-3">
                 <CheckIcon />
-                <span>Map search, pipeline, and CRM basics</span>
+                <span>
+                  Save up to{" "}
+                  <strong className="text-slate-900 dark:text-white">{FREE_LEAD_LIMIT}</strong> businesses for life —
+                  pipeline, map search, scoring &amp; CRM basics
+                </span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
-                <span>Lead scoring &amp; contact tracking</span>
+                <span>
+                  <strong className="text-slate-900 dark:text-white">{FREE_SEARCHES_LIFETIME}</strong> live discovery
+                  searches total (lifetime; repeated cached searches don&apos;t count)
+                </span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
-                <span>Branded invoice PDFs — templates, logo, and colors from the CRM</span>
+                <span>
+                  <strong className="text-slate-900 dark:text-white">{FREE_INVOICE_PDF_LIMIT}</strong> branded invoice
+                  PDFs (lifetime) — templates, logo &amp; colors from the CRM
+                </span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
-                <span>Upgrade in-app when you need more</span>
+                <span>Upgrade in-app for unlimited saves, higher search caps &amp; unlimited invoice PDFs</span>
               </li>
             </ul>
             <Link
@@ -99,15 +112,14 @@ export function PricingSection() {
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
+                <span>
+                  <strong className="text-slate-900 dark:text-white">Unlimited</strong> access to businesses — discover
+                  and qualify as many as you need (fair use)
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <CheckIcon />
                 <span>Everything in Free, including invoice builder &amp; search presets</span>
-              </li>
-              <li className="flex gap-3">
-                <CheckIcon />
-                <span>Exports: CSV + JSON endpoints</span>
-              </li>
-              <li className="flex gap-3">
-                <CheckIcon />
-                <span>Automation-friendly (Sheets, Airtable, Zapier/Make)</span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />

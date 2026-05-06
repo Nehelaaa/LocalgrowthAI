@@ -1,3 +1,4 @@
+import { AuthThemeCorner } from "@/components/theme/AuthThemeCorner";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { isGoogleOAuthConfigured } from "@/lib/google-oauth";
 import { postLoginContinueUrl } from "@/lib/post-login-continue";
@@ -14,7 +15,8 @@ export default function RegisterPage() {
   const hasGoogle = isGoogleOAuthConfigured();
   const googleAfterAuthUrl = postLoginContinueUrl("/onboarding");
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-100/90 p-4 dark:bg-slate-950">
+    <div className="relative flex min-h-[100dvh] items-center justify-center bg-slate-100/90 p-4 dark:bg-slate-950">
+      <AuthThemeCorner />
       <div
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.18),transparent)] dark:bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.12),transparent)]"
         aria-hidden
