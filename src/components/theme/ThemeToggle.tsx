@@ -9,6 +9,8 @@ type Props = {
   compact?: boolean;
   /** Hide “Appearance” caption (e.g. marketing header). */
   hideCaption?: boolean;
+  /** Switch only (no “Light”/“Dark” text) — use in tight layouts; rely on aria-label + title. */
+  iconOnly?: boolean;
   /**
    * Dashboard sidebar: one row (“Theme” + switch), no outer panel chrome —
    * parent provides the card and dividers.
@@ -16,7 +18,7 @@ type Props = {
   embed?: boolean;
 };
 
-export function ThemeToggle({ className = "", compact, hideCaption, embed }: Props) {
+export function ThemeToggle({ className = "", compact, hideCaption, iconOnly, embed }: Props) {
   const { preference, setPreference, mounted } = useThemePreference();
   const effective = mounted ? resolveEffectiveColorScheme(preference) : "light";
   const isDark = effective === "dark";
@@ -25,9 +27,28 @@ export function ThemeToggle({ className = "", compact, hideCaption, embed }: Pro
   const wantsFullWidth = !embed && !hideCaption;
   const controlButtonClass = embed
     ? "inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200 dark:hover:bg-slate-800 "
-    : "inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100/90 dark:border-slate-600/80 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800/80 " +
-      (wantsFullWidth ? "w-full " : "w-max ") +
-      (compact ? "" : "sm:px-3 ");
+    : iconOnly
+      ? "inline-flex h-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-slate-200/90 bg-white/95 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600/80 dark:bg-slate-800/70 dark:hover:bg-slate-800 "
+      : "inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100/90 dark:border-slate-600/80 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800/80 " +
+        (wantsFullWidth ? "w-full " : "w-max ") +
+        (compact ? "" : "sm:px-3 ");
+
+  const track = (
+    <span
+      className={
+        "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-px transition-colors duration-200 " +
+        (isDark ? "bg-indigo-600" : "bg-slate-300 dark:bg-slate-500")
+      }
+      aria-hidden
+    >
+      <span
+        className={
+          "pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out " +
+          (isDark ? "translate-x-4" : "translate-x-0.5")
+        }
+      />
+    </span>
+  );
 
   const control = (
     <button
@@ -42,21 +63,8 @@ export function ThemeToggle({ className = "", compact, hideCaption, embed }: Pro
         controlButtonClass + (!mounted ? "cursor-wait opacity-70" : "touch-manipulation")
       }
     >
-      <span className="tabular-nums">{actionLabel}</span>
-      <span
-        className={
-          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-px transition-colors duration-200 " +
-          (isDark ? "bg-indigo-600" : "bg-slate-300 dark:bg-slate-500")
-        }
-        aria-hidden
-      >
-        <span
-          className={
-            "pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out " +
-            (isDark ? "translate-x-4" : "translate-x-0.5")
-          }
-        />
-      </span>
+      {!iconOnly && <span className="tabular-nums">{actionLabel}</span>}
+      {track}
     </button>
   );
 

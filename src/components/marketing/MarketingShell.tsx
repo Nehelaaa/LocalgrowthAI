@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
 
 export function MarketingShell({
@@ -119,6 +120,12 @@ export function MarketingShell({
               Contact us
             </Link>
           </nav>
+          <div className="mt-8 flex flex-col items-center gap-2 border-t border-slate-200/70 pt-8 dark:border-slate-800/60">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              Display
+            </p>
+            <ThemeToggle hideCaption iconOnly />
+          </div>
         </div>
       </footer>
     </div>
