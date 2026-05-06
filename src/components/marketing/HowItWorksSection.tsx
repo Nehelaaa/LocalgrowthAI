@@ -472,16 +472,6 @@ function VisualPipeline() {
               websiteQuote: "—",
               followUp: "—",
             },
-            {
-              name: "Sunrise Hair Studio",
-              city: "Austin",
-              state: "TX",
-              score: 84,
-              badge: "WARM" as const,
-              status: "CONTACTED" as const,
-              websiteQuote: "$1,200",
-              followUp: "Fri",
-            },
           ].map((lead) => (
             <div
               key={lead.name}
