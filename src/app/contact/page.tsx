@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { PublicContactForm } from "@/components/marketing/PublicContactForm";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { publicPageMetadata } from "@/lib/seo/public-page-metadata";
 
-export const metadata: Metadata = {
-  title: "Contact support",
+export const metadata: Metadata = publicPageMetadata({
+  pathname: "/contact",
+  title: "Contact LocalLeadster support",
+  ogTitle: "Contact LocalLeadster",
   description:
-    "Send a support message to the LocalLeadster team.",
-};
+    "Questions about billing, Google Places search limits, exports, or your account? Send a message to the LocalLeadster team and we will get back to you.",
+  keywords: ["LocalLeadster support", "LocalLeadster contact", "local lead software help"],
+});
 
 export default function ContactPage() {
   return (

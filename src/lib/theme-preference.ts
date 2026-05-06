@@ -49,5 +49,8 @@ export function readStoredThemePreference(): ThemePreference | null {
   return null;
 }
 
-/** Inline in root layout — runs before paint to reduce theme flash (class + native `color-scheme`). */
+/**
+ * Minified boot snippet (legacy / tests). Production layout loads `/lgai-theme-boot.js` via `next/script`
+ * — keep that file in sync when changing storage key or boot logic.
+ */
 export const THEME_BOOT_SCRIPT = `!function(){try{var k='${THEME_STORAGE_KEY}',d=document.documentElement,m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches,s=null;try{s=localStorage.getItem(k)}catch(e){}if(s==='dark'){d.classList.add('dark');d.style.colorScheme='dark'}else if(s==='light'){d.classList.remove('dark');d.style.colorScheme='light'}else{d.classList.toggle('dark',!!m);d.style.colorScheme=m?'dark':'light'}}catch(e){}}();`;

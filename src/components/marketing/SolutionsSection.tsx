@@ -5,23 +5,23 @@ const solutions = [
   {
     href: "/for/freelancers",
     title: "Freelancers",
-    desc: "Find local prospects, qualify fast, and keep follow-ups in one clean pipeline.",
+    desc: "Replace nights lost to Maps + spreadsheets: find local prospects fast, qualify with signals, and keep follow-ups in one pipeline.",
     Illustration: IllustrationRadar,
-    bullets: ["Spot weak web presence", "Save + score leads", "Branded PDF quotes from any lead"],
+    bullets: ["Prospect faster with territory runs", "Save + score leads in minutes", "Invoice from the same row"],
   },
   {
     href: "/for/agencies",
     title: "Agencies & teams",
-    desc: "Turn territory searches into predictable meetings — with CRM stages, exports, and secure Pro billing.",
+    desc: "Turn repeatable territory searches into predictable pipeline — CRM stages, exports, branded PDFs, and Pro billing when you scale.",
     Illustration: IllustrationPipeline,
-    bullets: ["Team-ready pipeline", "Exports + invoices on brand", "Stripe billing on Pro"],
+    bullets: ["Pipeline stages everyone can see", "Follow-up accountability", "Stripe billing on Pro"],
   },
   {
     href: "/for/sales",
     title: "B2B sales & setters",
-    desc: "Build targeted lists, segment by signals, and keep your call sheet up to date daily.",
+    desc: "Build targeted lists, segment by opportunity signals, and keep your call sheet current — stop manually rebuilding the same Google Maps loop.",
     Illustration: IllustrationOutreach,
-    bullets: ["Daily prospecting", "Presets + deep filters", "Track outcomes & follow-ups"],
+    bullets: ["Fresh call-sheet after every run", "Presets sharpen the list", "Outcomes logged on the lead"],
   },
 ] as const;
 
@@ -36,10 +36,11 @@ export function SolutionsSection() {
         id="solutions-heading"
         className="text-center text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white"
       >
-        Built for anyone selling to local businesses
+        Built for teams who need outcomes
       </h2>
-      <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600 dark:text-slate-400">
-        Same workflow. Different offers. Pick a starting point — the product stays simple.
+      <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-slate-600 dark:text-slate-400 sm:text-base">
+        Choose the playbook closest to how you sell. Each keeps prospecting and outreach inside{" "}
+        <span className="font-medium text-slate-800 dark:text-slate-200">one LocalLeadster workspace</span>.
       </p>
 
       <ul className="mt-10 grid gap-4 lg:grid-cols-3" role="list">

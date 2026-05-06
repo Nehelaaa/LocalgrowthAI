@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { BusinessSearchForm } from "@/app/dashboard/search/BusinessSearchForm";
 import {
   defaultPlaceFilterState,
   filterAndSortPlaces,
@@ -17,37 +16,37 @@ const HOW_STEP1_SUBMIT_ID = "lgai-how-step1-submit";
 const steps = [
   {
     id: 1,
-    title: "Search a territory",
-    body: "Pick city, state, radius, and industry. We pull live Google Places data so you only talk to real businesses in your service area.",
-    eyebrow: "Google Places search",
+    title: "Run a territory in minutes",
+    body: "Set city, state, radius, and trade — then pull a ranked list of real businesses you can filter and save. Stop rebuilding the same Maps search every day.",
+    eyebrow: "Territory search",
     accent: "indigo" as const,
   },
   {
     id: 2,
-    title: "Flag & score leads",
-    body: "Instantly see who has no real website or only social. HOT / WARM / COLD scores help you prioritize the best opportunities first.",
-    eyebrow: "Qualification signals",
+    title: "Qualify with signals + tiers",
+    body: "Spot no-site, social-only, and weak-presence opportunities instantly. HOT / WARM / COLD keeps your call list honest so you work the best leads first.",
+    eyebrow: "Faster qualification",
     accent: "amber" as const,
   },
   {
     id: 3,
-    title: "Run your pipeline",
-    body: "Track contact status, notes, follow-up dates, and value in a built-in CRM. Interested and contacted leads float to the top so you always see who you’re actively working.",
-    eyebrow: "Simple CRM pipeline",
+    title: "Pipeline that matches outreach",
+    body: "Pipeline stages plus follow-up tracking and explicit next actions on each lead — a call sheet everyone trusts, without a heavyweight CRM.",
+    eyebrow: "Organized outreach",
     accent: "emerald" as const,
   },
   {
     id: 4,
-    title: "Brand & bill in one click",
-    body: "Pick an invoice layout, logo, and accent color — then generate a client-ready PDF right from any lead. No extra design tool required.",
-    eyebrow: "Branded PDF invoices",
+    title: "Invoice from the same row",
+    body: "Generate a branded PDF invoice without exporting to another tool. Same context, less admin, faster payment conversations.",
+    eyebrow: "Branded PDFs",
     accent: "sky" as const,
   },
   {
     id: 5,
-    title: "Close deals & track revenue",
-    body: "Move opportunities to Won/Lost, set deal value, and see what’s closing this week. Keep your pipeline clean and know exactly how much money is in play.",
-    eyebrow: "Closing + revenue",
+    title: "Close with revenue clarity",
+    body: "Track outcomes, deal value, and what’s closing soon — so you always know what’s in play and what to push next.",
+    eyebrow: "Revenue focus",
     accent: "violet" as const,
   },
 ];
@@ -88,7 +87,7 @@ export function HowItWorksSection() {
           How LocalLeadster works
         </h2>
         <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-600 dark:text-slate-400">
-          Five steps from search to close — including branded invoices. Click a step to explore — use arrow keys too.
+          Interactive preview — territory through revenue. Arrow keys navigate the tabs.
         </p>
 
         <div className="mt-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-5">
@@ -188,11 +187,11 @@ export function HowItWorksSection() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5 text-[9px] font-semibold text-slate-600 dark:text-slate-300">
-                  {s.id === 1 && <Pill>City + radius + category</Pill>}
-                  {s.id === 2 && <Pill>Signals + tiers</Pill>}
-                  {s.id === 3 && <Pill>Pipeline + follow-ups</Pill>}
+                  {s.id === 1 && <Pill>Territory + live list</Pill>}
+                  {s.id === 2 && <Pill>Signals + scoring</Pill>}
+                  {s.id === 3 && <Pill>CRM + follow-ups</Pill>}
                   {s.id === 4 && <Pill>Templates + PDF</Pill>}
-                  {s.id === 5 && <Pill>Won value + revenue</Pill>}
+                  {s.id === 5 && <Pill>Deals + revenue</Pill>}
                 </div>
               </div>
 
@@ -382,18 +381,37 @@ function VisualSearch() {
           ref={searchCardRef}
           className="relative rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-4"
         >
-          <BusinessSearchForm
-            onSearch={async () => {}}
-            loading={false}
-            embedded
-            initialCity="Austin"
-            initialState="TX"
-            initialRadiusMiles={10}
-            initialBusinessType="plumber"
-            submitButtonId={HOW_STEP1_SUBMIT_ID}
-          />
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Active territory
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {[
+              ["City", "Austin"],
+              ["State", "TX"],
+              ["Radius", "10 mi"],
+              ["Trade", "Plumber"],
+            ].map(([k, v]) => (
+              <span
+                key={k}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1 text-[11px] dark:border-slate-600 dark:bg-slate-800/80"
+              >
+                <span className="font-semibold text-slate-500 dark:text-slate-400">{k}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{v}</span>
+              </span>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+            One run returns a ranked list you can filter in seconds — not another night lost to Maps tabs.
+          </p>
+          <button
+            id={HOW_STEP1_SUBMIT_ID}
+            type="button"
+            className="mt-3 inline-flex min-h-[40px] w-full max-w-[12rem] items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm sm:w-auto"
+          >
+            Run search
+          </button>
 
-          {/* Demo pointer click on "Search" (preview-only; position follows real submit button) */}
+          {/* Demo pointer click on primary action (preview-only) */}
           {searchPointerAnchor ? (
           <div
             className="lgai-search-demo-pointer pointer-events-none absolute z-10 hidden sm:block"

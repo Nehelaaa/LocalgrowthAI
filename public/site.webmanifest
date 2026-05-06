@@ -1,0 +1,17 @@
+{
+  "name": "LocalLeadster",
+  "short_name": "LocalLeadster",
+  "description": "Local B2B lead generation, CRM pipeline, and invoicing.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}

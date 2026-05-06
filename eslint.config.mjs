@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Node scripts (CommonJS) live here and are not part of the app bundle.
     "scripts/**",
+    // Static assets (IIFE theme boot, etc.) — not TypeScript modules.
+    "public/**/*.js",
   ]),
 ]);
 

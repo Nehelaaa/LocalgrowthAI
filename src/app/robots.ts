@@ -1,26 +1,28 @@
 import type { MetadataRoute } from "next";
+import { getSiteOrigin } from "@/lib/seo/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.AUTH_URL?.replace(/\/$/, "") || "https://www.localleadster.com";
+  const base = getSiteOrigin();
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/for/", "/favicon.ico"],
         disallow: [
           "/api/",
           "/dashboard/",
           "/owner/",
           "/onboarding",
           "/login",
-          "/register",
+          "/auth/",
           "/forgot-password",
           "/reset-password",
           "/demo/",
+          "/unauthorized",
         ],
       },
     ],
     sitemap: `${base}/sitemap.xml`,
+    host: base.replace(/^https?:\/\//, ""),
   };
 }
 

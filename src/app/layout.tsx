@@ -1,32 +1,43 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { THEME_BOOT_SCRIPT } from "@/lib/theme-preference";
-
-const base = process.env.AUTH_URL
-  ? new URL(process.env.AUTH_URL)
-  : new URL("http://localhost:3000");
+import { getMetadataBase } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
-  metadataBase: base,
+  metadataBase: getMetadataBase(),
+  applicationName: "LocalLeadster",
   title: {
     default: "LocalLeadster",
     template: "%s | LocalLeadster",
   },
   description:
-    "Search Google Places, qualify local leads, and run outreach + pipeline from one clean workspace.",
+    "Local lead generation software: Google Places territory prospecting, opportunity signals, HOT/WARM/COLD scoring, CRM pipeline with follow-ups, and branded PDF invoices — one workspace for agencies, freelancers, and sales teams.",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     shortcut: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
     siteName: "LocalLeadster",
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "LocalLeadster — local B2B prospecting, CRM pipeline, and invoicing",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
   },
+  referrer: "strict-origin-when-cross-origin",
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
@@ -44,7 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className="min-h-[100dvh] antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <Script id="lgai-theme-boot" src="/lgai-theme-boot.js" strategy="beforeInteractive" />
         <ThemeProvider>
           <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>

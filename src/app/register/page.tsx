@@ -6,11 +6,21 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
+import { publicPageMetadata } from "@/lib/seo/public-page-metadata";
 
-export const metadata: Metadata = {
-  title: "Create account",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = publicPageMetadata({
+  pathname: "/register",
+  title: "Create your free LocalLeadster account",
+  ogTitle: "Sign up — LocalLeadster",
+  description:
+    "Start free: Google Places territory prospecting, lead scoring, CRM pipeline with follow-ups, and branded PDF invoices when you upgrade to Pro.",
+  keywords: [
+    "LocalLeadster sign up",
+    "local lead generation free trial",
+    "Google Places CRM",
+    "create LocalLeadster account",
+  ],
+});
 
 export default function RegisterPage() {
   const hasGoogle = isGoogleOAuthConfigured();
