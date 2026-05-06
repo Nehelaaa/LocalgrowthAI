@@ -9,6 +9,7 @@ import {
   type PlaceRow,
 } from "@/lib/place-search-scoring";
 import { contactStatusLabel, contactStatusPillClass } from "@/lib/contact-status";
+import { InvoiceDocumentPreview } from "@/components/invoices/InvoiceDocumentPreview";
 
 const steps = [
   {
@@ -542,51 +543,82 @@ function VisualPipeline() {
 }
 
 function VisualInvoice() {
+  const accentHex = "#f59e0b";
   return (
     <Frame>
-      <div className="grid gap-3 lg:grid-cols-[1fr_1.1fr]">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Invoice templates
+      <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+        <div>
+          <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Invoice builder (real PDF preview)
           </p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {["Minimal", "Ledger", "Statement", "Accent", "Editorial"].map((name) => (
-              <span
-                key={name}
-                className={
-                  "rounded-lg border px-2 py-1 text-[10px] font-semibold " +
-                  (name === "Statement"
-                    ? "border-violet-400 bg-violet-50 text-violet-900 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-100"
-                    : "border-slate-200/80 bg-white text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-300")
-                }
-              >
-                {name}
-              </span>
-            ))}
+          <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
+            <div className="border-b border-slate-100 bg-slate-50/70 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/20">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                    From any lead → Generate invoice
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                    Template: Statement · Accent: Bronze
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white">
+                  Download PDF
+                </span>
+              </div>
+            </div>
+            <div className="relative h-[240px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
+              <div className="absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_35%_20%,black,transparent_65%)]" aria-hidden>
+                <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12)_0%,transparent_62%)]" />
+              </div>
+              <div className="relative mx-auto h-full w-full max-w-[420px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
+                <div className="absolute left-0 top-0 origin-top-left scale-[0.92] [transform-origin:top_left]">
+                  <InvoiceDocumentPreview
+                    templateId="statement"
+                    accentHex={accentHex}
+                    businessName="Apex Plumbing Co."
+                    logoDataUrl={null}
+                    density="comfortable"
+                    documentTitle="Invoice"
+                    footerPhrase="Thanks for your business"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
-            Logo, accent color, and layout stay saved — every PDF matches your brand.
-          </p>
         </div>
+
         <div className="space-y-2">
-          <div className="rounded-2xl border border-indigo-200/70 bg-gradient-to-br from-white to-indigo-50/80 p-3 shadow-sm dark:border-indigo-500/25 dark:from-slate-900/40 dark:to-indigo-950/20">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-extrabold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
-                From any lead
-              </p>
-              <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[9px] font-bold text-white">
-                Download PDF
-              </span>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Templates + branding
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {["Minimal", "Ledger", "Statement", "Accent", "Editorial"].map((name) => (
+                <span
+                  key={name}
+                  className={
+                    "rounded-lg border px-2 py-1 text-[10px] font-semibold " +
+                    (name === "Statement"
+                      ? "border-violet-400 bg-violet-50 text-violet-900 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-100"
+                      : "border-slate-200/80 bg-white text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-300")
+                  }
+                >
+                  {name}
+                </span>
+              ))}
             </div>
-            <div className="mt-2 rounded-lg border border-slate-200/80 bg-white/95 p-2.5 text-[10px] dark:border-slate-700/50 dark:bg-slate-900/50">
-              <p className="font-bold text-slate-900 dark:text-white">INVOICE</p>
-              <p className="mt-0.5 text-slate-600 dark:text-slate-300">Line items · tax · notes</p>
-              <div className="mt-2 h-1.5 rounded bg-violet-500/85" aria-hidden />
-            </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+              Pick a layout, logo, and accent once — every PDF stays on-brand.
+            </p>
           </div>
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-2 text-[10px] text-slate-600 dark:border-slate-700/50 dark:bg-slate-800/40 dark:text-slate-300">
-            Also new: refine results with presets (Easy Wins, High Value, Fast Closers) and stackable filters before you
-            save.
+          <div className="rounded-2xl border border-indigo-200/60 bg-indigo-50/80 p-3 shadow-sm dark:border-indigo-500/30 dark:bg-indigo-500/10">
+            <p className="text-[11px] font-extrabold tracking-tight text-indigo-950 dark:text-indigo-100">
+              Client-ready in seconds
+            </p>
+            <p className="mt-1 text-[10px] leading-relaxed text-indigo-900/80 dark:text-indigo-200/80">
+              Line items, tax, and notes — then download a clean PDF.
+            </p>
           </div>
         </div>
       </div>
