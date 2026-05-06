@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BusinessSearchForm } from "@/app/dashboard/search/BusinessSearchForm";
-import { LeadSearchFiltersPanel } from "@/app/dashboard/search/LeadSearchFiltersPanel";
 import {
   defaultPlaceFilterState,
   filterAndSortPlaces,
@@ -232,7 +231,7 @@ function Frame({ children }: { children: React.ReactNode }) {
 }
 
 function VisualSearch() {
-  const [filters, setFilters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
+  const [filters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
 
   const places = useMemo<PlaceRow[]>(
     () => [
@@ -294,17 +293,15 @@ function VisualSearch() {
     <Frame>
       <div className="space-y-4">
         <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-5">
-          <BusinessSearchForm onSearch={async () => {}} loading={false} embedded />
-          <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800/80">
-            <LeadSearchFiltersPanel
-              lastSearch={{ city: "Austin", state: "TX", radiusMiles: 10, businessType: "plumber" }}
-              filters={filters}
-              onChange={setFilters}
-              visibleCount={filteredPlaces.length}
-              totalCount={places.length}
-              embedded
-            />
-          </div>
+          <BusinessSearchForm
+            onSearch={async () => {}}
+            loading={false}
+            embedded
+            initialCity="Austin"
+            initialState="TX"
+            initialRadiusMiles={10}
+            initialBusinessType="plumber"
+          />
         </div>
 
         <ReadonlyResultsPreview places={filteredPlaces.slice(0, 3)} totalBeforeFilters={places.length} />
@@ -314,8 +311,6 @@ function VisualSearch() {
 }
 
 function VisualScore() {
-  const [filters, setFilters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
-
   const places = useMemo<PlaceRow[]>(
     () => [
       {
@@ -354,21 +349,9 @@ function VisualScore() {
     []
   );
 
-  const filteredPlaces = useMemo(() => filterAndSortPlaces(places, filters), [places, filters]);
-
   return (
     <Frame>
-      <div className="space-y-4">
-        <LeadSearchFiltersPanel
-          lastSearch={{ city: "Austin", state: "TX", radiusMiles: 10, businessType: "dentist" }}
-          filters={filters}
-          onChange={setFilters}
-          visibleCount={filteredPlaces.length}
-          totalCount={places.length}
-          embedded
-        />
-        <ReadonlyResultsPreview places={filteredPlaces} totalBeforeFilters={places.length} />
-      </div>
+      <ReadonlyResultsPreview places={places} totalBeforeFilters={places.length} />
     </Frame>
   );
 }

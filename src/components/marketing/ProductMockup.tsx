@@ -177,7 +177,15 @@ function PanelSearch() {
   return (
     <div className="space-y-2 text-left">
       <div className="rounded-xl border border-slate-200/80 bg-white/80 p-2.5 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
-        <BusinessSearchForm onSearch={async () => {}} loading={false} embedded />
+        <BusinessSearchForm
+          onSearch={async () => {}}
+          loading={false}
+          embedded
+          initialCity="Austin"
+          initialState="TX"
+          initialRadiusMiles={10}
+          initialBusinessType="plumber"
+        />
       </div>
       <div className="rounded-xl border border-slate-200/80 bg-white/80 p-2.5 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
         <LeadSearchFiltersPanel

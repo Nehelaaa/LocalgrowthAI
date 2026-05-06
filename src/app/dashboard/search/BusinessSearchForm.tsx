@@ -32,13 +32,29 @@ type Props = {
   loading: boolean;
   /** When true, render without the outer card — parent provides container. */
   embedded?: boolean;
+  /** Optional prefill (used for marketing previews). */
+  initialCity?: string;
+  /** Optional prefill (used for marketing previews). */
+  initialState?: string;
+  /** Optional prefill (used for marketing previews). */
+  initialRadiusMiles?: number;
+  /** Optional prefill (used for marketing previews). */
+  initialBusinessType?: string;
 };
 
-export function BusinessSearchForm({ onSearch, loading, embedded }: Props) {
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [radiusMiles, setRadiusMiles] = useState(10);
-  const [businessType, setBusinessType] = useState("");
+export function BusinessSearchForm({
+  onSearch,
+  loading,
+  embedded,
+  initialCity = "",
+  initialState = "",
+  initialRadiusMiles = 10,
+  initialBusinessType = "",
+}: Props) {
+  const [city, setCity] = useState(initialCity);
+  const [state, setState] = useState(initialState);
+  const [radiusMiles, setRadiusMiles] = useState(initialRadiusMiles);
+  const [businessType, setBusinessType] = useState(initialBusinessType);
   const [bizTypeOpen, setBizTypeOpen] = useState(false);
   const [bizTypeActiveIndex, setBizTypeActiveIndex] = useState<number>(-1);
   const blurCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
