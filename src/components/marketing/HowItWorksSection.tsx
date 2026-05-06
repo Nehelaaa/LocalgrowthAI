@@ -306,7 +306,7 @@ function VisualSearch() {
           />
         </div>
 
-        <ReadonlyResultsPreview places={filteredPlaces.slice(0, 3)} totalBeforeFilters={places.length} />
+        <ReadonlyResultsPreview places={filteredPlaces.slice(0, 2)} totalBeforeFilters={places.length} />
       </div>
     </Frame>
   );
