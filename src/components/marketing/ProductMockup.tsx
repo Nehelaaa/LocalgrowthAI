@@ -161,12 +161,12 @@ function PanelInvoice() {
           </div>
         </div>
         {/* Wide desktop preview: page fills the window */}
-        <div className="relative aspect-[16/9] max-h-[380px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
+        <div className="relative aspect-[16/9] max-h-[420px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
           <div className="absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_35%_20%,black,transparent_65%)]" aria-hidden>
             <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12)_0%,transparent_62%)]" />
           </div>
-          <div className="relative mx-auto h-full w-full max-w-[980px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 origin-center scale-[1.02] [transform-origin:center]">
+          <div className="relative mx-auto h-full w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[52%] origin-center scale-[1.36] [transform-origin:center]">
               <InvoiceDocumentPreview
                 templateId="statement"
                 accentHex={accentHex}
