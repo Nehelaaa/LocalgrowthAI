@@ -60,7 +60,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, embed }: Pro
 
   if (embed) {
     return (
-      <div className={"flex items-center justify-between " + className}>
+      <div className={"flex items-center gap-3 " + className}>
         <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Theme</span>
         {control}
         {!mounted ? (
