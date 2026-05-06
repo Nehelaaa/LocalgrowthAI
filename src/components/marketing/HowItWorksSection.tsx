@@ -1,6 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BusinessSearchForm } from "@/app/dashboard/search/BusinessSearchForm";
+import { LeadSearchFiltersPanel } from "@/app/dashboard/search/LeadSearchFiltersPanel";
+import {
+  defaultPlaceFilterState,
+  filterAndSortPlaces,
+  type PlaceFilterState,
+  type PlaceRow,
+} from "@/lib/place-search-scoring";
 
 const steps = [
   {
@@ -224,232 +232,142 @@ function Frame({ children }: { children: React.ReactNode }) {
 }
 
 function VisualSearch() {
+  const [filters, setFilters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
+
+  const places = useMemo<PlaceRow[]>(
+    () => [
+      {
+        placeId: "demo-apex-plumbing",
+        name: "Apex Plumbing Co.",
+        address: "123 Main St, Austin, TX",
+        city: "Austin",
+        state: "TX",
+        phone: "(512) 555-0199",
+        website: undefined,
+        rating: 4.6,
+        reviewCount: 180,
+        googleMapsUrl: "https://www.google.com/maps",
+        businessType: "plumber",
+        hasSocialOnly: false,
+        noWebsite: true,
+        photoUrl: undefined,
+      },
+      {
+        placeId: "demo-quickfix-drains",
+        name: "QuickFix Drains",
+        address: "220 Congress Ave, Austin, TX",
+        city: "Austin",
+        state: "TX",
+        phone: "(512) 555-0134",
+        website: "https://instagram.com/quickfixdrains",
+        rating: 4.2,
+        reviewCount: 62,
+        googleMapsUrl: "https://www.google.com/maps",
+        businessType: "plumber",
+        hasSocialOnly: true,
+        noWebsite: true,
+        photoUrl: undefined,
+      },
+      {
+        placeId: "demo-city-rooter",
+        name: "City Rooter LLC",
+        address: "500 E 6th St, Austin, TX",
+        city: "Austin",
+        state: "TX",
+        phone: "(512) 555-0177",
+        website: undefined,
+        rating: 4.9,
+        reviewCount: 24,
+        googleMapsUrl: "https://www.google.com/maps",
+        businessType: "plumber",
+        hasSocialOnly: false,
+        noWebsite: true,
+        photoUrl: undefined,
+      },
+    ],
+    []
+  );
+
+  const filteredPlaces = useMemo(() => filterAndSortPlaces(places, filters), [places, filters]);
+
   return (
     <Frame>
-      <div className="space-y-3">
-        <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
-          <span className="rounded-md bg-indigo-100 px-2 py-1 text-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-200">
-            Austin, TX
-          </span>
-          <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            10 mi radius
-          </span>
-          <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            Plumbers
-          </span>
-          <span className="rounded-md bg-emerald-100 px-2 py-1 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200">
-            No website
-          </span>
-        </div>
-
-        <div className="grid gap-3 lg:grid-cols-[1.05fr_1fr]">
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/60 p-3 dark:border-slate-700/50 dark:from-slate-900/30 dark:to-slate-900/10 sm:p-4">
-            <div
-              className="pointer-events-none absolute inset-0 opacity-70 [mask-image:radial-gradient(circle_at_40%_40%,black,transparent_70%)]"
-              aria-hidden
-              style={{
-                backgroundImage:
-                  "linear-gradient(to right, rgba(148,163,184,0.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.22) 1px, transparent 1px)",
-                backgroundSize: "22px 22px",
-              }}
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-5">
+          <BusinessSearchForm onSearch={async () => {}} loading={false} embedded />
+          <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800/80">
+            <LeadSearchFiltersPanel
+              lastSearch={{ city: "Austin", state: "TX", radiusMiles: 10, businessType: "plumber" }}
+              filters={filters}
+              onChange={setFilters}
+              visibleCount={filteredPlaces.length}
+              totalCount={places.length}
+              embedded
             />
-
-            <div className="relative">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Territory
-                </p>
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  Center + radius
-                </span>
-              </div>
-
-              <div className="mt-3 aspect-[16/10] w-full overflow-hidden rounded-xl border border-slate-200/70 bg-white/70 dark:border-slate-800/70 dark:bg-slate-950/20">
-                <svg
-                  viewBox="0 0 320 200"
-                  className="h-full w-full"
-                  role="img"
-                  aria-label="Interactive territory preview"
-                >
-                  <defs>
-                    <linearGradient id="llg" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stopColor="#7c3aed" stopOpacity="0.18" />
-                      <stop offset="1" stopColor="#2563eb" stopOpacity="0.12" />
-                    </linearGradient>
-                    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="5" />
-                    </filter>
-                  </defs>
-
-                  {/* soft background */}
-                  <rect x="0" y="0" width="320" height="200" fill="url(#llg)" />
-
-                  {/* subtle "roads" */}
-                  <g opacity="0.55" stroke="#94a3b8" strokeWidth="1">
-                    <path d="M-10 140 C 80 110, 130 120, 210 70 S 340 40, 350 30" fill="none" />
-                    <path d="M-10 85 C 60 60, 140 90, 210 115 S 320 170, 360 190" fill="none" />
-                    <path d="M35 -10 C 70 60, 140 55, 200 20 S 300 0, 340 30" fill="none" />
-                  </g>
-
-                  {/* radius ring */}
-                  <circle cx="160" cy="102" r="58" fill="#4f46e5" opacity="0.08" />
-                  <circle cx="160" cy="102" r="58" fill="none" stroke="#4f46e5" opacity="0.35" strokeWidth="2" />
-
-                  {/* pulse ring */}
-                  <circle cx="160" cy="102" r="22" fill="#4f46e5" opacity="0.10">
-                    <animate attributeName="r" values="18;28;18" dur="2.6s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.16;0.04;0.16" dur="2.6s" repeatCount="indefinite" />
-                  </circle>
-
-                  {/* center pin */}
-                  <g>
-                    <circle cx="160" cy="102" r="7.5" fill="#4f46e5" />
-                    <circle cx="160" cy="102" r="3.3" fill="#ffffff" opacity="0.95" />
-                  </g>
-
-                  {/* result pins */}
-                  {[
-                    { x: 124, y: 72, hot: true },
-                    { x: 205, y: 84, hot: false },
-                    { x: 186, y: 138, hot: true },
-                    { x: 112, y: 126, hot: false },
-                  ].map((p, i) => (
-                    <g key={i}>
-                      <circle
-                        cx={p.x}
-                        cy={p.y}
-                        r={10}
-                        fill={p.hot ? "#f59e0b" : "#22c55e"}
-                        opacity="0.16"
-                        filter="url(#soft)"
-                      />
-                      <circle
-                        cx={p.x}
-                        cy={p.y}
-                        r={4.5}
-                        fill={p.hot ? "#f59e0b" : "#22c55e"}
-                        opacity="0.9"
-                      />
-                      <circle cx={p.x} cy={p.y} r={2.2} fill="#ffffff" opacity="0.9" />
-                    </g>
-                  ))}
-                </svg>
-              </div>
-
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {[
-                  { k: "Results", v: "20" },
-                  { k: "No site", v: "11" },
-                  { k: "HOT", v: "4" },
-                ].map((x) => (
-                  <div
-                    key={x.k}
-                    className="rounded-xl border border-slate-200/70 bg-white/70 p-2 text-center dark:border-slate-800/70 dark:bg-slate-950/20"
-                  >
-                    <p className="text-[11px] font-extrabold tabular-nums text-slate-900 dark:text-white">
-                      {x.v}
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                      {x.k}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            {[
-              { n: "Apex Plumbing Co.", tag: "No site", hot: true },
-              { n: "QuickFix Drains", tag: "Social only", hot: false },
-              { n: "City Rooter LLC", tag: "No site", hot: true },
-            ].map((r) => (
-              <div
-                key={r.n}
-                className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-sm dark:border-slate-700/50 dark:bg-slate-900/30"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-900 dark:text-white">{r.n}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{r.tag}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {r.hot && (
-                    <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold text-amber-900 dark:bg-amber-500/15 dark:text-amber-200">
-                      HOT
-                    </span>
-                  )}
-                  <span className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-extrabold text-white">
-                    + Save
-                  </span>
-                </div>
-              </div>
-            ))}
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-2 text-[11px] text-slate-600 dark:border-slate-700/50 dark:bg-slate-900/20 dark:text-slate-300">
-              Tip: use presets or stack filters (website, opportunity, reviews) to surface the best prospects faster.
-            </div>
           </div>
         </div>
+
+        <ReadonlyResultsPreview places={filteredPlaces.slice(0, 3)} totalBeforeFilters={places.length} />
       </div>
     </Frame>
   );
 }
 
 function VisualScore() {
+  const [filters, setFilters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
+
+  const places = useMemo<PlaceRow[]>(
+    () => [
+      {
+        placeId: "demo-lakeview-dental",
+        name: "Lakeview Dental",
+        address: "88 Barton Springs Rd, Austin, TX",
+        city: "Austin",
+        state: "TX",
+        phone: "(512) 555-0111",
+        website: undefined,
+        rating: 4.8,
+        reviewCount: 205,
+        googleMapsUrl: "https://www.google.com/maps",
+        businessType: "dentist",
+        hasSocialOnly: false,
+        noWebsite: true,
+        photoUrl: undefined,
+      },
+      {
+        placeId: "demo-austin-roofing",
+        name: "Austin Roofing Co",
+        address: "410 W 2nd St, Austin, TX",
+        city: "Austin",
+        state: "TX",
+        phone: "(512) 555-0142",
+        website: "https://austinroofing.example",
+        rating: 4.4,
+        reviewCount: 94,
+        googleMapsUrl: "https://www.google.com/maps",
+        businessType: "roofer",
+        hasSocialOnly: false,
+        noWebsite: false,
+        photoUrl: undefined,
+      },
+    ],
+    []
+  );
+
+  const filteredPlaces = useMemo(() => filterAndSortPlaces(places, filters), [places, filters]);
+
   return (
     <Frame>
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Signals
-          </p>
-          <div className="mt-3 space-y-2 text-sm">
-            {[
-              { l: "No website", v: "Yes", tone: "emerald" },
-              { l: "Reviews", v: "180", tone: "slate" },
-              { l: "Rating", v: "4.6", tone: "slate" },
-              { l: "Tier", v: "HOT", tone: "amber" },
-            ].map((x) => (
-              <div key={x.l} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/40">
-                <span className="text-slate-600 dark:text-slate-300">{x.l}</span>
-                <span
-                  className={
-                    "rounded-full px-2.5 py-1 text-[11px] font-extrabold " +
-                    (x.tone === "emerald"
-                      ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-200"
-                      : x.tone === "amber"
-                        ? "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200"
-                        : "bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100")
-                  }
-                >
-                  {x.v}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Recommended next step
-          </p>
-          <div className="mt-3 space-y-2">
-            <div className="rounded-xl border border-indigo-200/70 bg-indigo-50/80 p-3 text-sm dark:border-indigo-500/30 dark:bg-indigo-500/10">
-              <p className="font-semibold text-indigo-950 dark:text-indigo-100">Send first touch</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-indigo-900/80 dark:text-indigo-200/80">
-                “Great reviews — I noticed you don’t have a website yet. Want a quick 10‑min call?”
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-              {["Email", "Call", "DM", "Loom"].map((x) => (
-                <span
-                  key={x}
-                  className="rounded-full border border-slate-200/80 bg-white px-3 py-1 dark:border-slate-700/60 dark:bg-slate-900/40"
-                >
-                  {x}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="space-y-4">
+        <LeadSearchFiltersPanel
+          lastSearch={{ city: "Austin", state: "TX", radiusMiles: 10, businessType: "dentist" }}
+          filters={filters}
+          onChange={setFilters}
+          visibleCount={filteredPlaces.length}
+          totalCount={places.length}
+          embedded
+        />
+        <ReadonlyResultsPreview places={filteredPlaces} totalBeforeFilters={places.length} />
       </div>
     </Frame>
   );
@@ -616,5 +534,72 @@ function VisualClose() {
         </div>
       </div>
     </Frame>
+  );
+}
+
+function ReadonlyResultsPreview({
+  places,
+  totalBeforeFilters,
+}: {
+  places: PlaceRow[];
+  totalBeforeFilters: number;
+}) {
+  if (places.length === 0) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-400">
+        No businesses match your filters.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+          Results ({places.length}
+          {totalBeforeFilters > places.length ? ` of ${totalBeforeFilters}` : ""})
+        </p>
+        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+          Preview
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {places.map((place) => (
+          <div
+            key={place.placeId}
+            className="flex flex-col sm:flex-row gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
+          >
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-slate-900 dark:text-white">{place.name}</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{place.address}</p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {place.rating != null && (
+                  <span className="text-sm text-slate-500">
+                    ★ {place.rating} ({place.reviewCount} reviews)
+                  </span>
+                )}
+                {place.noWebsite && (
+                  <span className="rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-xs px-2 py-0.5">
+                    No website
+                  </span>
+                )}
+                {place.hasSocialOnly && (
+                  <span className="rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2 py-0.5">
+                    Social only
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:items-end">
+              <span className="text-sm text-indigo-600 dark:text-indigo-400">View on Maps</span>
+              <span className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white font-medium opacity-80">
+                Add to leads
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
