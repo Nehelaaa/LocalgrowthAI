@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
 
 export function MarketingShell({
@@ -63,9 +62,6 @@ export function MarketingShell({
               </Link>
             </nav>
             <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:flex-nowrap sm:gap-2">
-              <div className="shrink-0">
-                <ThemeToggle hideCaption compact />
-              </div>
               <Link
                 className="min-h-[40px] shrink-0 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 sm:px-3 dark:text-slate-200"
                 href="/login"
