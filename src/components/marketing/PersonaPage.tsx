@@ -56,7 +56,6 @@ const personas: Record<
       { t: "Close faster", d: "Run follow-ups, export to your stack, and keep a clean audit trail." },
     ],
     proof: [
-      { t: "Pro-ready infrastructure", d: "Secure auth + Stripe billing built in." },
       { t: "Less context switching", d: "Search, CRM, and outreach live in one place." },
     ],
     Illustration: IllustrationPipeline,
