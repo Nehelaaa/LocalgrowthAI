@@ -540,7 +540,7 @@ function VisualInvoice() {
           <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Invoice builder (real PDF preview)
           </p>
-          <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
+          <div className="mt-2 rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
             <div className="border-b border-slate-100 bg-slate-50/70 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/20">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
@@ -556,12 +556,9 @@ function VisualInvoice() {
                 </span>
               </div>
             </div>
-            <div className="relative aspect-[16/9] max-h-[400px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
-              <div className="absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_35%_20%,black,transparent_65%)]" aria-hidden>
-                <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12)_0%,transparent_62%)]" />
-              </div>
-              <div className="relative mx-auto h-full w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[52%] origin-center scale-[1.36] [transform-origin:center]">
+            <div className="bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
+              <div className="w-full overflow-x-auto">
+                <div className="mx-auto w-[800px] min-h-[1050px] rounded-xl bg-white p-6 shadow-lg ring-1 ring-slate-900/10">
                   <InvoiceDocumentPreview
                     templateId="statement"
                     accentHex={accentHex}
@@ -570,6 +567,7 @@ function VisualInvoice() {
                     density="comfortable"
                     documentTitle="Invoice"
                     footerPhrase="Thanks for your business"
+                    className="w-full overflow-visible !rounded-none !border-0 !shadow-none !ring-0"
                   />
                 </div>
               </div>

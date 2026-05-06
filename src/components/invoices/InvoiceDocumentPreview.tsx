@@ -46,6 +46,11 @@ type Props = {
   compact?: boolean;
   documentTitle?: string;
   footerPhrase?: string;
+  /**
+   * Optional styling hook for embedding previews in marketing/pages.
+   * Applied to the outermost container of the selected template.
+   */
+  className?: string;
 };
 
 export function InvoiceDocumentPreview({
@@ -57,6 +62,7 @@ export function InvoiceDocumentPreview({
   compact,
   documentTitle: rawDocTitle,
   footerPhrase: rawFooter,
+  className = "",
 }: Props) {
   const tid = normalizeInvoiceTemplateId(rawTid);
   const accent = normalizeHexColor(rawAccent, "#4f46e5");
@@ -73,7 +79,7 @@ export function InvoiceDocumentPreview({
   if (tid === "mono") {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10 ${scale}`}
+        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-white/10 ${scale} ${className}`}
       >
         <div className="bg-zinc-900 px-4 py-3 text-white">
           <div className="flex items-center gap-3">
@@ -102,7 +108,7 @@ export function InvoiceDocumentPreview({
   if (tid === "editorial") {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-[#fafaf9] shadow-lg ring-1 ring-stone-900/5 dark:border-stone-700 dark:bg-stone-950 dark:ring-white/10 ${scale}`}
+        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-[#fafaf9] shadow-lg ring-1 ring-stone-900/5 dark:border-stone-700 dark:bg-stone-950 dark:ring-white/10 ${scale} ${className}`}
       >
         <div className={`${pad} text-center`}>
           <p className="font-serif text-2xl font-light tracking-[0.2em] text-stone-800 dark:text-stone-100">
@@ -139,7 +145,7 @@ export function InvoiceDocumentPreview({
   if (tid === "ledger") {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border-2 border-slate-300 bg-gradient-to-b from-amber-50/90 to-white shadow-md dark:border-slate-600 dark:from-amber-950/20 dark:to-slate-900 ${scale}`}
+        className={`relative overflow-hidden rounded-lg border-2 border-slate-300 bg-gradient-to-b from-amber-50/90 to-white shadow-md dark:border-slate-600 dark:from-amber-950/20 dark:to-slate-900 ${scale} ${className}`}
       >
         <div className={`${pad} border-b-2 border-dashed border-slate-300/80 dark:border-slate-600`}>
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -174,7 +180,7 @@ export function InvoiceDocumentPreview({
   if (tid === "accentBar") {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 ${scale}`}
+        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 ${scale} ${className}`}
       >
         <div
           className="absolute bottom-0 left-0 top-0 w-2 rounded-l-lg"
@@ -231,7 +237,7 @@ export function InvoiceDocumentPreview({
   if (tid === "horizon") {
     return (
       <div
-        className={`relative overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:bg-slate-900 dark:ring-white/[0.06] ${scale}`}
+        className={`relative overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:bg-slate-900 dark:ring-white/[0.06] ${scale} ${className}`}
       >
         <div className="px-4 py-3 sm:px-5" style={{ backgroundColor: `${accent}24` }}>
           <div className="flex items-start justify-between gap-3">
@@ -267,7 +273,7 @@ export function InvoiceDocumentPreview({
   if (tid === "sidebar") {
     return (
       <div
-        className={`relative flex min-h-[14rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md dark:border-slate-700 dark:bg-slate-900 ${scale}`}
+        className={`relative flex min-h-[14rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md dark:border-slate-700 dark:bg-slate-900 ${scale} ${className}`}
       >
         <div
           className="flex w-[30%] min-w-[6.5rem] flex-col border-y border-r border-slate-200/90 border-l-4 bg-slate-50/95 p-3 dark:border-slate-700 dark:bg-slate-800/40"
@@ -301,7 +307,7 @@ export function InvoiceDocumentPreview({
   if (tid === "blueprint") {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border-2 border-blue-900/25 bg-[#f1f5f9] shadow-md dark:border-blue-400/20 dark:bg-slate-900 ${scale}`}
+        className={`relative overflow-hidden rounded-lg border-2 border-blue-900/25 bg-[#f1f5f9] shadow-md dark:border-blue-400/20 dark:bg-slate-900 ${scale} ${className}`}
       >
         <div className={`${pad} border-b border-blue-900/15 dark:border-slate-600`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -334,7 +340,7 @@ export function InvoiceDocumentPreview({
   if (tid === "studio") {
     return (
       <div
-        className={`relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 ${scale}`}
+        className={`relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 ${scale} ${className}`}
       >
         <div className={pad}>
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -369,7 +375,7 @@ export function InvoiceDocumentPreview({
     const frame = INVOICE_CLASSIC_FRAME_HEX;
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border-2 bg-[#fffdf8] p-1 shadow-md dark:bg-stone-950 ${scale}`}
+        className={`relative overflow-hidden rounded-lg border-2 bg-[#fffdf8] p-1 shadow-md dark:bg-stone-950 ${scale} ${className}`}
         style={{
           borderColor: `${frame}73`,
           boxShadow: `0 0 0 1px ${frame}26`,
@@ -411,7 +417,7 @@ export function InvoiceDocumentPreview({
   /* minimal — airy, soft card, simple table */
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/80 shadow-md ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:from-slate-900 dark:to-slate-900/90 dark:ring-white/[0.06] ${scale}`}
+      className={`relative overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/80 shadow-md ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:from-slate-900 dark:to-slate-900/90 dark:ring-white/[0.06] ${scale} ${className}`}
     >
       <div className={pad}>
         <div className="flex items-start justify-between gap-3">
