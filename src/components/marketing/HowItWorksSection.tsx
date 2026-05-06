@@ -91,10 +91,10 @@ export function HowItWorksSection() {
           Five steps from search to close — including branded invoices. Click a step to explore — use arrow keys too.
         </p>
 
-        <div className="mt-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-6">
+        <div className="mt-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-5">
           <div
             ref={tablistRef}
-            className="w-full shrink-0 lg:max-w-[15.5rem]"
+            className="w-full shrink-0 lg:max-w-[14.75rem]"
             role="tablist"
             aria-label="How it works steps"
             tabIndex={0}
@@ -124,7 +124,7 @@ export function HowItWorksSection() {
                       tabIndex={on ? 0 : -1}
                       onClick={() => setActive(i)}
                       className={
-                        "group w-full rounded-lg border p-2 text-left transition sm:p-2.5 " +
+                        "group w-full rounded-lg border p-1.5 text-left transition sm:p-2 " +
                         (on
                           ? `${tone} shadow-sm ring-1`
                           : "border-slate-200/80 bg-white/60 hover:border-slate-300 hover:bg-white/80 dark:border-slate-700/50 dark:bg-slate-900/30 dark:hover:border-slate-600 dark:hover:bg-slate-900/40")
@@ -133,7 +133,7 @@ export function HowItWorksSection() {
                       <div className="flex items-start gap-1.5">
                         <span
                           className={
-                            "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[9px] font-extrabold " +
+                            "mt-px inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[8px] font-extrabold leading-none " +
                             (on
                               ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
                               : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100")
@@ -142,20 +142,20 @@ export function HowItWorksSection() {
                           {step.id}
                         </span>
                         <div className="min-w-0">
-                          <p className="text-[9px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          <p className="text-[8px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                             {step.eyebrow}
                           </p>
-                          <p className="mt-0.5 text-[13px] font-semibold leading-snug text-slate-900 dark:text-white">
+                          <p className="mt-0.5 text-[12px] font-semibold leading-snug text-slate-900 dark:text-white">
                             {step.title}
                           </p>
                           {on && (
-                            <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                            <p className="mt-1 text-[10px] leading-relaxed text-slate-600 dark:text-slate-300">
                               {step.body}
                             </p>
                           )}
                         </div>
                       </div>
-                      <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-slate-200/70 dark:bg-slate-700/50">
+                      <div className="mt-1 h-[3px] w-full overflow-hidden rounded-full bg-slate-200/70 dark:bg-slate-700/50">
                         <div
                           className={
                             "h-full rounded-full transition-all duration-300 " +
@@ -174,20 +174,20 @@ export function HowItWorksSection() {
             id={panelIds[active]}
             role="tabpanel"
             aria-labelledby={ids[active]}
-            className="relative flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 shadow-lg ring-1 ring-slate-900/5 backdrop-blur dark:border-slate-700/50 dark:bg-slate-900/40 dark:ring-white/5 sm:min-h-[272px] lg:min-h-[352px]"
+            className="relative flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 shadow-lg ring-1 ring-slate-900/5 backdrop-blur dark:border-slate-700/50 dark:bg-slate-900/40 dark:ring-white/5 sm:min-h-[260px] lg:min-h-[336px]"
           >
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_30%_20%,rgba(99,102,241,0.14),transparent)] dark:bg-[radial-gradient(ellipse_80%_60%_at_30%_20%,rgba(99,102,241,0.12),transparent)]" />
-            <div className="relative p-2.5 sm:p-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="relative p-2 sm:p-3.5">
+              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-300">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-indigo-600 dark:text-indigo-300">
                     Step {s.id}
                   </p>
-                  <p className="mt-0.5 text-base font-bold tracking-tight text-slate-900 dark:text-white sm:text-lg">
+                  <p className="mt-0.5 text-sm font-bold tracking-tight text-slate-900 dark:text-white sm:text-base">
                     {s.title}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="flex flex-wrap gap-1.5 text-[9px] font-semibold text-slate-600 dark:text-slate-300">
                   {s.id === 1 && <Pill>City + radius + category</Pill>}
                   {s.id === 2 && <Pill>Signals + tiers</Pill>}
                   {s.id === 3 && <Pill>Pipeline + follow-ups</Pill>}
@@ -196,7 +196,7 @@ export function HowItWorksSection() {
                 </div>
               </div>
 
-              <div className="mt-3">
+              <div className="mt-2.5">
                 {s.id === 1 && <VisualSearch />}
                 {s.id === 2 && <VisualScore />}
                 {s.id === 3 && <VisualPipeline />}
@@ -213,7 +213,7 @@ export function HowItWorksSection() {
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-0.5 text-[9px] dark:border-slate-700/60 dark:bg-slate-900/40">
+    <span className="rounded-full border border-slate-200/80 bg-white/80 px-2 py-0.5 text-[8px] leading-tight dark:border-slate-700/60 dark:bg-slate-900/40">
       {children}
     </span>
   );
