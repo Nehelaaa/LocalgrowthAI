@@ -8,6 +8,7 @@ import {
   type PlaceFilterState,
   type PlaceRow,
 } from "@/lib/place-search-scoring";
+import { contactStatusLabel, contactStatusPillClass } from "@/lib/contact-status";
 
 const steps = [
   {
@@ -423,45 +424,118 @@ function VisualScore() {
 function VisualPipeline() {
   return (
     <Frame>
-      <div className="grid gap-3 lg:grid-cols-3">
-        {[
-          { t: "New", tone: "slate", items: ["City Rooter LLC", "Greenway Plumbing"] },
-          { t: "Contacted", tone: "sky", items: ["Apex Plumbing Co."] },
-          { t: "Follow-up", tone: "amber", items: ["QuickFix Drains"] },
-        ].map((col) => (
-          <div key={col.t} className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                {col.t}
-              </p>
-              <span
-                className={
-                  "rounded-full px-2 py-0.5 text-[10px] font-extrabold " +
-                  (col.tone === "amber"
-                    ? "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200"
-                    : col.tone === "sky"
-                      ? "bg-sky-100 text-sky-900 dark:bg-sky-500/15 dark:text-sky-200"
-                      : "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-200")
-                }
-              >
-                {col.items.length}
-              </span>
-            </div>
-            <div className="mt-2 space-y-2">
-              {col.items.map((x) => (
-                <div
-                  key={x}
-                  className="rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40 dark:text-white"
-                >
-                  {x}
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    Next: follow up Thu
+      <div className="space-y-3">
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              CRM leads
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-900 dark:text-white">
+              Track status, score, and follow-ups
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-[10px] font-semibold text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-300">
+            Preview
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            {
+              name: "Apex Plumbing Co.",
+              city: "Austin",
+              state: "TX",
+              score: 92,
+              badge: "HOT" as const,
+              status: "INTERESTED" as const,
+              websiteQuote: "$1,800",
+              followUp: "Thu",
+            },
+            {
+              name: "City Rooter LLC",
+              city: "Austin",
+              state: "TX",
+              score: 78,
+              badge: "WARM" as const,
+              status: "CONTACTED" as const,
+              websiteQuote: "$2,400",
+              followUp: "Mon",
+            },
+            {
+              name: "Greenway Plumbing",
+              city: "Austin",
+              state: "TX",
+              score: 66,
+              badge: "COLD" as const,
+              status: "NOT_CONTACTED" as const,
+              websiteQuote: "—",
+              followUp: "—",
+            },
+            {
+              name: "Sunrise Hair Studio",
+              city: "Austin",
+              state: "TX",
+              score: 84,
+              badge: "WARM" as const,
+              status: "CONTACTED" as const,
+              websiteQuote: "$1,200",
+              followUp: "Fri",
+            },
+          ].map((lead) => (
+            <div
+              key={lead.name}
+              className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700/80 dark:bg-slate-900/60 dark:ring-white/[0.05]"
+            >
+              <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-br from-violet-50/80 to-white px-4 py-3 dark:border-slate-800 dark:from-violet-950/25 dark:to-slate-900/70">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{lead.name}</p>
+                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    {lead.city}, {lead.state}
                   </p>
                 </div>
-              ))}
+                <div
+                  className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-2xl bg-white shadow-inner shadow-slate-900/5 ring-1 ring-violet-200/60 dark:bg-slate-800 dark:ring-violet-500/20"
+                  aria-label={`Score ${lead.score}`}
+                >
+                  <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                    Score
+                  </span>
+                  <span className="text-base font-bold tabular-nums leading-none text-violet-700 dark:text-violet-300">
+                    {lead.score}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+                <span
+                  className={
+                    "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold " +
+                    (lead.badge === "HOT"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                      : lead.badge === "WARM"
+                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                        : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300")
+                  }
+                >
+                  {lead.badge}
+                </span>
+                <span
+                  className={
+                    "inline-flex min-h-[1.75rem] items-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium " +
+                    contactStatusPillClass[lead.status]
+                  }
+                >
+                  {contactStatusLabel[lead.status]}
+                </span>
+                <span className="ml-auto text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                  Website: <span className="font-semibold text-slate-800 dark:text-slate-100">{lead.websiteQuote}</span>
+                  {" · "}Follow-up{" "}
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">{lead.followUp}</span>
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </Frame>
   );
