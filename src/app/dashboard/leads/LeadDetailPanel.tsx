@@ -144,7 +144,7 @@ export function LeadDetailPanel({
         initialClientName={lead.business.name}
         initialClientAddress={lead.business.address ?? ""}
         initialWebsitePriceText={websiteQuote}
-        initialNotes={notes}
+        initialInvoiceNotes=""
       />
 
       <div

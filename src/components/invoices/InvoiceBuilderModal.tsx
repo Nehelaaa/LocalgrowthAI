@@ -38,7 +38,8 @@ type Props = {
   initialClientName: string;
   initialClientAddress: string;
   initialWebsitePriceText: string;
-  initialNotes: string;
+  /** Notes that appear on the invoice for the customer (NOT CRM lead notes). */
+  initialInvoiceNotes: string;
 };
 
 /** Template/accent/density from localStorage (invoice templates page) can be newer than React state. */
@@ -62,7 +63,7 @@ export function InvoiceBuilderModal({
   initialClientName,
   initialClientAddress,
   initialWebsitePriceText,
-  initialNotes,
+  initialInvoiceNotes,
 }: Props) {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -100,12 +101,12 @@ export function InvoiceBuilderModal({
     setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
     setClientName(initialClientName);
     setClientAddress(initialClientAddress);
-    setNotes(initialNotes);
+    setNotes(initialInvoiceNotes);
     const amt = parseMoneyFromQuote(initialWebsitePriceText);
     setLineItems([{ id: newLineId(), description: "Website", amount: amt }]);
     setTaxPercent(0);
     setDiscountAmount(0);
-  }, [open, initialClientName, initialClientAddress, initialWebsitePriceText, initialNotes]);
+  }, [open, initialClientName, initialClientAddress, initialWebsitePriceText, initialInvoiceNotes]);
 
   useEffect(() => {
     if (!open) return;
