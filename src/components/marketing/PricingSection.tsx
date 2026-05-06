@@ -130,7 +130,7 @@ export function PricingSection() {
               href="/register"
               className="mt-8 block text-center rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 text-sm font-semibold text-white shadow-md transition hover:from-violet-500 hover:to-indigo-500 dark:shadow-indigo-500/20"
             >
-              Create account — upgrade in the app
+              Create account
             </Link>
           </div>
         </div>
