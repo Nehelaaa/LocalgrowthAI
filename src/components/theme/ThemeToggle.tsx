@@ -1,7 +1,7 @@
 "use client";
 
 import { useThemePreference } from "./ThemeProvider";
-import { resolveEffectiveColorScheme } from "@/lib/theme-preference";
+import { readDomColorScheme, resolveEffectiveColorScheme } from "@/lib/theme-preference";
 
 type Props = {
   className?: string;
@@ -20,7 +20,7 @@ type Props = {
 
 export function ThemeToggle({ className = "", compact, hideCaption, iconOnly, embed }: Props) {
   const { preference, setPreference, mounted } = useThemePreference();
-  const effective = mounted ? resolveEffectiveColorScheme(preference) : "light";
+  const effective = mounted ? resolveEffectiveColorScheme(preference) : readDomColorScheme();
   const isDark = effective === "dark";
   const actionLabel = isDark ? "Light" : "Dark";
 

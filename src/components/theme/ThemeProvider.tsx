@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -39,16 +40,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>("system");
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    queueMicrotask(() => {
-      const stored = readStoredThemePreference();
-      if (stored) {
-        startTransition(() => setPreferenceState(stored));
-      }
-      applyThemePreference(stored ?? "system");
-      setMounted(true);
-      markThemeTransitionsReady();
-    });
+  useLayoutEffect(() => {
+    const stored = readStoredThemePreference();
+    const initial = stored ?? "system";
+    /* Sync from storage before first paint (boot script already set <html> class). Lazy useState init would mismatch SSR vs client. */
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration sync before paint
+    setPreferenceState(initial);
+    applyThemePreference(initial);
+    setMounted(true);
+    markThemeTransitionsReady();
   }, []);
 
   useEffect(() => {

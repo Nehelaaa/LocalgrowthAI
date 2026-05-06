@@ -49,6 +49,12 @@ export function readStoredThemePreference(): ThemePreference | null {
   return null;
 }
 
+/** Reads current `dark` class on `<html>` (set by boot script before React). */
+export function readDomColorScheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
 /**
  * Minified boot snippet (legacy / tests). Production layout loads `/lgai-theme-boot.js` via `next/script`
  * — keep that file in sync when changing storage key or boot logic.
