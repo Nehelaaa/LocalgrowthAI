@@ -6,9 +6,10 @@ import {
   completeOnboarding,
   type OnboardingState,
 } from "@/actions/onboarding";
+import { BotTrapFields } from "@/components/forms/BotTrapFields";
+import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
 
 const onboardingInitialState: OnboardingState = {};
-import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
 
 const order = (Object.keys(PROFESSIONS) as ProfessionId[]).sort(
   (a, b) => PROFESSIONS[a].order - PROFESSIONS[b].order
@@ -33,7 +34,8 @@ export function OnboardingForm({
   }, [state?.success, router]);
 
   return (
-    <form action={action} className="mt-6 space-y-5">
+    <form action={action} className="relative mt-6 space-y-5">
+      <BotTrapFields />
       {state?.error && (
         <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
       )}

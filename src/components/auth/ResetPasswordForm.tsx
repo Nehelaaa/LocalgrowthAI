@@ -8,6 +8,7 @@ import {
   resetPasswordWithToken,
   type ResetPasswordState,
 } from "@/actions/password-reset";
+import { BotTrapFields } from "@/components/forms/BotTrapFields";
 
 const init: ResetPasswordState = {};
 
@@ -34,7 +35,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form action={action} className="mt-6 space-y-4">
+    <form action={action} className="relative mt-6 space-y-4">
+      <BotTrapFields />
       <input type="hidden" name="token" value={token} />
       {(state.error || state.fieldErrors) && (
         <p className="text-sm text-red-600 dark:text-red-400">

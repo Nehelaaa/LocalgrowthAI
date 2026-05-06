@@ -7,7 +7,8 @@ export function systemPrefersDark(): boolean {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-function resolvedColorScheme(pref: ThemePreference): "light" | "dark" {
+/** Resolved UI theme for a stored preference (treats `system` via `prefers-color-scheme`). */
+export function resolveEffectiveColorScheme(pref: ThemePreference): "light" | "dark" {
   if (pref === "dark") return "dark";
   if (pref === "light") return "light";
   return systemPrefersDark() ? "dark" : "light";
@@ -24,7 +25,7 @@ export function applyThemePreference(pref: ThemePreference): void {
   } else {
     root.classList.toggle("dark", systemPrefersDark());
   }
-  root.style.colorScheme = resolvedColorScheme(pref);
+  root.style.colorScheme = resolveEffectiveColorScheme(pref);
 }
 
 /** Enables CSS theme transitions after paint (avoids animating the first paint / hydration). */

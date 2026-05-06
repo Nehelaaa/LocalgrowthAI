@@ -4,7 +4,13 @@ import { z } from "zod";
 import { hash } from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import {
+  botRejectedUserMessage,
+  isBotHoneypotTripped,
+} from "@/lib/form-bot-guard";
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
+import { rateLimitAuthForm } from "@/lib/rate-limit-auth-forms";
+import { getClientIp } from "@/lib/request-ip";
 
 const professionIds = Object.keys(PROFESSIONS) as [ProfessionId, ...ProfessionId[]];
 
@@ -30,6 +36,16 @@ export async function registerUser(
   _prev: RegisterState,
   formData: FormData
 ): Promise<RegisterState> {
+  if (isBotHoneypotTripped(formData)) {
+    return { error: botRejectedUserMessage() };
+  }
+  const ip = await getClientIp();
+  if (!rateLimitAuthForm(`register:${ip}`).success) {
+    return {
+      error: "Too many sign-up attempts from this network. Please wait a few minutes and try again.",
+    };
+  }
+
   const raw = {
     name: String(formData.get("name") ?? "").trim(),
     email: String(formData.get("email") ?? "")

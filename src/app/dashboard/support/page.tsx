@@ -10,9 +10,9 @@ export default async function SupportPage() {
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
           Contact support
         </h1>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Send a question or issue to our team. Your message is delivered to the
-          same inbox we use for customer support.
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          Send a question or issue to our team — with optional screenshots or PDFs. Messages
+          go to the same inbox we use for customer support.
         </p>
       </div>
       <SupportContactForm accountEmail={user.email} />

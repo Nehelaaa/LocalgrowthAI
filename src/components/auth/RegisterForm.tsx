@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { registerUser, type RegisterState } from "@/actions/register";
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
+import { BotTrapFields } from "@/components/forms/BotTrapFields";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { GoogleSetupHint } from "./GoogleSetupHint";
 import { postLoginContinueUrl } from "@/lib/post-login-continue";
@@ -69,7 +70,8 @@ export function RegisterForm({
     <div className="mt-6 space-y-5">
       {!hasGoogle && <GoogleSetupHint />}
 
-      <form ref={formRef} id="register-form" className="space-y-4" action={action}>
+      <form ref={formRef} id="register-form" className="relative space-y-4" action={action}>
+        <BotTrapFields />
         {state?.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
         <div>
           <label

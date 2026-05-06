@@ -5,6 +5,12 @@ import { z } from "zod";
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { getAppOriginForRequest } from "@/lib/app-origin";
+import {
+  botRejectedUserMessage,
+  isBotHoneypotTripped,
+} from "@/lib/form-bot-guard";
+import { rateLimitAuthForm } from "@/lib/rate-limit-auth-forms";
+import { getClientIp } from "@/lib/request-ip";
 import { sendPasswordResetEmail } from "@/lib/send-password-reset-email";
 
 const emailSchema = z.object({
@@ -29,6 +35,16 @@ export async function requestPasswordReset(
   _prev: ForgotPasswordState,
   formData: FormData
 ): Promise<ForgotPasswordState> {
+  if (isBotHoneypotTripped(formData)) {
+    return { error: botRejectedUserMessage() };
+  }
+  const ip = await getClientIp();
+  if (!rateLimitAuthForm(`forgot:${ip}`).success) {
+    return {
+      error: "Too many reset requests. Please wait before trying again.",
+    };
+  }
+
   const rawEmail = String(formData.get("email") ?? "")
     .toLowerCase()
     .trim();
@@ -99,6 +115,16 @@ export async function resetPasswordWithToken(
   _prev: ResetPasswordState,
   formData: FormData
 ): Promise<ResetPasswordState> {
+  if (isBotHoneypotTripped(formData)) {
+    return { error: botRejectedUserMessage() };
+  }
+  const ip = await getClientIp();
+  if (!rateLimitAuthForm(`reset:${ip}`).success) {
+    return {
+      error: "Too many attempts. Please wait a few minutes and try again.",
+    };
+  }
+
   const raw = {
     token: String(formData.get("token") ?? ""),
     password: String(formData.get("password") ?? ""),

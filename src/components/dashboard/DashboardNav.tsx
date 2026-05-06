@@ -8,6 +8,7 @@ import type { FC } from "react";
 import { ManageBillingButton } from "./ManageBillingButton";
 import { UpgradeButton } from "./UpgradeButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BRAND_WORDMARK_NAV } from "@/lib/brand-wordmark";
 
 const nav: {
   href: string;
@@ -206,30 +207,36 @@ function NavList({
   );
 }
 
-const brandWordmarkClass =
-  "block bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text font-bold leading-tight tracking-tight text-transparent dark:from-violet-300 dark:to-indigo-300";
-
 function BrandBlock({ small }: { small?: boolean }) {
   return (
     <Link
       href="/dashboard"
-      className="group flex items-center gap-2 transition hover:opacity-90 touch-manipulation"
+      className="group flex w-max max-w-full items-center gap-2 overflow-visible transition hover:opacity-90 touch-manipulation"
     >
       <Image
         src="/favicon.svg"
         alt="LocalLeadster"
         className={
-          "rounded-xl shadow-md shadow-indigo-500/20 " + (small ? "h-8 w-8" : "h-9 w-9")
+          "shrink-0 rounded-xl shadow-md shadow-indigo-500/20 " + (small ? "h-8 w-8" : "h-9 w-9")
         }
         width={small ? 32 : 36}
         height={small ? 32 : 36}
         priority
       />
-      <span className="min-w-0">
-        <span className={small ? "text-[15px] " + brandWordmarkClass : "text-[15px] md:text-base " + brandWordmarkClass}>
+      <span className="min-w-0 shrink-0 overflow-visible">
+        <span
+          className={
+            BRAND_WORDMARK_NAV +
+            (small ? " text-[15px]" : " text-[15px] md:text-base")
+          }
+        >
           LocalLeadster
         </span>
-        {!small && <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Pipeline</span>}
+        {!small && (
+          <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+            Pipeline
+          </span>
+        )}
       </span>
     </Link>
   );
@@ -241,28 +248,45 @@ function FooterHome({
   user?: { email: string; name?: string | null; isPro: boolean };
 }) {
   return (
-    <div className="sticky bottom-0 z-10 shrink-0 space-y-2 border-t border-slate-200/80 bg-white/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/60">
-      {user && (
-        <div className="rounded-xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white/70 p-3 shadow-sm dark:border-slate-700/50 dark:from-slate-800/40 dark:to-slate-900/30">
-          <p className="truncate text-xs font-semibold text-slate-600 dark:text-slate-300">
-            {user.name || user.email}
-          </p>
-          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-            {user.isPro ? "Pro" : "Free plan"}
-          </p>
-          {!user.isPro && <UpgradeButton className="mt-2 w-full" label="Upgrade to Pro" />}
-          {user.isPro && <ManageBillingButton className="mt-2 w-full" />}
+    <div className="sticky bottom-0 z-10 shrink-0 border-t border-slate-200/80 bg-gradient-to-b from-slate-50/95 to-white/90 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:from-slate-950/95 dark:to-slate-900/90">
+      <div className="overflow-hidden rounded-xl border border-slate-200/70 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700/50 dark:bg-slate-900/75 dark:shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
+        <div className="px-3 py-2.5">
+          <ThemeToggle embed />
         </div>
-      )}
-      <div className="rounded-xl border border-slate-200/80 bg-white/70 p-1 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/20">
+        {user ? (
+          <>
+            <div className="mx-3 h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
+            <div className="px-3 py-3">
+              <p className="truncate text-sm font-semibold leading-tight text-slate-900 dark:text-slate-50">
+                {user.name || user.email}
+              </p>
+              <p
+                className={
+                  "mt-1 text-[10px] font-bold uppercase tracking-wider " +
+                  (user.isPro
+                    ? "text-indigo-600 dark:text-indigo-400"
+                    : "text-slate-500 dark:text-slate-400")
+                }
+              >
+                {user.isPro ? "Pro" : "Free plan"}
+              </p>
+              {!user.isPro ? (
+                <UpgradeButton className="mt-3 w-full" label="Upgrade to Pro" />
+              ) : (
+                <ManageBillingButton className="mt-3 w-full px-3" label="Manage billing" />
+              )}
+            </div>
+          </>
+        ) : null}
+        <div className="mx-3 h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
         <Link
           href="/sign-out"
           prefetch={false}
-          className="group flex w-full min-h-[44px] items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 dark:text-slate-200 dark:hover:bg-red-950/30 dark:hover:text-red-200"
+          className="group flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500/30 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
         >
           <span>Sign out</span>
           <svg
-            className="h-4 w-4 text-slate-400 transition-colors group-hover:text-red-500 dark:text-slate-500 dark:group-hover:text-red-300"
+            className="h-4 w-4 text-slate-400 transition-colors group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -352,9 +376,6 @@ export function DashboardNav({
             <div className="min-h-0 flex-1 overflow-y-auto">
               <NavList pathname={pathname} onNavigate={close} compact items={navItems} />
             </div>
-            <div className="shrink-0 border-t border-slate-200/80 p-3 dark:border-slate-800/80">
-              <ThemeToggle compact />
-            </div>
             <FooterHome user={user} />
           </aside>
         </div>
@@ -366,9 +387,6 @@ export function DashboardNav({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
           <NavList pathname={pathname} items={navItems} />
-        </div>
-        <div className="shrink-0 border-t border-slate-200/80 p-3 dark:border-slate-800/80">
-          <ThemeToggle />
         </div>
         <FooterHome user={user} />
       </aside>

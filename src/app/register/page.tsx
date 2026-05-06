@@ -5,6 +5,7 @@ import { postLoginContinueUrl } from "@/lib/post-login-continue";
 import Link from "next/link";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
 
 export const metadata: Metadata = {
   title: "Create account",
@@ -21,20 +22,18 @@ export default function RegisterPage() {
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.18),transparent)] dark:bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.12),transparent)]"
         aria-hidden
       />
-      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-800/80 dark:bg-slate-900">
+      <div className="relative z-10 w-full max-w-lg overflow-x-clip overflow-y-visible rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-800/80 dark:bg-slate-900">
         <div className="border-b border-slate-200/70 bg-gradient-to-b from-white to-slate-50/60 p-7 dark:border-slate-800/70 dark:from-slate-900 dark:to-slate-900/60">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-visible">
           <Image
             src="/favicon.svg"
             alt="LocalLeadster"
-            className="h-9 w-9 rounded-xl shadow-md"
+            className="h-9 w-9 shrink-0 rounded-xl shadow-md"
             width={36}
             height={36}
             priority
           />
-          <span className="bg-gradient-to-r from-violet-700 via-indigo-600 to-blue-600 bg-clip-text text-lg font-bold text-transparent dark:from-violet-300 dark:via-indigo-300 dark:to-sky-300">
-            LocalLeadster
-          </span>
+          <span className={BRAND_WORDMARK_LG}>LocalLeadster</span>
           </div>
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Create an account

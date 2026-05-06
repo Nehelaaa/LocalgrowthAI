@@ -1,13 +1,7 @@
 "use client";
 
 import { useThemePreference } from "./ThemeProvider";
-import type { ThemePreference } from "@/lib/theme-preference";
-
-const modes: { id: ThemePreference; label: string; short: string }[] = [
-  { id: "light", label: "Light theme", short: "Light" },
-  { id: "system", label: "Match device (system)", short: "Auto" },
-  { id: "dark", label: "Dark theme", short: "Dark" },
-];
+import { resolveEffectiveColorScheme } from "@/lib/theme-preference";
 
 type Props = {
   className?: string;
@@ -15,53 +9,81 @@ type Props = {
   compact?: boolean;
   /** Hide “Appearance” caption (e.g. marketing header). */
   hideCaption?: boolean;
+  /**
+   * Dashboard sidebar: one row (“Theme” + switch), no outer panel chrome —
+   * parent provides the card and dividers.
+   */
+  embed?: boolean;
 };
 
-export function ThemeToggle({ className = "", compact, hideCaption }: Props) {
+export function ThemeToggle({ className = "", compact, hideCaption, embed }: Props) {
   const { preference, setPreference, mounted } = useThemePreference();
+  const effective = mounted ? resolveEffectiveColorScheme(preference) : "light";
+  const isDark = effective === "dark";
+  const actionLabel = isDark ? "Light" : "Dark";
 
-  const group = (
-    <div
+  const controlButtonClass = embed
+    ? "inline-flex shrink-0 items-center justify-between gap-2 rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800 "
+    : "flex min-h-9 w-full items-center justify-between gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100/90 dark:border-slate-600/80 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800/80 " +
+      (compact ? "" : "sm:px-3 ");
+
+  const control = (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      title={isDark ? "Use light theme" : "Use dark theme"}
+      disabled={!mounted}
+      onClick={() => setPreference(isDark ? "light" : "dark")}
       className={
-        "inline-flex w-full rounded-lg border border-slate-200/90 bg-slate-50/90 p-0.5 dark:border-slate-600/80 dark:bg-slate-800/50 " +
-        (compact ? "max-w-full" : "")
+        controlButtonClass + (!mounted ? "cursor-wait opacity-70" : "touch-manipulation")
       }
-      role="group"
-      aria-label="Color theme"
     >
-      {modes.map((m) => {
-        const active = mounted && preference === m.id;
-        return (
-          <button
-            key={m.id}
-            type="button"
-            title={m.label}
-            aria-pressed={active}
-            aria-label={m.label}
-            disabled={!mounted}
-            onClick={() => setPreference(m.id)}
-            className={
-              "min-h-9 flex-1 rounded-md px-1.5 text-center text-[11px] font-semibold transition-colors duration-200 touch-manipulation sm:px-2 sm:text-xs " +
-              (active
-                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-700 dark:text-white dark:ring-slate-600/80"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100")
-            }
-          >
-            {m.short}
-          </button>
-        );
-      })}
-    </div>
+      <span className="tabular-nums">{actionLabel}</span>
+      <span
+        className={
+          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-px transition-colors duration-200 " +
+          (isDark ? "bg-indigo-600" : "bg-slate-300 dark:bg-slate-500")
+        }
+        aria-hidden
+      >
+        <span
+          className={
+            "pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out " +
+            (isDark ? "translate-x-4" : "translate-x-0.5")
+          }
+        />
+      </span>
+    </button>
   );
+
+  if (embed) {
+    return (
+      <div className={"flex items-center justify-between gap-3 " + className}>
+        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Theme</span>
+        {control}
+        {!mounted ? (
+          <span className="sr-only">Loading theme preference</span>
+        ) : (
+          <span className="sr-only">
+            Color theme: {effective}. Switch to {actionLabel.toLowerCase()} mode.
+          </span>
+        )}
+      </div>
+    );
+  }
 
   if (hideCaption) {
     return (
       <div className={className}>
-        {group}
+        {control}
         {!mounted ? (
           <span className="sr-only">Loading theme preference</span>
         ) : (
-          <span className="sr-only">Current theme: {preference}</span>
+          <span className="sr-only">
+            Color theme: {effective}. Switch to {actionLabel.toLowerCase()} mode.
+          </span>
         )}
       </div>
     );
@@ -78,13 +100,14 @@ export function ThemeToggle({ className = "", compact, hideCaption }: Props) {
       <p className="px-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         Appearance
       </p>
-      {group}
+      {control}
       {!mounted ? (
         <span className="sr-only">Loading theme preference</span>
       ) : (
-        <span className="sr-only">Current theme: {preference}</span>
+        <span className="sr-only">
+          Color theme: {effective}. Switch to {actionLabel.toLowerCase()} mode.
+        </span>
       )}
     </div>
   );
 }
-

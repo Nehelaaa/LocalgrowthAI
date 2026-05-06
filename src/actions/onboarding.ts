@@ -2,9 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUserForAction } from "@/lib/session-user";
 import { prisma } from "@/lib/db";
+import {
+  botRejectedUserMessage,
+  isBotHoneypotTripped,
+} from "@/lib/form-bot-guard";
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
+import { requireUserForAction } from "@/lib/session-user";
 
 const professionIds = Object.keys(PROFESSIONS) as [ProfessionId, ...ProfessionId[]];
 const professionSchema = z.union([z.enum(professionIds), z.literal("")]);
@@ -15,6 +19,9 @@ export async function completeOnboarding(
   _prev: OnboardingState,
   formData: FormData
 ): Promise<OnboardingState> {
+  if (isBotHoneypotTripped(formData)) {
+    return { error: botRejectedUserMessage() };
+  }
   const user = await requireUserForAction();
   const prof = String(formData.get("profession") ?? "");
   const parsed = professionSchema.safeParse(prof);

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { supportMailtoHref } from "@/lib/support-inbox";
+import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
 
 export function MarketingShell({
   children,
@@ -25,11 +25,11 @@ export function MarketingShell({
       </a>
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-3.5">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex min-w-0 items-center gap-2 overflow-visible">
             <Image
               src="/favicon.svg"
               alt="LocalLeadster"
-              className="h-9 w-9 rounded-xl shadow-md sm:hidden"
+              className="h-9 w-9 shrink-0 rounded-xl shadow-md sm:hidden"
               width={36}
               height={36}
               priority
@@ -37,14 +37,12 @@ export function MarketingShell({
             <Image
               src="/logo.svg"
               alt="LocalLeadster"
-              className="hidden h-10 w-auto max-w-[min(240px,52vw)] rounded-lg sm:block"
+              className="hidden h-10 w-auto max-w-[min(280px,58vw)] rounded-lg sm:block"
               width={240}
               height={70}
               priority
             />
-            <span className="bg-gradient-to-r from-violet-700 via-indigo-600 to-blue-600 bg-clip-text text-lg font-bold tracking-tight text-transparent dark:from-violet-300 dark:via-indigo-300 dark:to-sky-300 sm:hidden">
-              LocalLeadster
-            </span>
+            <span className={`shrink-0 sm:hidden ${BRAND_WORDMARK_LG}`}>LocalLeadster</span>
           </Link>
           <nav
             className="hidden items-center gap-1 text-sm font-medium text-slate-600 sm:flex dark:text-slate-300"
@@ -86,7 +84,7 @@ export function MarketingShell({
       <main id="main">{children}</main>
 
       <footer
-        className="border-t border-slate-200/80 bg-slate-50/90 py-12 text-center text-sm text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/80 dark:text-slate-400"
+        className="relative z-20 border-t border-slate-200/80 bg-slate-50/90 py-12 text-center text-sm text-slate-500 dark:border-slate-800/80 dark:bg-slate-950/80 dark:text-slate-400"
         role="contentinfo"
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -116,12 +114,12 @@ export function MarketingShell({
             <Link href="/#pricing" className="hover:underline">
               Pricing
             </Link>
-            <a
-              href={supportMailtoHref()}
-              className="text-indigo-600 hover:underline dark:text-indigo-400"
+            <Link
+              href="/contact"
+              className="text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
             >
               Contact customer support
-            </a>
+            </Link>
           </nav>
         </div>
       </footer>

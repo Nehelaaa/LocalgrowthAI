@@ -6,6 +6,7 @@ import {
   requestPasswordReset,
   type ForgotPasswordState,
 } from "@/actions/password-reset";
+import { BotTrapFields } from "@/components/forms/BotTrapFields";
 
 const init: ForgotPasswordState = {};
 
@@ -38,7 +39,8 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form action={action} className="mt-6 space-y-4">
+    <form action={action} className="relative mt-6 space-y-4">
+      <BotTrapFields />
       {state.error && (
         <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
       )}

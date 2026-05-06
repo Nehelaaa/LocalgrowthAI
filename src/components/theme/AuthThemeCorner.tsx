@@ -5,7 +5,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 /** Fixed control for auth/onboarding pages (no dashboard nav). */
 export function AuthThemeCorner() {
   return (
-    <div className="pointer-events-auto fixed right-3 top-3 z-[80] w-[min(calc(100vw-1.5rem),11.5rem)] pt-[max(0px,env(safe-area-inset-top))] sm:right-5 sm:top-5">
+    <div className="pointer-events-auto fixed right-3 top-3 z-[80] w-[min(calc(100vw-1.5rem),9.5rem)] pt-[max(0px,env(safe-area-inset-top))] sm:right-5 sm:top-5">
       <ThemeToggle
         hideCaption
         compact

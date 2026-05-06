@@ -1,27 +1,89 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { BOT_HONEYPOT_FIELD } from "@/lib/form-bot-guard";
+import {
+  SUPPORT_MAX_ATTACHMENTS,
+  SUPPORT_MAX_SINGLE_FILE_BYTES,
+  SUPPORT_MAX_TOTAL_ATTACHMENT_BYTES,
+  isAllowedSupportFile,
+  supportAttachmentMimeLabel,
+} from "@/lib/support-attachments";
 import { supportMailtoHref } from "@/lib/support-inbox";
 
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function SupportContactForm({ accountEmail }: { accountEmail: string }) {
+  const fileRef = useRef<HTMLInputElement>(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileHint, setFileHint] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [devNotice, setDevNotice] = useState(false);
+
+  const totalBytes = files.reduce((a, f) => a + f.size, 0);
+
+  const tryAddFiles = useCallback((incoming: FileList | File[]) => {
+    setFileHint(null);
+    const list = [...incoming].filter((f) => f.size > 0);
+    if (list.length === 0) return;
+
+    setFiles((prev) => {
+      let next = [...prev];
+      for (const f of list) {
+        if (!isAllowedSupportFile(f.type, f.name)) {
+          setFileHint(`Skipped “${f.name}” — only ${supportAttachmentMimeLabel()}.`);
+          continue;
+        }
+        if (f.size > SUPPORT_MAX_SINGLE_FILE_BYTES) {
+          setFileHint(`“${f.name}” is too large (max ${formatBytes(SUPPORT_MAX_SINGLE_FILE_BYTES)} per file).`);
+          continue;
+        }
+        if (next.length >= SUPPORT_MAX_ATTACHMENTS) {
+          setFileHint(`You can attach up to ${SUPPORT_MAX_ATTACHMENTS} files.`);
+          break;
+        }
+        const dup = next.some((e) => e.name === f.name && e.size === f.size);
+        if (dup) continue;
+        const newTotal = next.reduce((s, x) => s + x.size, 0) + f.size;
+        if (newTotal > SUPPORT_MAX_TOTAL_ATTACHMENT_BYTES) {
+          setFileHint(`Total size would exceed ${formatBytes(SUPPORT_MAX_TOTAL_ATTACHMENT_BYTES)}. Remove a file or pick a smaller one.`);
+          break;
+        }
+        next = [...next, f];
+      }
+      return next;
+    });
+  }, []);
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFileHint(null);
+  };
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("loading");
     setError(null);
     setDevNotice(false);
+    setFileHint(null);
     try {
+      const fd = new FormData();
+      fd.append("subject", subject);
+      fd.append("message", message);
+      fd.append(BOT_HONEYPOT_FIELD, "");
+      for (const f of files) {
+        fd.append("files", f);
+      }
       const res = await fetch("/api/support", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, message }),
+        body: fd,
       });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -37,116 +99,198 @@ export function SupportContactForm({ accountEmail }: { accountEmail: string }) {
       if (data.loggedToConsole) setDevNotice(true);
       setSubject("");
       setMessage("");
+      setFiles([]);
+      if (fileRef.current) fileRef.current.value = "";
     } catch {
       setStatus("error");
       setError("Network error — check your connection and try again.");
     }
   }
 
+  const [dragOver, setDragOver] = useState(false);
+
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-5 rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/50"
+      className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_4px_24px_-4px_rgba(15,23,42,0.08)] ring-1 ring-slate-900/[0.03] dark:border-slate-700/80 dark:bg-slate-900/60 dark:shadow-[0_4px_24px_-4px_rgba(0,0,0,0.4)] dark:ring-white/[0.04]"
     >
-      <div>
-        <label
-          htmlFor="support-account-email"
-          className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-        >
-          Your account email
-        </label>
-        <p
-          id="support-account-email"
-          className="mt-1 text-sm text-slate-600 dark:text-slate-400"
-        >
-          {accountEmail}{" "}
-          <span className="text-slate-500 dark:text-slate-500">
-            (we attach this to your message so we can reply)
-          </span>
+      <div className="border-b border-slate-100 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50/50 px-6 py-5 dark:border-slate-700/50 dark:from-indigo-950/30 dark:via-slate-900/80 dark:to-slate-950/50">
+        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/60 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-indigo-700 shadow-sm dark:border-indigo-500/30 dark:bg-slate-900/80 dark:text-indigo-300">
+          Signed in as
+        </div>
+        <p className="mt-2 truncate text-sm font-semibold text-slate-900 dark:text-slate-50">{accountEmail}</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+          Replies go to this address. You don&apos;t need to type it again below.
         </p>
       </div>
 
-      <div>
-        <label
-          htmlFor="support-subject"
-          className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-        >
-          Subject
-        </label>
-        <input
-          id="support-subject"
-          name="subject"
-          required
-          minLength={3}
-          maxLength={200}
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          autoComplete="off"
-          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none ring-indigo-500/0 transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-          placeholder="Brief summary of your question"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="support-message"
-          className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-        >
-          Message
-        </label>
-        <textarea
-          id="support-message"
-          name="message"
-          required
-          minLength={10}
-          maxLength={8000}
-          rows={8}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none ring-indigo-500/0 transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-          placeholder="Describe what you need help with — steps to reproduce, screenshots in your reply email, etc."
-        />
-      </div>
-
-      {status === "error" && error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
-          {error}{" "}
-          <a
-            className="font-medium underline"
-            href="mailto:localleadster@gmail.com?subject=LocalLeadster%20support"
+      <div className="space-y-5 px-6 py-6">
+        <div>
+          <label
+            htmlFor="support-subject"
+            className="block text-sm font-semibold text-slate-800 dark:text-slate-200"
           >
-            Email us directly
-          </a>
-        </p>
-      )}
+            Subject
+          </label>
+          <input
+            id="support-subject"
+            name="subject"
+            required
+            minLength={3}
+            maxLength={200}
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            autoComplete="off"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/25 dark:border-slate-600 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:bg-slate-950"
+            placeholder="Brief summary of your question"
+          />
+        </div>
 
-      {status === "success" && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-200">
-          Thanks — your message was sent. We&apos;ll get back to you at{" "}
-          <span className="font-medium">{accountEmail}</span>.
-          {devNotice && (
-            <span className="mt-1 block text-emerald-800/90 dark:text-emerald-300/90">
-              (Dev: Resend isn&apos;t configured — check the server terminal for
-              the logged message.)
+        <div>
+          <label
+            htmlFor="support-message"
+            className="block text-sm font-semibold text-slate-800 dark:text-slate-200"
+          >
+            Message
+          </label>
+          <textarea
+            id="support-message"
+            name="message"
+            required
+            minLength={10}
+            maxLength={8000}
+            rows={7}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/25 dark:border-slate-600 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:bg-slate-950"
+            placeholder="What happened, what you expected, and any steps to reproduce. Screenshots help — attach them below."
+          />
+          <p className="mt-1.5 text-right text-[11px] text-slate-400 dark:text-slate-500">
+            {message.length.toLocaleString()} / 8,000
+          </p>
+        </div>
+
+        <div>
+          <span className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
+            Attachments{" "}
+            <span className="font-normal text-slate-500 dark:text-slate-400">(optional)</span>
+          </span>
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+            {supportAttachmentMimeLabel()} · up to {SUPPORT_MAX_ATTACHMENTS} files ·{" "}
+            {formatBytes(SUPPORT_MAX_SINGLE_FILE_BYTES)} each ·{" "}
+            {formatBytes(SUPPORT_MAX_TOTAL_ATTACHMENT_BYTES)} total
+          </p>
+          <input
+            ref={fileRef}
+            type="file"
+            className="sr-only"
+            multiple
+            accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,application/pdf,image/png,image/jpeg,image/webp,image/gif,text/plain"
+            onChange={(e) => {
+              if (e.target.files?.length) tryAddFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOver(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOver(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOver(false);
+              if (e.dataTransfer.files?.length) tryAddFiles(e.dataTransfer.files);
+            }}
+            className={
+              "mt-2 flex w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors " +
+              (dragOver
+                ? "border-indigo-400 bg-indigo-50/80 dark:border-indigo-500 dark:bg-indigo-950/40"
+                : "border-slate-200 bg-slate-50/40 hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-600 dark:bg-slate-950/40 dark:hover:border-slate-500 dark:hover:bg-slate-900/50")
+            }
+          >
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              Drop files here or click to browse
             </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {files.length} / {SUPPORT_MAX_ATTACHMENTS} files · {formatBytes(totalBytes)} total
+            </span>
+          </button>
+          {fileHint && (
+            <p className="mt-2 text-xs text-amber-800 dark:text-amber-200/90" role="status">
+              {fileHint}
+            </p>
           )}
-        </p>
-      )}
+          {files.length > 0 && (
+            <ul className="mt-3 space-y-2">
+              {files.map((f, i) => (
+                <li
+                  key={`${f.name}-${i}-${f.size}`}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-200/90 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950/50"
+                >
+                  <span className="min-w-0 truncate text-slate-800 dark:text-slate-200" title={f.name}>
+                    {f.name}
+                  </span>
+                  <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                    {formatBytes(f.size)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(i)}
+                    className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {status === "loading" ? "Sending…" : "Send message"}
-        </button>
-        <a
-          href={supportMailtoHref()}
-          className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-        >
-          Open mail app instead
-        </a>
+        {status === "error" && error && (
+          <p className="rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-800 dark:bg-red-950/35 dark:text-red-200">
+            {error}{" "}
+            <a className="font-semibold underline" href={supportMailtoHref()}>
+              Email us directly
+            </a>
+          </p>
+        )}
+
+        {status === "success" && (
+          <p className="rounded-xl bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-200">
+            Thanks — your message was sent. We&apos;ll get back to you at{" "}
+            <span className="font-semibold">{accountEmail}</span>.
+            {devNotice && (
+              <span className="mt-1 block text-emerald-800/90 dark:text-emerald-300/90">
+                (Dev: Resend isn&apos;t configured — check the server terminal for the logged message.)
+              </span>
+            )}
+          </p>
+        )}
+
+        <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between dark:border-slate-700/50">
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          >
+            {status === "loading" ? "Sending…" : "Send message"}
+          </button>
+          <a
+            href={supportMailtoHref()}
+            className="text-center text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400 sm:text-left"
+          >
+            Open mail app instead
+          </a>
+        </div>
       </div>
     </form>
   );

@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const isDev = process.env.NODE_ENV === "development";
+    const isProd = process.env.NODE_ENV === "production";
     const scriptSrc = [
       "script-src 'self'",
       "'unsafe-inline'",
@@ -29,6 +30,7 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "object-src 'none'",
       "frame-ancestors 'none'",
+      "form-action 'self'",
       "img-src 'self' https: data:",
       "font-src 'self' https: data:",
       // Next renders JSON-LD via inline <script>, and the demo page includes the Tailwind CDN script.
@@ -36,22 +38,30 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https:",
       "connect-src 'self' https://api.stripe.com https://*.stripe.com https://places.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com",
       "frame-src https://js.stripe.com https://accounts.google.com",
+      ...(isProd ? ["upgrade-insecure-requests"] : []),
     ].join("; ");
+
+    const common: { key: string; value: string }[] = [
+      { key: "Content-Security-Policy", value: csp },
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+      { key: "X-DNS-Prefetch-Control", value: "off" },
+    ];
+
+    /** HSTS on plain HTTP/dev breaks local testing and is meant for HTTPS deployments only. */
+    if (isProd) {
+      common.push({
+        key: "Strict-Transport-Security",
+        value: "max-age=31536000; includeSubDomains; preload",
+      });
+    }
 
     return [
       {
         source: "/:path*",
-        headers: [
-          { key: "Content-Security-Policy", value: csp },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains; preload",
-          },
-        ],
+        headers: common,
       },
     ];
   },
