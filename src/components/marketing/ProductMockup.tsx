@@ -53,7 +53,7 @@ export function ProductMockup() {
           ))}
         </div>
 
-        <div className="p-3 sm:p-4 sm:pr-[236px]">
+        <div className="p-3 sm:p-4">
           <div key={tab} className="lgai-mock-fade">
             {tab === "search" && <PanelSearch />}
             {tab === "crm" && <PanelCrm />}
@@ -61,57 +61,8 @@ export function ProductMockup() {
             {tab === "close" && <PanelClose />}
           </div>
         </div>
-
-        {/* Lightweight “selling” callouts for first-glance clarity */}
-        <div className="pointer-events-none absolute right-3 top-[64px] hidden w-[210px] space-y-2 sm:block">
-          {tab === "search" && (
-            <>
-              <Callout title="Google-business results" body="Names, ratings, phone, and quick signals at a glance." />
-              <Callout title="Save in one click" body="Build your pipeline while you search." tone="indigo" />
-            </>
-          )}
-          {tab === "crm" && (
-            <>
-              <Callout title="Prioritize fast" body="HOT / WARM / COLD tiers + next step." />
-              <Callout title="Active leads first" body="Interested & contacted rise to the top of your list." tone="indigo" />
-            </>
-          )}
-          {tab === "invoice" && (
-            <>
-              <Callout title="Branded PDFs" body="Layouts, logo, and accent — saved once, used everywhere." />
-              <Callout title="From the lead" body="Open any CRM row → build & download in seconds." tone="indigo" />
-            </>
-          )}
-          {tab === "close" && (
-            <>
-              <Callout title="Track money in play" body="Deal value + close date per opportunity." />
-              <Callout title="Close faster" body="See what’s closing this week and follow up on time." tone="indigo" />
-            </>
-          )}
-        </div>
       </div>
 
-    </div>
-  );
-}
-
-function Callout({
-  title,
-  body,
-  tone,
-}: {
-  title: string;
-  body: string;
-  tone?: "indigo";
-}) {
-  const toneCls =
-    tone === "indigo"
-      ? "border-indigo-200/60 bg-indigo-50/80 text-indigo-950 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-100"
-      : "border-slate-200/70 bg-white/85 text-slate-900 dark:border-slate-800/70 dark:bg-slate-900/55 dark:text-slate-100";
-  return (
-    <div className={"rounded-2xl border p-3 shadow-sm backdrop-blur " + toneCls}>
-      <p className="text-[11px] font-extrabold tracking-tight">{title}</p>
-      <p className="mt-1 text-[10px] leading-relaxed opacity-80">{body}</p>
     </div>
   );
 }
