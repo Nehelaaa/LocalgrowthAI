@@ -546,8 +546,7 @@ function VisualInvoice() {
   const accentHex = "#f59e0b";
   return (
     <Frame>
-      <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-        <div>
+      <div>
           <p className="text-[10px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Invoice builder (real PDF preview)
           </p>
@@ -567,12 +566,12 @@ function VisualInvoice() {
                 </span>
               </div>
             </div>
-            <div className="relative h-[240px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
+            <div className="relative h-[280px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
               <div className="absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_35%_20%,black,transparent_65%)]" aria-hidden>
                 <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12)_0%,transparent_62%)]" />
               </div>
-              <div className="relative mx-auto h-full w-full max-w-[420px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
-                <div className="absolute left-0 top-0 origin-top-left scale-[0.92] [transform-origin:top_left]">
+              <div className="relative mx-auto h-full w-full max-w-[640px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
+                <div className="absolute left-0 top-0 origin-top-left scale-[0.98] [transform-origin:top_left]">
                   <InvoiceDocumentPreview
                     templateId="statement"
                     accentHex={accentHex}
@@ -586,41 +585,6 @@ function VisualInvoice() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/50 dark:bg-slate-900/30">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Templates + branding
-            </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {["Minimal", "Ledger", "Statement", "Accent", "Editorial"].map((name) => (
-                <span
-                  key={name}
-                  className={
-                    "rounded-lg border px-2 py-1 text-[10px] font-semibold " +
-                    (name === "Statement"
-                      ? "border-violet-400 bg-violet-50 text-violet-900 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-100"
-                      : "border-slate-200/80 bg-white text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-300")
-                  }
-                >
-                  {name}
-                </span>
-              ))}
-            </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
-              Pick a layout, logo, and accent once — every PDF stays on-brand.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-indigo-200/60 bg-indigo-50/80 p-3 shadow-sm dark:border-indigo-500/30 dark:bg-indigo-500/10">
-            <p className="text-[11px] font-extrabold tracking-tight text-indigo-950 dark:text-indigo-100">
-              Client-ready in seconds
-            </p>
-            <p className="mt-1 text-[10px] leading-relaxed text-indigo-900/80 dark:text-indigo-200/80">
-              Line items, tax, and notes — then download a clean PDF.
-            </p>
-          </div>
-        </div>
       </div>
     </Frame>
   );
