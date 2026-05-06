@@ -141,11 +141,6 @@ export default function HomePage() {
                   d: "Deal value, close dates, outcomes, and a weekly view. Interested & contacted leads sort to the top of your list.",
                   icon: "💰",
                 },
-                {
-                  t: "Manual leads + context",
-                  d: "Add a business by hand when you meet someone offline — same notes, follow-ups, and invoice flow as saved search leads.",
-                  icon: "🤝",
-                },
               ].map((f) => (
                 <li
                   key={f.t}
