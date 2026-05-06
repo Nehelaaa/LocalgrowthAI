@@ -291,8 +291,8 @@ function VisualSearch() {
 
   return (
     <Frame>
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-5">
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-4">
           <BusinessSearchForm
             onSearch={async () => {}}
             loading={false}
