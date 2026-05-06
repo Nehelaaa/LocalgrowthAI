@@ -9,13 +9,10 @@ import {
   type PlaceRow,
 } from "@/lib/place-search-scoring";
 import { contactStatusLabel, contactStatusPillClass } from "@/lib/contact-status";
-import { InvoiceDocumentPreview } from "@/components/invoices/InvoiceDocumentPreview";
-import { ScaledPreview } from "@/components/ui/ScaledPreview";
 
 const tabs = [
   { id: "search" as const, label: "Find" },
   { id: "crm" as const, label: "Leads" },
-  { id: "invoice" as const, label: "Invoices" },
   { id: "close" as const, label: "Close" },
 ];
 
@@ -58,7 +55,6 @@ export function ProductMockup() {
           <div key={tab} className="lgai-mock-fade">
             {tab === "search" && <PanelSearch />}
             {tab === "crm" && <PanelCrm />}
-            {tab === "invoice" && <PanelInvoice />}
             {tab === "close" && <PanelClose />}
           </div>
         </div>
@@ -104,22 +100,6 @@ function PanelSearch() {
         noWebsite: true,
         photoUrl: undefined,
       },
-      {
-        placeId: "demo-city-rooter",
-        name: "City Rooter LLC",
-        address: "500 E 6th St, Austin, TX",
-        city: "Austin",
-        state: "TX",
-        phone: "(512) 555-0104",
-        website: undefined,
-        rating: 4.9,
-        reviewCount: 203,
-        googleMapsUrl: "https://www.google.com/maps",
-        businessType: "plumber",
-        hasSocialOnly: false,
-        noWebsite: true,
-        photoUrl: undefined,
-      },
     ],
     []
   );
@@ -138,48 +118,7 @@ function PanelSearch() {
           initialBusinessType="plumber"
         />
       </div>
-      <MiniResultsPreview places={filtered.slice(0, 3)} />
-    </div>
-  );
-}
-
-function PanelInvoice() {
-  const accentHex = "#f59e0b";
-  return (
-    <div className="text-left text-xs">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Invoice preview (real PDF layout)
-      </p>
-      <div className="mt-2 rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
-        <div className="border-b border-slate-100 bg-slate-50/70 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/20">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-              Apex Plumbing Co. — Invoice
-            </p>
-            <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white">
-              Download PDF
-            </span>
-          </div>
-        </div>
-        <div className="bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
-          <ScaledPreview
-            designWidth={800}
-            maxHeight={600}
-            pageClassName="rounded-xl p-8 shadow-lg ring-1 ring-slate-900/10 dark:ring-white/10"
-          >
-            <InvoiceDocumentPreview
-              templateId="minimal"
-              accentHex={accentHex}
-              businessName="Apex Plumbing Co."
-              logoDataUrl={null}
-              density="comfortable"
-              documentTitle="Invoice"
-              footerPhrase="Thanks for your business"
-              className="w-full overflow-visible !rounded-none !border-0 !shadow-none !ring-0"
-            />
-          </ScaledPreview>
-        </div>
-      </div>
+      <MiniResultsPreview places={filtered.slice(0, 2)} />
     </div>
   );
 }
