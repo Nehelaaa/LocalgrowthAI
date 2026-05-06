@@ -38,7 +38,7 @@ export function BusinessSearchForm({ onSearch, loading, embedded }: Props) {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [radiusMiles, setRadiusMiles] = useState(10);
-  const [businessType, setBusinessType] = useState("auto repair");
+  const [businessType, setBusinessType] = useState("");
   const [bizTypeOpen, setBizTypeOpen] = useState(false);
   const [bizTypeActiveIndex, setBizTypeActiveIndex] = useState<number>(-1);
   const blurCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
