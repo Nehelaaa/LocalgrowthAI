@@ -13,7 +13,7 @@ import { InvoiceDocumentPreview } from "@/components/invoices/InvoiceDocumentPre
 
 const tabs = [
   { id: "search" as const, label: "Find" },
-  { id: "crm" as const, label: "CRM" },
+  { id: "crm" as const, label: "Leads" },
   { id: "invoice" as const, label: "Invoices" },
   { id: "close" as const, label: "Close" },
 ];
@@ -162,12 +162,12 @@ function PanelInvoice() {
             </div>
           </div>
           {/* Big, readable crop of the PDF */}
-          <div className="relative h-[240px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
+          <div className="relative h-[260px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
             <div className="absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_35%_20%,black,transparent_65%)]" aria-hidden>
               <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12)_0%,transparent_62%)]" />
             </div>
-            <div className="relative mx-auto h-full w-full max-w-[360px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
-              <div className="absolute left-0 top-0 origin-top-left scale-[0.82] [transform-origin:top_left]">
+            <div className="relative mx-auto h-full w-full max-w-[420px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
+              <div className="absolute left-0 top-0 origin-top-left scale-[1.02] [transform-origin:top_left]">
                 <InvoiceDocumentPreview
                   templateId="statement"
                   accentHex={accentHex}
@@ -205,11 +205,57 @@ function PanelCrm() {
   return (
     <div className="space-y-2 text-left">
       <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        CRM leads (same badges + status pills)
+        Leads (same badges + status pills)
       </p>
+      <div className="grid grid-cols-3 gap-2 text-center text-[9px] sm:text-[10px]">
+        {[
+          { v: "11", l: "Leads" },
+          { v: "8", l: "No site" },
+          { v: "2", l: "Hot" },
+        ].map((s) => (
+          <div
+            key={s.l}
+            className="rounded-lg border border-slate-200/80 bg-white p-1.5 dark:border-slate-700/50 dark:bg-slate-900/50"
+          >
+            <p className="text-sm font-bold text-slate-900 dark:text-white">{s.v}</p>
+            <p className="text-slate-500 dark:text-slate-400">{s.l}</p>
+          </div>
+        ))}
+      </div>
+
       {[
-        { name: "Apex Plumbing Co.", badge: "WARM" as const, status: "CONTACTED" as const, value: "$1,800", follow: "Thu" },
-        { name: "City Rooter LLC", badge: "HOT" as const, status: "INTERESTED" as const, value: "$2,400", follow: "Mon" },
+        {
+          name: "Apex Plumbing Co.",
+          badge: "WARM" as const,
+          status: "CONTACTED" as const,
+          value: "$1,800",
+          follow: "Thu",
+          score: 78,
+        },
+        {
+          name: "City Rooter LLC",
+          badge: "HOT" as const,
+          status: "INTERESTED" as const,
+          value: "$2,400",
+          follow: "Mon",
+          score: 92,
+        },
+        {
+          name: "QuickFix Drains",
+          badge: "COLD" as const,
+          status: "NOT_CONTACTED" as const,
+          value: "—",
+          follow: "—",
+          score: 61,
+        },
+        {
+          name: "Lakeview Dental",
+          badge: "HOT" as const,
+          status: "CONTACTED" as const,
+          value: "$3,200",
+          follow: "Fri",
+          score: 88,
+        },
       ].map((r) => (
         <div
           key={r.name}
@@ -219,7 +265,11 @@ function PanelCrm() {
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{r.name}</p>
               <p className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
-                Website price: <span className="font-semibold text-slate-700 dark:text-slate-200">{r.value}</span> · Follow-up{" "}
+                Score{" "}
+                <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">{r.score}</span>
+                {" · "}Website price{" "}
+                <span className="font-semibold text-slate-700 dark:text-slate-200">{r.value}</span>
+                {" · "}Follow-up{" "}
                 <span className="font-semibold text-slate-700 dark:text-slate-200">{r.follow}</span>
               </p>
             </div>
