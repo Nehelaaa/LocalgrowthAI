@@ -9,7 +9,6 @@ import {
   isAllowedSupportFile,
   supportAttachmentMimeLabel,
 } from "@/lib/support-attachments";
-import { SUPPORT_INBOX_EMAIL } from "@/lib/support-inbox";
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -113,8 +112,7 @@ export function PublicContactForm() {
     >
       <div className="border-b border-slate-100 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50/50 px-6 py-5 dark:border-slate-700/50 dark:from-indigo-950/30 dark:via-slate-900/80 dark:to-slate-950/50">
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          Send a message and we’ll reply by email. Messages go to{" "}
-          <span className="font-semibold text-slate-800 dark:text-slate-200">{SUPPORT_INBOX_EMAIL}</span>.
+          Send a message and we’ll reply by email.
         </p>
       </div>
 
@@ -284,7 +282,7 @@ export function PublicContactForm() {
             {status === "loading" ? "Sending…" : "Send message"}
           </button>
           <p className="text-center text-xs text-slate-500 dark:text-slate-400 sm:text-right">
-            Prefer email? Send to <span className="font-medium">{SUPPORT_INBOX_EMAIL}</span>.
+            Prefer email? Reach us from the footer link.
           </p>
         </div>
       </div>
