@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { ContactSupportPanel } from "@/components/marketing/ContactSupportPanel";
+import { PublicContactForm } from "@/components/marketing/PublicContactForm";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 
 export const metadata: Metadata = {
   title: "Contact support",
   description:
-    "Reach the LocalLeadster team by email. Copy our support address or open your mail app.",
+    "Send a support message to the LocalLeadster team.",
 };
 
 export default function ContactPage() {
@@ -16,7 +16,7 @@ export default function ContactPage() {
           Contact support
         </h1>
         <div className="mt-8">
-          <ContactSupportPanel />
+          <PublicContactForm />
         </div>
       </div>
     </MarketingShell>
