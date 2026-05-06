@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { BusinessSearchForm } from "@/app/dashboard/search/BusinessSearchForm";
-import { LeadSearchFiltersPanel } from "@/app/dashboard/search/LeadSearchFiltersPanel";
 import {
   defaultPlaceFilterState,
   filterAndSortPlaces,
@@ -118,7 +117,7 @@ function Callout({
 }
 
 function PanelSearch() {
-  const [filters, setFilters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
+  const [filters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
   const places = useMemo<PlaceRow[]>(
     () => [
       {
@@ -185,16 +184,6 @@ function PanelSearch() {
           initialState="TX"
           initialRadiusMiles={10}
           initialBusinessType="plumber"
-        />
-      </div>
-      <div className="rounded-xl border border-slate-200/80 bg-white/80 p-2.5 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
-        <LeadSearchFiltersPanel
-          lastSearch={{ city: "Austin", state: "TX", radiusMiles: 10, businessType: "plumber" }}
-          filters={filters}
-          onChange={setFilters}
-          visibleCount={filtered.length}
-          totalCount={places.length}
-          embedded
         />
       </div>
       <MiniResultsPreview places={filtered.slice(0, 3)} />
