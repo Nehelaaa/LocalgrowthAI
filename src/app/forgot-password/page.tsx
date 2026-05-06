@@ -1,4 +1,3 @@
-import { AuthThemeCorner } from "@/components/theme/AuthThemeCorner";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
 export default function ForgotPasswordPage() {
   return (
     <div className="relative flex min-h-[100dvh] items-center justify-center bg-slate-100/90 p-4 dark:bg-slate-950">
-      <AuthThemeCorner />
       <div
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.18),transparent)] dark:bg-[radial-gradient(ellipse_100%_80%_at_50%_-30%,rgba(99,102,241,0.12),transparent)]"
         aria-hidden
