@@ -145,56 +145,39 @@ function PanelSearch() {
 function PanelInvoice() {
   const accentHex = "#f59e0b";
   return (
-    <div className="grid gap-3 text-left text-xs sm:grid-cols-[1.05fr_0.95fr] sm:items-start">
-      <div>
-        <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          Invoice preview (real PDF layout)
-        </p>
-        <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
-          <div className="border-b border-slate-100 bg-slate-50/70 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/20">
-            <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-                Apex Plumbing Co. — Invoice
-              </p>
-              <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white">
-                Download PDF
-              </span>
-            </div>
-          </div>
-          {/* Big, readable crop of the PDF */}
-          <div className="relative h-[260px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
-            <div className="absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_35%_20%,black,transparent_65%)]" aria-hidden>
-              <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12)_0%,transparent_62%)]" />
-            </div>
-            <div className="relative mx-auto h-full w-full max-w-[420px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
-              <div className="absolute left-0 top-0 origin-top-left scale-[1.02] [transform-origin:top_left]">
-                <InvoiceDocumentPreview
-                  templateId="statement"
-                  accentHex={accentHex}
-                  businessName="Apex Plumbing Co."
-                  logoDataUrl={null}
-                  density="comfortable"
-                  documentTitle="Invoice"
-                  footerPhrase="Thanks for your business"
-                />
-              </div>
-            </div>
+    <div className="text-left text-xs">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        Invoice preview (real PDF layout)
+      </p>
+      <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/40">
+        <div className="border-b border-slate-100 bg-slate-50/70 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/20">
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+              Apex Plumbing Co. — Invoice
+            </p>
+            <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white">
+              Download PDF
+            </span>
           </div>
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-sm dark:border-slate-700/50 dark:bg-slate-900/55">
-          <p className="text-[11px] font-extrabold tracking-tight text-slate-900 dark:text-white">Branded PDFs</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-slate-600 dark:text-slate-300">
-            Layout, logo, and accent — saved once, used everywhere.
-          </p>
-        </div>
-        <div className="rounded-2xl border border-indigo-200/60 bg-indigo-50/80 p-3 shadow-sm dark:border-indigo-500/30 dark:bg-indigo-500/10">
-          <p className="text-[11px] font-extrabold tracking-tight text-indigo-950 dark:text-indigo-100">From the lead</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-indigo-900/80 dark:text-indigo-200/80">
-            Open any CRM row → build & download in seconds.
-          </p>
+        {/* Big, readable crop of the PDF */}
+        <div className="relative h-[300px] bg-[radial-gradient(ellipse_at_top,_rgb(248_250_252)_0%,_rgb(241_245_249)_100%)] p-3 dark:bg-[radial-gradient(ellipse_at_top,_rgb(15_23_42)_0%,_rgb(2_6_23)_100%)]">
+          <div className="absolute inset-0 opacity-60 [mask-image:radial-gradient(circle_at_35%_20%,black,transparent_65%)]" aria-hidden>
+            <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12)_0%,transparent_62%)]" />
+          </div>
+          <div className="relative mx-auto h-full w-full max-w-[520px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-lg dark:border-slate-700/60 dark:bg-slate-900">
+            <div className="absolute left-0 top-0 origin-top-left scale-[1.12] [transform-origin:top_left]">
+              <InvoiceDocumentPreview
+                templateId="statement"
+                accentHex={accentHex}
+                businessName="Apex Plumbing Co."
+                logoDataUrl={null}
+                density="comfortable"
+                documentTitle="Invoice"
+                footerPhrase="Thanks for your business"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
