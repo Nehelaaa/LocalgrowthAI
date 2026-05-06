@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getSession, signOut } from "next-auth/react";
+import { getSession, signIn, signOut } from "next-auth/react";
 
 /**
  * Auth.js forbids GET /api/auth/signin/:provider — it throws UnknownAction ("Unsupported action").
@@ -107,6 +107,15 @@ export function GoogleSignInButton({
               } catch {
                 /* ignore */
               }
+              // Prefer the official client helper (handles POST + redirects internally).
+              // Fall back to our manual csrf+POST if it fails in a given browser/runtime.
+              try {
+                await signIn("google", { callbackUrl: redirectTo });
+                return;
+              } catch {
+                // continue to fallback
+              }
+
               const csrfRes = await fetch("/api/auth/csrf", { credentials: "same-origin" });
               if (!csrfRes.ok) throw new Error("csrf");
               const { csrfToken } = (await csrfRes.json()) as { csrfToken?: string };
