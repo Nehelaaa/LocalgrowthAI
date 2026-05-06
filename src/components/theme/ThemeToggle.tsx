@@ -23,7 +23,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, embed }: Pro
   const actionLabel = isDark ? "Light" : "Dark";
 
   const controlButtonClass = embed
-    ? "inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800 "
+    ? "inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200 dark:hover:bg-slate-800 "
     : "flex min-h-9 w-full items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100/90 dark:border-slate-600/80 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800/80 " +
       (compact ? "" : "sm:px-3 ");
 
@@ -60,7 +60,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, embed }: Pro
 
   if (embed) {
     return (
-      <div className={"flex items-center justify-between gap-3 " + className}>
+      <div className={"flex items-center justify-between " + className}>
         <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Theme</span>
         {control}
         {!mounted ? (

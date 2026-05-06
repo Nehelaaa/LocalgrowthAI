@@ -248,15 +248,15 @@ function FooterHome({
   user?: { email: string; name?: string | null; isPro: boolean };
 }) {
   return (
-    <div className="sticky bottom-0 z-10 shrink-0 border-t border-slate-200/80 bg-gradient-to-b from-slate-50/95 to-white/90 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:from-slate-950/95 dark:to-slate-900/90">
-      <div className="overflow-hidden rounded-xl border border-slate-200/70 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700/50 dark:bg-slate-900/75 dark:shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
-        <div className="px-3 py-2.5">
-          <ThemeToggle embed />
+    <div className="sticky bottom-0 z-10 shrink-0 border-t border-slate-200/80 bg-white/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/60">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/70">
+        <div className="px-4 py-3">
+          <ThemeToggle embed className="gap-2" />
         </div>
         {user ? (
           <>
-            <div className="mx-3 h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
-            <div className="px-3 py-3">
+            <div className="h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
+            <div className="px-4 py-3.5">
               <p className="truncate text-sm font-semibold leading-tight text-slate-900 dark:text-slate-50">
                 {user.name || user.email}
               </p>
@@ -273,16 +273,16 @@ function FooterHome({
               {!user.isPro ? (
                 <UpgradeButton className="mt-3 w-full" label="Upgrade to Pro" />
               ) : (
-                <ManageBillingButton className="mt-3 w-full px-3" label="Manage billing" />
+                <ManageBillingButton className="mt-3 w-full" label="Manage billing" />
               )}
             </div>
           </>
         ) : null}
-        <div className="mx-3 h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
+        <div className="h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
         <Link
           href="/sign-out"
           prefetch={false}
-          className="group flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500/30 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+          className="group flex min-h-[44px] w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500/30 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
         >
           <span>Sign out</span>
           <svg
