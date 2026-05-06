@@ -417,7 +417,7 @@ function VisualScore() {
 
   return (
     <Frame>
-      <ReadonlyResultsPreview places={places} totalBeforeFilters={places.length} />
+      <ReadonlyResultsPreview places={places.slice(0, 4)} totalBeforeFilters={places.length} />
     </Frame>
   );
 }
