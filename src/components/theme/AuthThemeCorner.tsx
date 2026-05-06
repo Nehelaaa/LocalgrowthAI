@@ -2,10 +2,16 @@
 
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
-/** Fixed control for auth/onboarding pages (no dashboard nav). */
+/** Theme control for auth/onboarding — bottom-right on small screens so it never covers the card header. */
 export function AuthThemeCorner() {
   return (
-    <div className="pointer-events-auto fixed right-3 top-3 z-[80] w-[min(calc(100vw-1.5rem),9.5rem)] pt-[max(0px,env(safe-area-inset-top))] sm:right-5 sm:top-5">
+    <div
+      className={
+        "pointer-events-auto fixed z-[80] w-max max-w-[calc(100vw-2rem)] " +
+        "bottom-6 right-3 " +
+        "sm:bottom-auto sm:right-5 sm:top-5 sm:pt-[max(0px,env(safe-area-inset-top))]"
+      }
+    >
       <ThemeToggle
         hideCaption
         compact

@@ -24,8 +24,8 @@ export function MarketingShell({
         Skip to main content
       </a>
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/90">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-3.5">
-          <Link href="/" className="flex min-w-0 items-center gap-2 overflow-visible">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-3.5">
+          <Link href="/" className="flex min-w-0 max-w-full items-center gap-2">
             <Image
               src="/favicon.svg"
               alt="LocalLeadster"
@@ -42,41 +42,43 @@ export function MarketingShell({
               height={70}
               priority
             />
-            <span className={`shrink-0 sm:hidden ${BRAND_WORDMARK_LG}`}>LocalLeadster</span>
+            <span className={`min-w-0 truncate sm:hidden ${BRAND_WORDMARK_LG}`}>LocalLeadster</span>
           </Link>
-          <nav
-            className="hidden items-center gap-1 text-sm font-medium text-slate-600 sm:flex dark:text-slate-300"
-            aria-label="Page sections"
-          >
-            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#how-it-works">
-              How it works
-            </Link>
-            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#features">
-              Features
-            </Link>
-            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#solutions">
-              Solutions
-            </Link>
-            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#pricing">
-              Pricing
-            </Link>
-          </nav>
-          <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-2">
-            <div className="w-[min(9.75rem,34vw)] shrink-0 sm:w-[10.5rem]">
-              <ThemeToggle hideCaption compact />
+          <div className="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+            <nav
+              className="hidden items-center gap-1 text-sm font-medium text-slate-600 sm:flex dark:text-slate-300"
+              aria-label="Page sections"
+            >
+              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#how-it-works">
+                How it works
+              </Link>
+              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#features">
+                Features
+              </Link>
+              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#solutions">
+                Solutions
+              </Link>
+              <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#pricing">
+                Pricing
+              </Link>
+            </nav>
+            <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:flex-nowrap sm:gap-2">
+              <div className="shrink-0">
+                <ThemeToggle hideCaption compact />
+              </div>
+              <Link
+                className="min-h-[40px] shrink-0 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 sm:px-3 dark:text-slate-200"
+                href="/login"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:from-violet-500 hover:to-indigo-500 sm:px-4"
+              >
+                Start free
+              </Link>
             </div>
-            <Link
-              className="min-h-[40px] shrink-0 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-700 sm:px-3 dark:text-slate-200"
-              href="/login"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:from-violet-500 hover:to-indigo-500 sm:px-4"
-            >
-              Start free
-            </Link>
           </div>
         </div>
       </header>
