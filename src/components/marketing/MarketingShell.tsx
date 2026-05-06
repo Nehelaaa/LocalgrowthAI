@@ -118,7 +118,7 @@ export function MarketingShell({
               href="/contact"
               className="text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
             >
-              Contact customer support
+              Contact us
             </Link>
           </nav>
         </div>
