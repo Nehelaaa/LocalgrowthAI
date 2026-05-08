@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { prismaAuthAdapter } from "@/lib/prisma-auth-adapter";
+import { findUserByEmail, normalizeEmail } from "@/lib/user-email";
 import type { Role } from "@prisma/client";
 
 declare module "next-auth" {
@@ -64,10 +65,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || credentials.password == null) return null;
-        const email = String(credentials.email).toLowerCase().trim();
+        const email = normalizeEmail(String(credentials.email));
         const password = String(credentials.password);
         if (password.length < 1) return null;
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await findUserByEmail(prisma, email);
         if (!user?.passwordHash) return null;
         const ok = await compare(password, user.passwordHash);
         if (!ok) return null;
@@ -89,16 +90,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // app already opts into dangerous email linking.
       if (account?.provider === "google") {
         const email =
-          (typeof (profile as { email?: unknown } | null)?.email === "string"
-            ? String((profile as { email?: unknown }).email)
+          typeof (profile as { email?: unknown } | null)?.email === "string"
+            ? normalizeEmail(String((profile as { email?: unknown }).email))
             : typeof user?.email === "string"
-              ? String(user.email)
-              : "")
-            .trim()
-            .toLowerCase();
+              ? normalizeEmail(String(user.email))
+              : "";
         const providerAccountId = String(account.providerAccountId ?? "").trim();
         if (email && providerAccountId) {
-          const existing = await prisma.user.findUnique({ where: { email } });
+          const existing = await findUserByEmail(prisma, email);
           if (existing) {
             await prisma.account.upsert({
               where: {

@@ -1,10 +1,11 @@
 import type { AdapterUser } from "@auth/core/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { PrismaClient } from "@prisma/client";
+import { findUserByEmail, normalizeEmail } from "@/lib/user-email";
 
 /** Lowercase trim — User.email is looked up with this shape in credentials sign-up too. */
 function normEmail(email: string | null | undefined): string {
-  return email?.trim().toLowerCase() ?? "";
+  return normalizeEmail(email);
 }
 
 /**
@@ -18,7 +19,7 @@ export function prismaAuthAdapter(prisma: PrismaClient) {
     getUserByEmail(email: string | null | undefined) {
       const e = normEmail(email);
       if (!e) return Promise.resolve(null);
-      return prisma.user.findUnique({ where: { email: e } });
+      return findUserByEmail(prisma, e);
     },
     createUser(data: AdapterUser) {
       const email = data.email != null ? normEmail(String(data.email)) : data.email;

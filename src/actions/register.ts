@@ -11,6 +11,7 @@ import {
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
 import { rateLimitAuthForm } from "@/lib/rate-limit-auth-forms";
 import { getClientIp } from "@/lib/request-ip";
+import { findUserByEmail } from "@/lib/user-email";
 
 const professionIds = Object.keys(PROFESSIONS) as [ProfessionId, ...ProfessionId[]];
 
@@ -65,7 +66,7 @@ export async function registerUser(
     return { fieldErrors: fe, error: "Check the fields above." };
   }
 
-  const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+  const existing = await findUserByEmail(prisma, parsed.data.email);
   if (existing) {
     return { error: "An account with that email already exists. Try signing in." };
   }
