@@ -6,6 +6,7 @@ import { assertOwnsLead, requireUserForAction } from "@/lib/session-user";
 import { prisma } from "@/lib/db";
 import { canCreateMoreLeads } from "@/lib/entitlements";
 import { computeLeadScore } from "@/lib/lead-score";
+import { googleMapsListingUrl } from "@/lib/google-maps-links";
 import type { ContactStatus, Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -173,6 +174,11 @@ export async function saveBusinessAsLead(place: {
     hasSocialOnly: place.hasSocialOnly,
   });
 
+  const canonicalMapsUrl = googleMapsListingUrl(
+    place.placeId,
+    [place.name, place.address].filter(Boolean).join(" · ") || place.name
+  );
+
   const result = await prisma.$transaction(async (tx) => {
     const u = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
     if (!canCreateMoreLeads(u.lifetimeLeadsCreated, u)) {
@@ -191,7 +197,7 @@ export async function saveBusinessAsLead(place: {
         website: place.website,
         rating: place.rating,
         reviewCount: place.reviewCount,
-        googleMapsUrl: place.googleMapsUrl,
+        googleMapsUrl: canonicalMapsUrl,
         businessType: place.businessType,
         lat: place.lat,
         lng: place.lng,
@@ -206,6 +212,7 @@ export async function saveBusinessAsLead(place: {
         website: place.website,
         hasSocialOnly: place.hasSocialOnly,
         photoUrl: place.photoUrl,
+        googleMapsUrl: canonicalMapsUrl,
       },
     });
 

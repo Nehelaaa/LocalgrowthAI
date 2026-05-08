@@ -9,16 +9,22 @@ import {
   TrashIconButton,
 } from "@/components/DeleteLeadDialog";
 import { contactStatusLabel, contactStatusPillClass } from "@/lib/contact-status";
+import { resolveGoogleMapsListingUrl } from "@/lib/google-maps-links";
 import type { Lead, Business, LeadBadge } from "@prisma/client";
 
 type LeadWithBusiness = Lead & { business: Business };
 
 function googleMapsUrlForBusiness(b: Business): string | null {
-  if (b.googleMapsUrl) return b.googleMapsUrl;
-  if (b.placeId && !b.placeId.startsWith("manual-")) {
-    return `https://www.google.com/maps/place/?q=place_id:${b.placeId}`;
-  }
-  return null;
+  return resolveGoogleMapsListingUrl({
+    placeId: b.placeId,
+    name: b.name,
+    address: b.address,
+    city: b.city,
+    state: b.state,
+    lat: b.lat,
+    lng: b.lng,
+    googleMapsUrl: b.googleMapsUrl,
+  });
 }
 
 const BADGE_COLORS: Record<LeadBadge, string> = {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { saveBusinessAsLead } from "@/actions/leads";
 import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
+import { googleMapsDirectionsUrl, isManualPlaceId } from "@/lib/google-maps-links";
 
 /** Client-side list pagination (Google returns many rows after multi-page fetch). */
 const RESULTS_PAGE_SIZE = 25;
@@ -296,14 +297,29 @@ export function PlaceResults({
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
-              <a
-                href={place.googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-              >
-                View on Maps
-              </a>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
+                <a
+                  href={place.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  View on Maps
+                </a>
+                {!isManualPlaceId(place.placeId) ? (
+                  <a
+                    href={googleMapsDirectionsUrl(
+                      place.placeId,
+                      [place.name, place.address].filter(Boolean).join(", ")
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    Directions
+                  </a>
+                ) : null}
+              </div>
               <button
                 type="button"
                 onClick={() => void handleAdd(place)}

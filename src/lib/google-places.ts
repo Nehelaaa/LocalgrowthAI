@@ -1,3 +1,5 @@
+import { googleMapsListingUrl } from "@/lib/google-maps-links";
+
 /**
  * Google Places API (New) - server-side only.
  * Text Search: https://developers.google.com/maps/documentation/places/web-service/text-search
@@ -172,7 +174,7 @@ function mapPlaceToResult(
   const lng = p.location?.longitude;
   const hasSocialOnly = !!website && isSocialOnlyWebsite(website);
   const noWebsite = !website || hasSocialOnly;
-  const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
+    const googleMapsUrl = googleMapsListingUrl(placeId, name);
   const photoUrl = p.photos?.[0]?.name
     ? `https://places.googleapis.com/v1/${p.photos[0].name}/media?key=${apiKey}&maxHeightPx=400`
     : undefined;

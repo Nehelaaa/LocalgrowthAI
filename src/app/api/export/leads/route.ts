@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session-user";
 import { mustUpgradeForProFeatures } from "@/lib/entitlements";
 import { rateLimitOr429, safeErrorMessage } from "@/lib/api-security";
+import { resolveGoogleMapsListingUrl } from "@/lib/google-maps-links";
 
 export async function GET(request: Request) {
   try {
@@ -45,7 +46,17 @@ export async function GET(request: Request) {
       website: l.business.website,
       rating: l.business.rating,
       reviewCount: l.business.reviewCount,
-      googleMapsUrl: l.business.googleMapsUrl,
+      googleMapsUrl:
+        resolveGoogleMapsListingUrl({
+          placeId: l.business.placeId,
+          name: l.business.name,
+          address: l.business.address,
+          city: l.business.city,
+          state: l.business.state,
+          lat: l.business.lat,
+          lng: l.business.lng,
+          googleMapsUrl: l.business.googleMapsUrl,
+        }) ?? l.business.googleMapsUrl,
     },
   }));
 

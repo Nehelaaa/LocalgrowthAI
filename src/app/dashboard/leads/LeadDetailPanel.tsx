@@ -8,6 +8,10 @@ import { DeleteLeadDialog } from "@/components/DeleteLeadDialog";
 import { updateLeadStatus, updateLead, deleteLead } from "@/actions/leads";
 import { InvoiceBuilderModal } from "@/components/invoices/InvoiceBuilderModal";
 import { getLeadById } from "@/actions/leads-list";
+import {
+  resolveGoogleMapsDirectionsUrl,
+  resolveGoogleMapsListingUrl,
+} from "@/lib/google-maps-links";
 import type { Lead, Business } from "@prisma/client";
 
 type LeadWithRelations = Lead & { business: Business };
@@ -123,6 +127,27 @@ export function LeadDetailPanel({
       setDeleteSubmitting(false);
     }
   };
+
+  const biz = lead.business;
+  const mapsListing = resolveGoogleMapsListingUrl({
+    placeId: biz.placeId,
+    name: biz.name,
+    address: biz.address,
+    city: biz.city,
+    state: biz.state,
+    lat: biz.lat,
+    lng: biz.lng,
+    googleMapsUrl: biz.googleMapsUrl,
+  });
+  const mapsDirections = resolveGoogleMapsDirectionsUrl({
+    placeId: biz.placeId,
+    name: biz.name,
+    address: biz.address,
+    city: biz.city,
+    state: biz.state,
+    lat: biz.lat,
+    lng: biz.lng,
+  });
 
   return createPortal(
     <div
@@ -257,16 +282,28 @@ export function LeadDetailPanel({
                   </span>
                 </p>
               )}
-              {lead.business.googleMapsUrl && (
-                <p>
-                  <a
-                    href={lead.business.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                  >
-                    Open in Google Maps →
-                  </a>
+              {(mapsListing || mapsDirections) && (
+                <p className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                  {mapsListing ? (
+                    <a
+                      href={mapsListing}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      View on Maps →
+                    </a>
+                  ) : null}
+                  {mapsDirections ? (
+                    <a
+                      href={mapsDirections}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      Directions →
+                    </a>
+                  ) : null}
                 </p>
               )}
             </div>
