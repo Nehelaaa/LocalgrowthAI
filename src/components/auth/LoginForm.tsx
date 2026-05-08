@@ -95,6 +95,7 @@ export function LoginForm({
             return;
           }
           if (r?.ok) {
+            await router.refresh();
             window.location.href = callbackUrl;
           }
         }}

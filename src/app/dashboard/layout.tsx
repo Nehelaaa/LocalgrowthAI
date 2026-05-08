@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { StarterLimitOverlay } from "@/components/dashboard/StarterLimitOverlay";
@@ -14,14 +15,18 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** Session/cookies must be read on each request — static shells would send everyone to /login. */
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
   let user = await getCurrentUser();
   if (!user) {
-    redirect("/login?callbackUrl=/dashboard");
+    redirect("/login?callbackUrl=" + encodeURIComponent("/dashboard"));
   }
   if (!user.onboardingComplete) {
     redirect("/onboarding");

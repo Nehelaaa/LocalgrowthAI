@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import {
   FREE_LEAD_LIMIT,
   FREE_SEARCHES_LIFETIME,
@@ -7,10 +8,13 @@ import {
 import { getCurrentUser } from "@/lib/session-user";
 import { OnboardingForm } from "./OnboardingForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function OnboardingPage() {
+  await connection();
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/login?callbackUrl=/onboarding");
+    redirect("/login?callbackUrl=" + encodeURIComponent("/onboarding"));
   }
   if (user.onboardingComplete) {
     redirect("/dashboard");

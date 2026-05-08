@@ -3,7 +3,11 @@ import { isGoogleOAuthConfigured } from "@/lib/google-oauth";
 import { postLoginContinueUrl } from "@/lib/post-login-continue";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { connection } from "next/server";
 import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
+
+/** OAuth error query params + env-dependent Google button must not be cached. */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -18,6 +22,7 @@ type Search = Promise<{
 }>;
 
 export default async function LoginPage({ searchParams }: { searchParams: Search }) {
+  await connection();
   const q = await searchParams;
   const callbackUrl = typeof q.callbackUrl === "string" ? q.callbackUrl : "/dashboard";
   const authError = typeof q.error === "string" ? q.error : null;

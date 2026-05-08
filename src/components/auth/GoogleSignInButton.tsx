@@ -110,7 +110,7 @@ export function GoogleSignInButton({
               // Prefer the official client helper (handles POST + redirects internally).
               // Fall back to our manual csrf+POST if it fails in a given browser/runtime.
               try {
-                await signIn("google", { callbackUrl: redirectTo });
+                await signIn("google", { redirectTo, callbackUrl: redirectTo });
                 return;
               } catch {
                 // continue to fallback
