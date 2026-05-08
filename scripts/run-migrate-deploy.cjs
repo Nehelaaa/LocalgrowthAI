@@ -4,6 +4,9 @@
  *
  * This script requires DIRECT_URL, then runs migrate with DATABASE_URL forced to that value for the subprocess
  * so the migration engine always uses a lock-friendly connection.
+ *
+ * Neon compute can be suspended when idle — the first TCP connect often fails with Prisma P1001 until it wakes.
+ * We retry a few times with a short delay so Vercel builds survive cold starts.
  */
 const { existsSync } = require("node:fs");
 const path = require("node:path");
@@ -15,6 +18,22 @@ if (existsSync(envFile)) {
     require("dotenv").config({ path: envFile });
   } catch {
     /* dotenv optional */
+  }
+}
+
+const MIGRATE_MAX_ATTEMPTS = Math.min(
+  10,
+  Math.max(1, Number(process.env.PRISMA_MIGRATE_MAX_ATTEMPTS ?? "5"))
+);
+const MIGRATE_RETRY_DELAY_MS = Math.min(
+  60_000,
+  Math.max(0, Number(process.env.PRISMA_MIGRATE_RETRY_DELAY_MS ?? "4500"))
+);
+
+function sleepMs(ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    /* busy-wait: short windows; keeps script sync without shell sleep */
   }
 }
 
@@ -48,10 +67,37 @@ if (pooled === direct) {
 }
 
 const env = { ...process.env, DATABASE_URL: direct };
-const result = spawnSync("npx", ["prisma", "migrate", "deploy"], {
-  stdio: "inherit",
-  env,
-  shell: process.platform === "win32",
-});
+let lastStatus = 1;
 
-process.exit(result.status === null ? 1 : result.status);
+for (let attempt = 1; attempt <= MIGRATE_MAX_ATTEMPTS; attempt++) {
+  if (attempt > 1 && MIGRATE_RETRY_DELAY_MS > 0) {
+    console.warn(
+      `[migrate] retry ${attempt}/${MIGRATE_MAX_ATTEMPTS} after ${MIGRATE_RETRY_DELAY_MS}ms (Neon wake / transient P1001)`
+    );
+    sleepMs(MIGRATE_RETRY_DELAY_MS);
+  } else if (attempt === 1) {
+    console.warn(
+      `[migrate] prisma migrate deploy (${MIGRATE_MAX_ATTEMPTS} attempt(s) max, direct host)`
+    );
+  }
+
+  const result = spawnSync("npx", ["prisma", "migrate", "deploy"], {
+    stdio: "inherit",
+    env,
+    shell: process.platform === "win32",
+  });
+
+  lastStatus = result.status === null ? 1 : result.status;
+  if (lastStatus === 0) {
+    process.exit(0);
+  }
+}
+
+console.error(
+  "\n[migrate] Still failing after retries. P1001 usually means the build cannot reach Postgres.\n" +
+    "  • Neon: open dashboard → project → ensure branch is not deleted; resume compute if suspended.\n" +
+    "  • Vercel: Settings → Env — set DATABASE_URL (pooled) + DIRECT_URL (direct), both with ?sslmode=require\n" +
+    "  • Neon IP allowlist: allow Vercel or disable allowlist for serverless CI.\n" +
+    "  • Optional env: PRISMA_MIGRATE_MAX_ATTEMPTS=8 PRISMA_MIGRATE_RETRY_DELAY_MS=8000\n"
+);
+process.exit(lastStatus);
