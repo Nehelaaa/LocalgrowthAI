@@ -66,6 +66,7 @@ export function LeadDetailPanel({
       startTransition(() => {
         router.refresh();
       });
+      onClose();
     } catch (e) {
       const msg =
         e instanceof Error
@@ -77,7 +78,7 @@ export function LeadDetailPanel({
     } finally {
       setSaving(false);
     }
-  }, [persistLeadFields, router]);
+  }, [persistLeadFields, router, onClose]);
 
   /** Auto-save price (and other fields) shortly after you stop typing. */
   useEffect(() => {
@@ -151,23 +152,35 @@ export function LeadDetailPanel({
         className="relative z-[111] flex h-full max-h-[100dvh] w-full min-h-0 max-w-2xl flex-col overflow-hidden rounded-none border-0 border-slate-200 bg-white shadow-2xl sm:max-h-[min(90vh,900px)] sm:rounded-2xl sm:border dark:border-slate-700 dark:bg-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-2 border-b border-slate-200 p-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:gap-4 sm:p-6 sm:pt-6 dark:border-slate-800">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              {lead.business.name}
-            </h2>
-            <p className="text-sm text-slate-500">
-              {lead.business.city}, {lead.business.state} · Score {lead.leadScore}{" "}
-              · {lead.badge}
-            </p>
+        <div className="flex flex-col gap-3 border-b border-slate-200 p-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:p-6 sm:pt-6 dark:border-slate-800">
+          <div className="flex min-w-0 items-start gap-2 sm:flex-1 sm:gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="break-words text-lg font-bold leading-snug text-slate-900 sm:text-xl dark:text-white">
+                {lead.business.name}
+              </h2>
+              <p className="mt-1 break-words text-sm text-slate-500 dark:text-slate-400">
+                {lead.business.city}, {lead.business.state} · Score {lead.leadScore}{" "}
+                · {lead.badge}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-0.5 inline-flex h-11 min-h-[44px] w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-end sm:gap-2">
             <button
               type="button"
               onClick={() => setInvoiceOpen(true)}
-              className="inline-flex min-h-[44px] min-w-0 touch-manipulation items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-800 shadow-sm transition hover:bg-indigo-100 dark:border-indigo-500/30 dark:bg-indigo-950/40 dark:text-indigo-100 dark:hover:bg-indigo-900/50"
+              className="inline-flex min-h-[44px] w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-800 shadow-sm transition hover:bg-indigo-100 sm:inline-flex sm:w-auto sm:justify-center dark:border-indigo-500/30 dark:bg-indigo-950/40 dark:text-indigo-100 dark:hover:bg-indigo-900/50"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -180,10 +193,10 @@ export function LeadDetailPanel({
               type="button"
               onClick={() => setDeleteDialogOpen(true)}
               disabled={deleteSubmitting}
-              className="inline-flex min-h-[44px] min-w-0 touch-manipulation items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-red-900/50 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+              className="inline-flex min-h-[44px] w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 sm:inline-flex sm:w-auto dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-red-900/50 dark:hover:bg-red-950/30 dark:hover:text-red-400"
             >
               <svg
-                className="h-4 w-4"
+                className="h-4 w-4 shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
@@ -197,16 +210,6 @@ export function LeadDetailPanel({
                 />
               </svg>
               Remove
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="min-h-[44px] min-w-[44px] touch-manipulation rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-              aria-label="Close"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
             </button>
           </div>
         </div>
