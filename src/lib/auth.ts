@@ -69,6 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (password.length < 1) return null;
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user?.passwordHash) return null;
+        if (user.disabled) return null;
         const ok = await compare(password, user.passwordHash);
         if (!ok) return null;
         return {

@@ -78,7 +78,9 @@ export function LoginForm({
           setError(null);
           setLoading(true);
           const fd = new FormData(e.currentTarget);
-          const email = String(fd.get("email") ?? "");
+          const email = String(fd.get("email") ?? "")
+            .trim()
+            .toLowerCase();
           const password = String(fd.get("password") ?? "");
           const r = await signIn("credentials", {
             email,
@@ -95,8 +97,13 @@ export function LoginForm({
             return;
           }
           if (r?.ok) {
-            await router.refresh();
-            window.location.href = callbackUrl;
+            // Full navigation only — no router.refresh() first. On mobile Safari, an immediate RSC
+            // refresh can race the Set-Cookie from sign-in and send you back to /login as “logged out”.
+            const target =
+              callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+                ? new URL(callbackUrl, window.location.origin).href
+                : callbackUrl;
+            window.location.assign(target);
           }
         }}
       >
@@ -113,6 +120,10 @@ export function LoginForm({
             name="email"
             type="email"
             autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="email"
             required
             className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />

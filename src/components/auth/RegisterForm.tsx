@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { registerUser, type RegisterState } from "@/actions/register";
@@ -26,7 +25,6 @@ export function RegisterForm({
   googleAfterAuthUrl: string;
 }) {
   const [state, action, pending] = useActionState(registerUser, init);
-  const router = useRouter();
   const signed = useRef(false);
   /** Must not read from the DOM after success — the form unmounts when we show “Signing you in…”. */
   const credsRef = useRef({ email: "", password: "" });
@@ -35,13 +33,15 @@ export function RegisterForm({
   useEffect(() => {
     if (!pending || !formRef.current) return;
     const fd = new FormData(formRef.current);
-    credsRef.current.email = String(fd.get("email") ?? "").trim();
+    credsRef.current.email = String(fd.get("email") ?? "")
+      .trim()
+      .toLowerCase();
     credsRef.current.password = String(fd.get("password") ?? "");
   }, [pending]);
 
   useEffect(() => {
     if (!state?.success || signed.current) return;
-    const email = credsRef.current.email.trim();
+    const email = credsRef.current.email.trim().toLowerCase();
     const password = credsRef.current.password;
     if (!email || !password) {
       signed.current = true;
@@ -52,13 +52,13 @@ export function RegisterForm({
     void (async () => {
       const r = await signIn("credentials", { email, password, redirect: false });
       if (r?.ok) {
-        router.push(postLoginContinueUrl("/dashboard"));
-        router.refresh();
+        const path = postLoginContinueUrl("/dashboard");
+        window.location.assign(new URL(path, window.location.origin).href);
       } else {
         window.location.href = "/login?registered=1";
       }
     })();
-  }, [state?.success, router]);
+  }, [state?.success]);
 
   if (state?.success) {
     return (
