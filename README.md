@@ -64,6 +64,12 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
    Owner dashboard access is granted when either the signed-in user has `role = 'ADMIN'`
    or their email is listed in `OWNER_EMAIL` / `OWNER_EMAILS`.
 
+   For the current owner login in Vercel, set:
+
+   ```bash
+   OWNER_EMAIL=topwebdeveloperan@gmail.com
+   ```
+
    To promote an existing user in the DB:
 
    ```sql
@@ -75,6 +81,14 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
 
    ```bash
    npm run auth:set-password -- your@email.com "YourNewPassword8+"
+   ```
+
+   If the owner email exists only in env and does not have a DB password yet, set
+   a temporary bootstrap password in Vercel, redeploy, sign in once with that
+   password, then remove the bootstrap variable:
+
+   ```bash
+   OWNER_BOOTSTRAP_PASSWORD="YourNewPassword8+"
    ```
 
 5. **Run**

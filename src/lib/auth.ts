@@ -2,9 +2,10 @@ import "@/lib/normalize-env-auth";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { prismaAuthAdapter } from "@/lib/prisma-auth-adapter";
+import { isOwnerEmail } from "@/lib/owner-emails";
 import { findUserByEmail, normalizeEmail } from "@/lib/user-email";
 import type { Role } from "@prisma/client";
 
@@ -36,6 +37,10 @@ const hasGoogle = Boolean(googleId && googleSecret);
 
 /** Explicit secret avoids rare cases where inferred env isn’t seen at runtime on the server (shows as ?error=Configuration). */
 const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+
+function ownerBootstrapPassword(): string {
+  return process.env.OWNER_BOOTSTRAP_PASSWORD?.trim() ?? "";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: authSecret,
@@ -69,7 +74,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials.password);
         if (password.length < 1) return null;
         const user = await findUserByEmail(prisma, email);
-        if (!user?.passwordHash) return null;
+        if (!user?.passwordHash) {
+          const bootstrapPassword = ownerBootstrapPassword();
+          if (
+            !isOwnerEmail(email) ||
+            bootstrapPassword.length < 8 ||
+            password !== bootstrapPassword
+          ) {
+            return null;
+          }
+
+          const passwordHash = await hash(password, 12);
+          const owner = user
+            ? await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                  passwordHash,
+                  role: "ADMIN",
+                  disabled: false,
+                  onboardingComplete: true,
+                },
+              })
+            : await prisma.user.create({
+                data: {
+                  email,
+                  passwordHash,
+                  role: "ADMIN",
+                  plan: "free",
+                  onboardingComplete: true,
+                },
+              });
+
+          return {
+            id: owner.id,
+            email: owner.email,
+            name: owner.name,
+            image: owner.image,
+            role: owner.role,
+          };
+        }
         const ok = await compare(password, user.passwordHash);
         if (!ok) return null;
         return {
