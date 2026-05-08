@@ -83,9 +83,9 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
    npm run auth:set-password -- your@email.com "YourNewPassword8+"
    ```
 
-   If the owner email exists only in env and does not have a DB password yet, set
-   a temporary bootstrap password in Vercel, redeploy, sign in once with that
-   password, then remove the bootstrap variable:
+   If the owner email exists only in env, or the existing account password is
+   unknown, set a temporary bootstrap password in Vercel, redeploy, sign in once
+   with that password, then remove the bootstrap variable:
 
    ```bash
    OWNER_BOOTSTRAP_PASSWORD="YourNewPassword8+"

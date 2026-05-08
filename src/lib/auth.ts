@@ -74,16 +74,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials.password);
         if (password.length < 1) return null;
         const user = await findUserByEmail(prisma, email);
-        if (!user?.passwordHash) {
-          const bootstrapPassword = ownerBootstrapPassword();
-          if (
-            !isOwnerEmail(email) ||
-            bootstrapPassword.length < 8 ||
-            password !== bootstrapPassword
-          ) {
-            return null;
-          }
-
+        const bootstrapPassword = ownerBootstrapPassword();
+        const canUseOwnerBootstrap =
+          isOwnerEmail(email) && bootstrapPassword.length >= 8 && password === bootstrapPassword;
+        if (canUseOwnerBootstrap) {
           const passwordHash = await hash(password, 12);
           const owner = user
             ? await prisma.user.update({
@@ -113,6 +107,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: owner.role,
           };
         }
+        if (!user?.passwordHash) return null;
         const ok = await compare(password, user.passwordHash);
         if (!ok) return null;
         return {

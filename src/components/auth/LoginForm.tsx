@@ -76,7 +76,8 @@ export function LoginForm({
           Owner dashboard sign-in uses your owner email, not a separate username.
           The email must be listed in OWNER_EMAIL or OWNER_EMAILS, and it must
           have a password set. For a new env-only owner, set OWNER_BOOTSTRAP_PASSWORD
-          once and sign in with that password.
+          once and sign in with that password; it also recovers an existing owner
+          account with an unknown password.
           {hasGoogle ? " If you originally used Google, continue with Google instead." : ""}
         </div>
       )}
@@ -102,7 +103,7 @@ export function LoginForm({
             const message = ownerLoginRequested
               ? hasGoogle
                 ? "Owner sign-in needs an env-listed owner email plus a password that has been set, or Continue with Google if that is how this account was created. For a new env-only owner, set OWNER_BOOTSTRAP_PASSWORD once."
-                : "Owner sign-in needs an env-listed owner email plus a password that has been set. For a new env-only owner, set OWNER_BOOTSTRAP_PASSWORD once or use Forgot password."
+                : "Owner sign-in needs an env-listed owner email plus a password that has been set. Set OWNER_BOOTSTRAP_PASSWORD once to create or recover the owner password, or use Forgot password."
               : hasGoogle
                 ? "Check email and password, or use Continue with Google below if that’s how you signed up."
                 : "Check your email and password. To use Google, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file.";
