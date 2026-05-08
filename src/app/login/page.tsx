@@ -26,6 +26,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const q = await searchParams;
   const callbackUrl = typeof q.callbackUrl === "string" ? q.callbackUrl : "/dashboard";
   const authError = typeof q.error === "string" ? q.error : null;
+  const ownerLoginRequested = callbackUrl === "/owner" || callbackUrl.startsWith("/owner/");
   /** After session exists, server decides /owner vs app (ADMIN, OWNER_EMAIL + OWNER_EMAILS). */
   const afterLoginUrl = postLoginContinueUrl(callbackUrl);
   return (
@@ -64,6 +65,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
           callbackUrl={afterLoginUrl}
           hasGoogle={isGoogleOAuthConfigured()}
           authError={authError}
+          ownerLoginRequested={ownerLoginRequested}
         />
       </div>
     </div>

@@ -31,10 +31,12 @@ export function LoginForm({
   callbackUrl,
   hasGoogle,
   authError,
+  ownerLoginRequested = false,
 }: {
   callbackUrl: string;
   hasGoogle: boolean;
   authError?: string | null;
+  ownerLoginRequested?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -69,6 +71,15 @@ export function LoginForm({
         <p className="text-sm text-amber-800 dark:text-amber-200">{oauthMsg}</p>
       )}
 
+      {ownerLoginRequested && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+          Owner dashboard sign-in uses your account email, not a username. If this
+          owner account was added from the dashboard, use the password set/reset
+          email first, or choose Forgot password below.
+          {hasGoogle ? " If you originally used Google, continue with Google instead." : ""}
+        </div>
+      )}
+
       {!hasGoogle && <GoogleSetupHint />}
 
       <form
@@ -87,11 +98,14 @@ export function LoginForm({
           });
           setLoading(false);
           if (r?.error) {
-            setError(
-              hasGoogle
+            const message = ownerLoginRequested
+              ? hasGoogle
+                ? "Owner sign-in needs your owner email plus a password that has been set, or Continue with Google if that is how this account was created."
+                : "Owner sign-in needs your owner email plus a password that has been set. Use Forgot password if you have not set one yet."
+              : hasGoogle
                 ? "Check email and password, or use Continue with Google below if that’s how you signed up."
-                : "Check your email and password. To use Google, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file."
-            );
+                : "Check your email and password. To use Google, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file.";
+            setError(message);
             return;
           }
           if (r?.ok) {
