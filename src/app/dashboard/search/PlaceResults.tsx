@@ -6,6 +6,9 @@ import Image from "next/image";
 import { saveBusinessAsLead } from "@/actions/leads";
 import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
 
+/** Client-side list pagination (Google returns many rows after multi-page fetch). */
+const RESULTS_PAGE_SIZE = 25;
+
 type Place = {
   placeId: string;
   name: string;
@@ -51,6 +54,7 @@ export function PlaceResults({
   totalBeforeFilters?: number;
 }) {
   const router = useRouter();
+  const [uiPage, setUiPage] = useState(1);
   const [saving, setSaving] = useState<string | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -64,10 +68,23 @@ export function PlaceResults({
 
   const filtered = places;
 
+  const totalUiPages = Math.max(1, Math.ceil(filtered.length / RESULTS_PAGE_SIZE));
+  const safeUiPage = Math.min(uiPage, totalUiPages);
+  const rangeStart = (safeUiPage - 1) * RESULTS_PAGE_SIZE;
+  const visiblePage = filtered.slice(rangeStart, rangeStart + RESULTS_PAGE_SIZE);
+
   const placeKey = useMemo(
     () => places.map((p) => p.placeId).sort().join(","),
     [places]
   );
+
+  useEffect(() => {
+    setUiPage(1);
+  }, [placeKey]);
+
+  useEffect(() => {
+    if (uiPage > totalUiPages) setUiPage(totalUiPages);
+  }, [uiPage, totalUiPages]);
 
   const rawTotal = totalBeforeFilters ?? places.length;
   const showOfTotal = rawTotal > filtered.length;
@@ -77,8 +94,8 @@ export function PlaceResults({
   }, [placeKey]);
 
   const allVisibleSelected =
-    filtered.length > 0 && filtered.every((p) => selected.has(p.placeId));
-  const someVisibleSelected = filtered.some((p) => selected.has(p.placeId));
+    visiblePage.length > 0 && visiblePage.every((p) => selected.has(p.placeId));
+  const someVisibleSelected = visiblePage.some((p) => selected.has(p.placeId));
 
   useEffect(() => {
     if (selectAllRef.current) {
@@ -111,9 +128,9 @@ export function PlaceResults({
     setSelected((prev) => {
       const next = new Set(prev);
       if (allVisibleSelected) {
-        filtered.forEach((p) => next.delete(p.placeId));
+        visiblePage.forEach((p) => next.delete(p.placeId));
       } else {
-        filtered.forEach((p) => next.add(p.placeId));
+        visiblePage.forEach((p) => next.add(p.placeId));
       }
       return next;
     });
@@ -188,10 +205,21 @@ export function PlaceResults({
         </p>
       ) : null}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-          Results ({filtered.length}
-          {showOfTotal ? ` of ${rawTotal}` : ""})
-        </h2>
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Results ({filtered.length}
+            {showOfTotal ? ` of ${rawTotal}` : ""})
+          </h2>
+          {filtered.length > RESULTS_PAGE_SIZE ? (
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Showing{" "}
+              <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">
+                {rangeStart + 1}–{Math.min(rangeStart + RESULTS_PAGE_SIZE, filtered.length)}
+              </span>{" "}
+              of {filtered.length} · Page {safeUiPage} of {totalUiPages}
+            </p>
+          ) : null}
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
             <input
@@ -199,10 +227,10 @@ export function PlaceResults({
               type="checkbox"
               checked={allVisibleSelected}
               onChange={toggleSelectAllVisible}
-              disabled={busy || filtered.length === 0}
+              disabled={busy || visiblePage.length === 0}
               className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
-            Select all visible
+            Select all on this page
           </label>
           <button
             type="button"
@@ -218,7 +246,7 @@ export function PlaceResults({
       </div>
 
       <div className="space-y-3">
-        {filtered.map((place) => (
+        {visiblePage.map((place) => (
           <div
             key={place.placeId}
             className="flex flex-col sm:flex-row gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
@@ -288,6 +316,36 @@ export function PlaceResults({
           </div>
         ))}
       </div>
+
+      {totalUiPages > 1 ? (
+        <nav
+          className="flex flex-col items-stretch gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800"
+          aria-label="Results pages"
+        >
+          <p className="text-center text-sm text-slate-500 dark:text-slate-400 sm:text-left">
+            Page <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">{safeUiPage}</span> of{" "}
+            <span className="tabular-nums">{totalUiPages}</span>
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setUiPage((p) => Math.max(1, p - 1))}
+              disabled={busy || safeUiPage <= 1}
+              className="min-h-10 min-w-[7rem] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setUiPage((p) => Math.min(totalUiPages, p + 1))}
+              disabled={busy || safeUiPage >= totalUiPages}
+              className="min-h-10 min-w-[7rem] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Next
+            </button>
+          </div>
+        </nav>
+      ) : null}
     </div>
   );
 }

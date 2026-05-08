@@ -121,6 +121,12 @@ export default function SearchPage() {
           raises the cap.
         </p>
       )}
+      <p className="mb-4 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+        Each live search asks Google for every available page of results (typically up to about 60 businesses per
+        query — Google&apos;s cap), ranks them near your selected city, and filters to your radius when we can
+        locate the city on the map. Enable the Geocoding API on the same Google Cloud project as Places if radius
+        feels off.
+      </p>
       <section className="w-full min-w-0 max-w-4xl rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-slate-900/[0.02] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 dark:ring-white/[0.03] sm:p-6">
         <BusinessSearchForm onSearch={onSearch} loading={loading} embedded />
         {results.length > 0 && (
