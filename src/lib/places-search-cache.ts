@@ -4,6 +4,9 @@ import type { PlaceResult } from "@/lib/google-places";
 
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
+/** Bump when search semantics change (e.g. multi-page Places) so old payloads are not reused. */
+const CACHE_KEY_VERSION = "2";
+
 export function placesSearchCacheKey(params: {
   city: string;
   state: string;
@@ -15,6 +18,7 @@ export function placesSearchCacheKey(params: {
     params.state.trim().toUpperCase(),
     String(params.radiusMiles),
     params.businessType.trim().toLowerCase(),
+    CACHE_KEY_VERSION,
   ].join("|");
   return createHash("sha256").update(normalized).digest("hex");
 }

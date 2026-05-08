@@ -174,7 +174,7 @@ function mapPlaceToResult(
   const lng = p.location?.longitude;
   const hasSocialOnly = !!website && isSocialOnlyWebsite(website);
   const noWebsite = !website || hasSocialOnly;
-    const googleMapsUrl = googleMapsListingUrl(placeId, name);
+  const googleMapsUrl = googleMapsListingUrl(placeId, name);
   const photoUrl = p.photos?.[0]?.name
     ? `https://places.googleapis.com/v1/${p.photos[0].name}/media?key=${apiKey}&maxHeightPx=400`
     : undefined;
@@ -247,8 +247,9 @@ export async function searchPlaces(params: {
   const headers = {
     "Content-Type": "application/json",
     "X-Goog-Api-Key": apiKey,
+    // nextPageToken must be listed or pagination is omitted and only the first 20 results return.
     "X-Goog-FieldMask":
-      "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.rating,places.userRatingCount,places.websiteUri,places.location,places.types,places.photos",
+      "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.rating,places.userRatingCount,places.websiteUri,places.location,places.types,places.photos,nextPageToken",
   };
 
   const mergedById = new Map<string, PlaceResult>();
