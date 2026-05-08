@@ -32,11 +32,17 @@ export function LoginForm({
   hasGoogle,
   authError,
   ownerLoginRequested = false,
+  ownerEnvStatus,
 }: {
   callbackUrl: string;
   hasGoogle: boolean;
   authError?: string | null;
   ownerLoginRequested?: boolean;
+  ownerEnvStatus?: {
+    hasOwnerEmail: boolean;
+    ownerEmailCount: number;
+    hasBootstrapPassword: boolean;
+  } | null;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,11 +80,21 @@ export function LoginForm({
       {ownerLoginRequested && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
           Owner dashboard sign-in uses your owner email, not a separate username.
-          The email must be listed in OWNER_EMAIL or OWNER_EMAILS, and it must
-          have a password set. For a new env-only owner, set OWNER_BOOTSTRAP_PASSWORD
-          once and sign in with that password; it also recovers an existing owner
-          account with an unknown password.
+          The email must be listed in OWNER_EMAIL or OWNER_EMAILS (OWNER_USERNAME
+          also works as an alias), and it must have a password set. For a new
+          env-only owner, set OWNER_BOOTSTRAP_PASSWORD once and sign in with that
+          password; it also recovers an existing owner account with an unknown password.
           {hasGoogle ? " If you originally used Google, continue with Google instead." : ""}
+          {ownerEnvStatus && (
+            <span className="mt-2 block text-xs font-medium">
+              Deployed owner config: owner email{" "}
+              {ownerEnvStatus.hasOwnerEmail
+                ? `detected (${ownerEnvStatus.ownerEmailCount})`
+                : "not detected"}
+              ; bootstrap password{" "}
+              {ownerEnvStatus.hasBootstrapPassword ? "detected" : "not detected"}.
+            </span>
+          )}
         </div>
       )}
 

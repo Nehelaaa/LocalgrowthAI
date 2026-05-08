@@ -39,7 +39,9 @@ const hasGoogle = Boolean(googleId && googleSecret);
 const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 function ownerBootstrapPassword(): string {
-  return process.env.OWNER_BOOTSTRAP_PASSWORD?.trim() ?? "";
+  return (process.env.OWNER_BOOTSTRAP_PASSWORD ?? "")
+    .trim()
+    .replace(/^['"]|['"]$/g, "");
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

@@ -70,6 +70,9 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
    OWNER_EMAIL=topwebdeveloperan@gmail.com
    ```
 
+   If you already created a Vercel variable named `OWNER_USERNAME`, the app also
+   accepts that as an alias, but `OWNER_EMAIL` is preferred.
+
    To promote an existing user in the DB:
 
    ```sql

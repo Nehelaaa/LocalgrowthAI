@@ -1,6 +1,7 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { isGoogleOAuthConfigured } from "@/lib/google-oauth";
 import { postLoginContinueUrl } from "@/lib/post-login-continue";
+import { ownerLoginEnvStatus } from "@/lib/owner-emails";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { connection } from "next/server";
@@ -27,6 +28,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const callbackUrl = typeof q.callbackUrl === "string" ? q.callbackUrl : "/dashboard";
   const authError = typeof q.error === "string" ? q.error : null;
   const ownerLoginRequested = callbackUrl === "/owner" || callbackUrl.startsWith("/owner/");
+  const ownerEnvStatus = ownerLoginRequested ? ownerLoginEnvStatus() : null;
   /** After session exists, server decides /owner vs app (ADMIN, OWNER_EMAIL + OWNER_EMAILS). */
   const afterLoginUrl = postLoginContinueUrl(callbackUrl);
   return (
@@ -66,6 +68,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
           hasGoogle={isGoogleOAuthConfigured()}
           authError={authError}
           ownerLoginRequested={ownerLoginRequested}
+          ownerEnvStatus={ownerEnvStatus}
         />
       </div>
     </div>
