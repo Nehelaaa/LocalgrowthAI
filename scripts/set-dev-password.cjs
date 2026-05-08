@@ -19,7 +19,12 @@ if (password.length < 8) {
 
 async function main() {
   const e = String(email).toLowerCase().trim();
-  const user = await prisma.user.findUnique({ where: { email: e } });
+  const user =
+    (await prisma.user.findUnique({ where: { email: e } })) ??
+    (await prisma.user.findFirst({
+      where: { email: { equals: String(email).trim(), mode: "insensitive" } },
+      orderBy: { createdAt: "asc" },
+    }));
   if (!user) {
     console.error(`No user found with email: ${e}`);
     process.exit(1);

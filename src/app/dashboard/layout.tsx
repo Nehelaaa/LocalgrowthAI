@@ -5,7 +5,7 @@ import { StarterLimitOverlay } from "@/components/dashboard/StarterLimitOverlay"
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session-user";
 import { canCreateMoreLeads, FREE_LEAD_LIMIT, hasProEntitlement } from "@/lib/entitlements";
-import { isOwnerEmail } from "@/lib/owner";
+import { isOwnerEmail } from "@/lib/owner-emails";
 import { getSearchUsageState } from "@/lib/search-usage";
 import { isStripeConfigured } from "@/lib/stripe";
 import { syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";

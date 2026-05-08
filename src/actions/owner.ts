@@ -7,6 +7,7 @@ import { requireOwnerOrRedirect } from "@/lib/owner";
 import { randomBytes } from "node:crypto";
 import { getAppOriginForRequest } from "@/lib/app-origin";
 import { sendPasswordResetEmail } from "@/lib/send-password-reset-email";
+import { findUserByEmail } from "@/lib/user-email";
 import type { Role } from "@prisma/client";
 
 const userIdSchema = z.string().min(1);
@@ -60,17 +61,22 @@ export async function ownerAddOwnerByEmail(email: string) {
   await requireOwnerOrRedirect();
   const e = emailSchema.parse(String(email).toLowerCase().trim());
 
-  const user = await prisma.user.upsert({
-    where: { email: e },
-    create: {
-      email: e,
-      role: "ADMIN",
-      plan: "free",
-      onboardingComplete: true,
-    },
-    update: { role: "ADMIN", disabled: false },
-    select: { id: true, email: true },
-  });
+  const existing = await findUserByEmail(prisma, e);
+  const user = existing
+    ? await prisma.user.update({
+        where: { id: existing.id },
+        data: { role: "ADMIN", disabled: false },
+        select: { id: true, email: true },
+      })
+    : await prisma.user.create({
+        data: {
+          email: e,
+          role: "ADMIN",
+          plan: "free",
+          onboardingComplete: true,
+        },
+        select: { id: true, email: true },
+      });
 
   // Create a one-time password set link (works even if passwordHash is currently null).
   await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });

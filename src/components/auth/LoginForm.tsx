@@ -31,10 +31,18 @@ export function LoginForm({
   callbackUrl,
   hasGoogle,
   authError,
+  ownerLoginRequested = false,
+  ownerEnvStatus,
 }: {
   callbackUrl: string;
   hasGoogle: boolean;
   authError?: string | null;
+  ownerLoginRequested?: boolean;
+  ownerEnvStatus?: {
+    hasOwnerEmail: boolean;
+    ownerEmailCount: number;
+    hasBootstrapPassword: boolean;
+  } | null;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -69,6 +77,27 @@ export function LoginForm({
         <p className="text-sm text-amber-800 dark:text-amber-200">{oauthMsg}</p>
       )}
 
+      {ownerLoginRequested && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+          Owner dashboard sign-in uses your owner email, not a separate username.
+          The email must be listed in OWNER_EMAIL or OWNER_EMAILS (OWNER_USERNAME
+          also works as an alias), and it must have a password set. For a new
+          env-only owner, set OWNER_BOOTSTRAP_PASSWORD once and sign in with that
+          password; it also recovers an existing owner account with an unknown password.
+          {hasGoogle ? " If you originally used Google, continue with Google instead." : ""}
+          {ownerEnvStatus && (
+            <span className="mt-2 block text-xs font-medium">
+              Deployed owner config: owner email{" "}
+              {ownerEnvStatus.hasOwnerEmail
+                ? `detected (${ownerEnvStatus.ownerEmailCount})`
+                : "not detected"}
+              ; bootstrap password{" "}
+              {ownerEnvStatus.hasBootstrapPassword ? "detected" : "not detected"}.
+            </span>
+          )}
+        </div>
+      )}
+
       {!hasGoogle && <GoogleSetupHint />}
 
       <form
@@ -87,11 +116,14 @@ export function LoginForm({
           });
           setLoading(false);
           if (r?.error) {
-            setError(
-              hasGoogle
+            const message = ownerLoginRequested
+              ? hasGoogle
+                ? "Owner sign-in needs an env-listed owner email plus a password that has been set, or Continue with Google if that is how this account was created. For a new env-only owner, set OWNER_BOOTSTRAP_PASSWORD once."
+                : "Owner sign-in needs an env-listed owner email plus a password that has been set. Set OWNER_BOOTSTRAP_PASSWORD once to create or recover the owner password, or use Forgot password."
+              : hasGoogle
                 ? "Check email and password, or use Continue with Google below if that’s how you signed up."
-                : "Check your email and password. To use Google, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file."
-            );
+                : "Check your email and password. To use Google, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file.";
+            setError(message);
             return;
           }
           if (r?.ok) {

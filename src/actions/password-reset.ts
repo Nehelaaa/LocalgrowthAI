@@ -12,6 +12,7 @@ import {
 import { rateLimitAuthForm } from "@/lib/rate-limit-auth-forms";
 import { getClientIp } from "@/lib/request-ip";
 import { sendPasswordResetEmail } from "@/lib/send-password-reset-email";
+import { findUserPasswordResetTarget, normalizeEmail } from "@/lib/user-email";
 
 const emailSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -45,9 +46,7 @@ export async function requestPasswordReset(
     };
   }
 
-  const rawEmail = String(formData.get("email") ?? "")
-    .toLowerCase()
-    .trim();
+  const rawEmail = normalizeEmail(String(formData.get("email") ?? ""));
   const parsed = emailSchema.safeParse({ email: rawEmail });
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors.email?.[0] ?? "Invalid email" };
@@ -61,10 +60,7 @@ export async function requestPasswordReset(
     };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-    select: { id: true, passwordHash: true },
-  });
+  const user = await findUserPasswordResetTarget(prisma, parsed.data.email);
 
   // OAuth-only accounts have no password — same neutral response as unknown email.
   if (!user?.passwordHash) {
@@ -87,7 +83,7 @@ export async function requestPasswordReset(
   const origin = await getAppOriginForRequest();
   const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(rawToken)}`;
 
-  const sent = await sendPasswordResetEmail(parsed.data.email, resetUrl);
+  const sent = await sendPasswordResetEmail(user.email, resetUrl);
 
   if (!sent.ok) {
     await prisma.passwordResetToken.deleteMany({

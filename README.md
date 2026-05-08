@@ -59,12 +59,39 @@ Full-stack SaaS to find local businesses without websites, score them, and manag
 
    Use `--dry-run` to count rows only. Set `SQLITE_PATH` if your `.db` is elsewhere.
 
-4. **Admin user**
+4. **Owner / admin access**
 
-   Sign in once with Google. Then in the DB set your user’s `role` to `ADMIN`:
+   Owner dashboard access is granted when either the signed-in user has `role = 'ADMIN'`
+   or their email is listed in `OWNER_EMAIL` / `OWNER_EMAILS`.
+
+   For the current owner login in Vercel, set:
+
+   ```bash
+   OWNER_EMAIL=topwebdeveloperan@gmail.com
+   ```
+
+   If you already created a Vercel variable named `OWNER_USERNAME`, the app also
+   accepts that as an alias, but `OWNER_EMAIL` is preferred.
+
+   To promote an existing user in the DB:
 
    ```sql
    UPDATE "User" SET role = 'ADMIN' WHERE email = 'your@email.com';
+   ```
+
+   Email/password sign-in only works for users with a local password set. If the owner
+   account was created with Google, use **Continue with Google** or set a password with:
+
+   ```bash
+   npm run auth:set-password -- your@email.com "YourNewPassword8+"
+   ```
+
+   If the owner email exists only in env, or the existing account password is
+   unknown, set a temporary bootstrap password in Vercel, redeploy, sign in once
+   with that password, then remove the bootstrap variable:
+
+   ```bash
+   OWNER_BOOTSTRAP_PASSWORD="YourNewPassword8+"
    ```
 
 5. **Run**
