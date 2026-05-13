@@ -37,7 +37,7 @@ export async function getDashboardMetrics() {
   const conversionRate =
     totalLeads > 0 ? Math.round((closedWon / totalLeads) * 100) : 0;
 
-  /** Sum of "Website price" on closed-won leads (the amount you enter per lead) — not a hardcoded $2,500. */
+  /** Sum of "Service price" on closed-won leads (the amount you enter per lead) — not a hardcoded $2,500. */
   const closedWonWebsiteValue = wonLeads.reduce(
     (sum, l) => sum + parseWebsitePrice(l.websiteQuote),
     0

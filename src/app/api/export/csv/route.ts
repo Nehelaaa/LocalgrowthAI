@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     "Badge",
     "Contact Status",
     "Notes",
-    "Website price",
+    "Service price",
     "Follow-up Date",
     "Tags",
   ];

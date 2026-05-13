@@ -93,7 +93,7 @@ const cardsData = (m: Awaited<ReturnType<typeof getDashboardMetrics>>) =>
         maximumFractionDigits: 2,
       })}`,
       tone: "slate" as const,
-      description: "Sum of website price on closed-won leads",
+      description: "Sum of service price on closed-won leads",
       icon: (
         <svg className={iconClass} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
           <path

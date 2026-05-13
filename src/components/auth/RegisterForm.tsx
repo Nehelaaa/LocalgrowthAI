@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
-import { signIn } from "next-auth/react";
+import { useActionState, useEffect, useRef, startTransition } from "react";
 import Link from "next/link";
+import { loginWithCredentials } from "@/actions/login-credentials";
 import { registerUser, type RegisterState } from "@/actions/register";
 import { PROFESSIONS, type ProfessionId } from "@/lib/profession";
 import { BotTrapFields } from "@/components/forms/BotTrapFields";
@@ -25,6 +25,7 @@ export function RegisterForm({
   googleAfterAuthUrl: string;
 }) {
   const [state, action, pending] = useActionState(registerUser, init);
+  const [loginState, loginAction] = useActionState(loginWithCredentials, {});
   const signed = useRef(false);
   /** Must not read from the DOM after success — the form unmounts when we show “Signing you in…”. */
   const credsRef = useRef({ email: "", password: "" });
@@ -49,16 +50,19 @@ export function RegisterForm({
       return;
     }
     signed.current = true;
-    void (async () => {
-      const r = await signIn("credentials", { email, password, redirect: false });
-      if (r?.ok) {
-        const path = postLoginContinueUrl("/dashboard");
-        window.location.assign(new URL(path, window.location.origin).href);
-      } else {
-        window.location.href = "/login?registered=1";
-      }
-    })();
-  }, [state?.success]);
+    const fd = new FormData();
+    fd.set("email", email);
+    fd.set("password", password);
+    fd.set("callbackUrl", postLoginContinueUrl("/dashboard"));
+    startTransition(() => {
+      loginAction(fd);
+    });
+  }, [state?.success, loginAction]);
+
+  useEffect(() => {
+    if (!loginState?.error || !state?.success) return;
+    window.location.href = "/login?registered=1";
+  }, [loginState?.error, state?.success]);
 
   if (state?.success) {
     return (

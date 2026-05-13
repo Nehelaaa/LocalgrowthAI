@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  loginWithCredentials,
+  type LoginCredentialsState,
+} from "@/actions/login-credentials";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { GoogleSetupHint } from "./GoogleSetupHint";
+
+const loginInit: LoginCredentialsState = {};
 
 function oauthUrlErrorMessage(code: string | null | undefined): string | null {
   if (!code) return null;
@@ -36,8 +41,10 @@ export function LoginForm({
   hasGoogle: boolean;
   authError?: string | null;
 }) {
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [state, formAction, pending] = useActionState(
+    loginWithCredentials,
+    loginInit
+  );
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -71,43 +78,17 @@ export function LoginForm({
 
       {!hasGoogle && <GoogleSetupHint />}
 
-      <form
-        className="space-y-4"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setError(null);
-          setLoading(true);
-          const fd = new FormData(e.currentTarget);
-          const email = String(fd.get("email") ?? "")
-            .trim()
-            .toLowerCase();
-          const password = String(fd.get("password") ?? "");
-          const r = await signIn("credentials", {
-            email,
-            password,
-            redirect: false,
-          });
-          setLoading(false);
-          if (r?.error) {
-            setError(
-              hasGoogle
+      <form className="space-y-4" action={formAction}>
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
+        {state?.error && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {state.error === "Invalid email or password."
+              ? hasGoogle
                 ? "Check email and password, or use Continue with Google below if that’s how you signed up."
                 : "Check your email and password. To use Google, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file."
-            );
-            return;
-          }
-          if (r?.ok) {
-            // Full navigation only — no router.refresh() first. On mobile Safari, an immediate RSC
-            // refresh can race the Set-Cookie from sign-in and send you back to /login as “logged out”.
-            const target =
-              callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
-                ? new URL(callbackUrl, window.location.origin).href
-                : callbackUrl;
-            window.location.assign(target);
-          }
-        }}
-      >
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+              : state.error}
+          </p>
+        )}
         <div>
           <label
             htmlFor="email"
@@ -154,10 +135,10 @@ export function LoginForm({
         </div>
         <button
           type="submit"
-          disabled={loading}
+          disabled={pending}
           className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50"
         >
-          {loading ? "Signing in…" : "Sign in with email"}
+          {pending ? "Signing in…" : "Sign in with email"}
         </button>
         <p className="text-center text-sm text-slate-600 dark:text-slate-400">
           New here?{" "}

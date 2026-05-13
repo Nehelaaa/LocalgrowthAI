@@ -192,7 +192,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
             <div className="mx-4 mb-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-50/90 p-3 dark:bg-slate-800/50">
               <div className="min-w-0">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                  Website price
+                  Service price
                 </p>
                 <p
                   className="mt-0.5 truncate text-sm font-medium text-slate-800 dark:text-slate-100"
@@ -242,7 +242,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
                   Status
                 </th>
                 <th className="px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">
-                  Website price
+                  Service price
                 </th>
                 <th className="px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400">
                   Follow-up

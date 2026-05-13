@@ -69,7 +69,7 @@ export function MarketingLeadsPanelContent() {
               <p className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
                 Score{" "}
                 <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-200">{r.score}</span>
-                {" · "}Website price{" "}
+                {" · "}Service price{" "}
                 <span className="font-semibold text-slate-700 dark:text-slate-200">{r.value}</span>
                 {" · "}Follow-up{" "}
                 <span className="font-semibold text-slate-700 dark:text-slate-200">{r.follow}</span>

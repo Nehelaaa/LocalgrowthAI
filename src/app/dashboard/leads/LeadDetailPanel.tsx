@@ -331,10 +331,10 @@ export function LeadDetailPanel({
 
           <section>
             <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
-              Website price
+              Service price
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-              What you&apos;re charging this business for the website (any format
+              What you&apos;re charging this business for your service (any format
               you like). Saves automatically about a second after you stop typing,
               when you leave a field, or when you tap Save below.
             </p>
@@ -344,7 +344,7 @@ export function LeadDetailPanel({
               value={websiteQuote}
               onChange={(e) => setWebsiteQuote(e.target.value)}
               onBlur={() => void persistLeadFields()}
-              placeholder="e.g. 3500, $3,500, or $3.5k landing + blog"
+              placeholder="e.g. 3500, $3,500, or $3.5k"
               className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white"
             />
           </section>
