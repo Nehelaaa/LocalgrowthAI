@@ -7,7 +7,12 @@ import { prisma } from "@/lib/db";
 import { canCreateMoreLeads } from "@/lib/entitlements";
 import { computeLeadScore } from "@/lib/lead-score";
 import { googleMapsListingUrl } from "@/lib/google-maps-links";
-import type { ContactStatus, Prisma } from "@prisma/client";
+import {
+  leadInvoiceDraftV1Schema,
+  type LeadInvoiceDraftV1,
+} from "@/lib/lead-invoice-draft";
+import type { ContactStatus } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 export type ManualCrmLeadResult =
@@ -257,6 +262,9 @@ const updateLeadSchema = z.object({
   tags: z.array(z.string()).optional(),
   // Accept string; numbers can come from atypical client payloads
   websiteQuote: z.union([z.string(), z.number()]).optional(),
+  pocName: z.string().optional(),
+  pocPhone: z.string().optional(),
+  pocEmail: z.string().optional(),
 });
 
 function tagsToDb(tags: string[] | undefined): string | undefined {
@@ -305,8 +313,17 @@ export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
     }
     throw e;
   }
-  const { leadId, contactStatus, notes, followUpDate, tags, websiteQuote } =
-    parsed.data;
+  const {
+    leadId,
+    contactStatus,
+    notes,
+    followUpDate,
+    tags,
+    websiteQuote,
+    pocName,
+    pocPhone,
+    pocEmail,
+  } = parsed.data;
 
   const data: Prisma.LeadUpdateInput = {};
 
@@ -329,6 +346,15 @@ export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
     const t = String(websiteQuote).trim();
     data.websiteQuote = t === "" ? null : t;
   }
+  if (pocName !== undefined) {
+    data.pocName = String(pocName).trim() || null;
+  }
+  if (pocPhone !== undefined) {
+    data.pocPhone = String(pocPhone).trim() || null;
+  }
+  if (pocEmail !== undefined) {
+    data.pocEmail = String(pocEmail).trim() || null;
+  }
 
   if (Object.keys(data).length === 0) {
     return;
@@ -337,6 +363,49 @@ export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
   await prisma.lead.update({
     where: { id: leadId, userId: user.id },
     data,
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/leads");
+}
+
+export async function saveLeadInvoiceDraft(
+  leadId: string,
+  draft: LeadInvoiceDraftV1
+) {
+  const user = await requireUserForAction();
+  const parsed = leadInvoiceDraftV1Schema.safeParse(draft);
+  if (!parsed.success) {
+    throw new Error("Invalid invoice draft.");
+  }
+  try {
+    await assertOwnsLead(user.id, leadId);
+  } catch (e) {
+    if (e instanceof Error && e.message === "FORBIDDEN") {
+      throw new Error("You can’t update this lead.");
+    }
+    throw e;
+  }
+  await prisma.lead.update({
+    where: { id: leadId, userId: user.id },
+    data: { invoiceDraft: parsed.data },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/leads");
+}
+
+export async function clearLeadInvoiceDraft(leadId: string) {
+  const user = await requireUserForAction();
+  try {
+    await assertOwnsLead(user.id, leadId);
+  } catch (e) {
+    if (e instanceof Error && e.message === "FORBIDDEN") {
+      throw new Error("You can’t update this lead.");
+    }
+    throw e;
+  }
+  await prisma.lead.update({
+    where: { id: leadId, userId: user.id },
+    data: { invoiceDraft: Prisma.DbNull },
   });
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");

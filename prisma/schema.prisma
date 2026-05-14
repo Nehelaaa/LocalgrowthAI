@@ -276,6 +276,12 @@ model Lead {
   opportunityInsights  String?
   revenueEstimate       String?
   websiteQuote         String?       // Price you're charging for the website (freeform, e.g. "3200" or "$3,200")
+  /** Person you deal with at the business (manual; not from Places). */
+  pocName              String?
+  pocPhone             String?
+  pocEmail             String?
+  /** Last-used invoice builder fields for this lead (JSON); cleared when user resets. */
+  invoiceDraft         Json?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   outreachs            Outreach[]

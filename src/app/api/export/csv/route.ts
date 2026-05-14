@@ -48,6 +48,9 @@ export async function GET(request: Request) {
     "Notes",
     "Service price",
     "Follow-up Date",
+    "POC Name",
+    "POC Phone",
+    "POC Email",
     "Tags",
   ];
   const rows = leads.map((l) => [
@@ -65,6 +68,9 @@ export async function GET(request: Request) {
     l.notes ?? "",
     l.websiteQuote ?? "",
     l.followUpDate ? new Date(l.followUpDate).toISOString().slice(0, 10) : "",
+    l.pocName ?? "",
+    l.pocPhone ?? "",
+    l.pocEmail ?? "",
     (l.tags ? (JSON.parse(l.tags) as string[]).join("; ") : ""),
   ]);
 

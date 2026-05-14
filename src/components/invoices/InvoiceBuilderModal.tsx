@@ -4,6 +4,10 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { consumeInvoicePdfSlot } from "@/actions/invoice-pdf-quota";
+import {
+  clearLeadInvoiceDraft,
+  saveLeadInvoiceDraft,
+} from "@/actions/leads";
 import { FREE_INVOICE_PDF_LIMIT } from "@/lib/entitlements";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
@@ -22,6 +26,11 @@ import {
 import { sanitizeInvoiceDocumentTitle, sanitizeInvoiceFooterPhrase } from "@/lib/invoice-wording";
 import type { InvoiceLineItem, InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceTotals } from "@/lib/invoice-types";
+import {
+  parseLeadInvoiceDraft,
+  serializeLeadInvoiceDraftStable,
+  type LeadInvoiceDraftV1,
+} from "@/lib/lead-invoice-draft";
 
 function newLineId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
@@ -35,6 +44,11 @@ function nextInvoiceNumber(): string {
 type Props = {
   open: boolean;
   onClose: () => void;
+  /** When set, client/line items/tax/notes auto-save for this lead and reload next time. */
+  leadId?: string;
+  /** `Lead.invoiceDraft` from the server (parsed when the modal opens). */
+  savedInvoiceDraft?: unknown;
+  onInvoiceDraftSaved?: () => void;
   initialClientName: string;
   initialClientAddress: string;
   initialWebsitePriceText: string;
@@ -60,6 +74,9 @@ function mergeLatestSavedPdfLook(snapshot: InvoiceSnapshot): InvoiceSnapshot {
 export function InvoiceBuilderModal({
   open,
   onClose,
+  leadId,
+  savedInvoiceDraft,
+  onInvoiceDraftSaved,
   initialClientName,
   initialClientAddress,
   initialWebsitePriceText,
@@ -83,9 +100,23 @@ export function InvoiceBuilderModal({
   const [invoiceLayoutDensity, setInvoiceLayoutDensity] = useState<"compact" | "comfortable">("comfortable");
   const [logoDragOver, setLogoDragOver] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  /** True for the whole time the modal stays open (so server refetches don’t reset the form). */
+  const invoiceInitDoneRef = useRef(false);
+  const lastPersistedDraftRef = useRef<string>("");
+  /** False until the open-layout pass has applied saved draft or defaults (avoids persisting empty state). */
+  const [invoiceReady, setInvoiceReady] = useState(false);
 
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      invoiceInitDoneRef.current = false;
+      setInvoiceReady(false);
+      return;
+    }
+    if (invoiceInitDoneRef.current) {
+      return;
+    }
+    invoiceInitDoneRef.current = true;
+
     setErr(null);
     setCopyDone(false);
     const sender = loadInvoiceSenderTemplate();
@@ -99,14 +130,105 @@ export function InvoiceBuilderModal({
     setInvoiceLayoutDensity(sender.density === "compact" ? "compact" : "comfortable");
     setInvoiceNumber(nextInvoiceNumber());
     setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
-    setClientName(initialClientName);
-    setClientAddress(initialClientAddress);
-    setNotes(initialInvoiceNotes);
-    const amt = parseMoneyFromQuote(initialWebsitePriceText);
-    setLineItems([{ id: newLineId(), description: "Website", amount: amt }]);
-    setTaxPercent(0);
-    setDiscountAmount(0);
-  }, [open, initialClientName, initialClientAddress, initialWebsitePriceText, initialInvoiceNotes]);
+
+    const parsed = parseLeadInvoiceDraft(savedInvoiceDraft);
+    const defaultAmt = parseMoneyFromQuote(initialWebsitePriceText);
+    const defaultLineItems: InvoiceLineItem[] = [
+      { id: newLineId(), description: "Service", amount: defaultAmt },
+    ];
+
+    if (parsed) {
+      setClientName(parsed.clientName);
+      setClientAddress(parsed.clientAddress);
+      setNotes(parsed.notes);
+      setTaxPercent(Number.isFinite(parsed.taxPercent) ? parsed.taxPercent : 0);
+      setDiscountAmount(
+        Number.isFinite(parsed.discountAmount) ? parsed.discountAmount : 0
+      );
+      const rows =
+        parsed.lineItems.length > 0
+          ? parsed.lineItems.map((li) => ({
+              id: newLineId(),
+              description: li.description,
+              amount: Number.isFinite(li.amount) ? li.amount : 0,
+            }))
+          : defaultLineItems;
+      setLineItems(rows);
+      lastPersistedDraftRef.current = serializeLeadInvoiceDraftStable({
+        v: 1,
+        clientName: parsed.clientName,
+        clientAddress: parsed.clientAddress,
+        lineItems: rows.map(({ description, amount }) => ({ description, amount })),
+        notes: parsed.notes,
+        taxPercent: Number.isFinite(parsed.taxPercent) ? parsed.taxPercent : 0,
+        discountAmount: Number.isFinite(parsed.discountAmount)
+          ? parsed.discountAmount
+          : 0,
+      });
+    } else {
+      setClientName(initialClientName);
+      setClientAddress(initialClientAddress);
+      setNotes(initialInvoiceNotes);
+      setLineItems(defaultLineItems);
+      setTaxPercent(0);
+      setDiscountAmount(0);
+      lastPersistedDraftRef.current = serializeLeadInvoiceDraftStable({
+        v: 1,
+        clientName: initialClientName,
+        clientAddress: initialClientAddress,
+        lineItems: defaultLineItems.map(({ description, amount }) => ({
+          description,
+          amount,
+        })),
+        notes: initialInvoiceNotes,
+        taxPercent: 0,
+        discountAmount: 0,
+      });
+    }
+    setInvoiceReady(true);
+  }, [
+    open,
+    savedInvoiceDraft,
+    initialClientName,
+    initialClientAddress,
+    initialWebsitePriceText,
+    initialInvoiceNotes,
+  ]);
+
+  const leadInvoiceDraftPayload = useMemo((): LeadInvoiceDraftV1 => {
+    return {
+      v: 1,
+      clientName,
+      clientAddress,
+      lineItems: lineItems.map(({ description, amount }) => ({
+        description,
+        amount: Number.isFinite(amount) ? amount : 0,
+      })),
+      notes,
+      taxPercent: Number.isFinite(taxPercent) ? taxPercent : 0,
+      discountAmount: Number.isFinite(discountAmount) ? discountAmount : 0,
+    };
+  }, [clientName, clientAddress, lineItems, notes, taxPercent, discountAmount]);
+
+  useEffect(() => {
+    if (!open || !leadId || !invoiceReady) return;
+    const next = serializeLeadInvoiceDraftStable(leadInvoiceDraftPayload);
+    if (next === lastPersistedDraftRef.current) return;
+    const t = window.setTimeout(() => {
+      void (async () => {
+        try {
+          await saveLeadInvoiceDraft(leadId, leadInvoiceDraftPayload);
+          lastPersistedDraftRef.current = next;
+          onInvoiceDraftSaved?.();
+        } catch (e) {
+          setErr(
+            e instanceof Error ? e.message : "Could not save invoice defaults."
+          );
+        }
+      })();
+    }, 850);
+    return () => window.clearTimeout(t);
+  }, [open, leadId, invoiceReady, leadInvoiceDraftPayload, onInvoiceDraftSaved]);
 
   useEffect(() => {
     if (!open) return;
@@ -219,6 +341,48 @@ export function InvoiceBuilderModal({
     setLineItems((rows) => (rows.length <= 1 ? rows : rows.filter((r) => r.id !== id)));
   }, []);
 
+  const handleClearSavedInvoice = useCallback(async () => {
+    if (!leadId) return;
+    setErr(null);
+    try {
+      await clearLeadInvoiceDraft(leadId);
+      const defaultAmt = parseMoneyFromQuote(initialWebsitePriceText);
+      const defaultLineItems: InvoiceLineItem[] = [
+        { id: newLineId(), description: "Service", amount: defaultAmt },
+      ];
+      setInvoiceNumber(nextInvoiceNumber());
+      setInvoiceDate(format(new Date(), "yyyy-MM-dd"));
+      setClientName(initialClientName);
+      setClientAddress(initialClientAddress);
+      setNotes(initialInvoiceNotes);
+      setLineItems(defaultLineItems);
+      setTaxPercent(0);
+      setDiscountAmount(0);
+      lastPersistedDraftRef.current = serializeLeadInvoiceDraftStable({
+        v: 1,
+        clientName: initialClientName,
+        clientAddress: initialClientAddress,
+        lineItems: defaultLineItems.map(({ description, amount }) => ({
+          description,
+          amount,
+        })),
+        notes: initialInvoiceNotes,
+        taxPercent: 0,
+        discountAmount: 0,
+      });
+      onInvoiceDraftSaved?.();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not clear saved invoice.");
+    }
+  }, [
+    leadId,
+    initialClientName,
+    initialClientAddress,
+    initialWebsitePriceText,
+    initialInvoiceNotes,
+    onInvoiceDraftSaved,
+  ]);
+
   const handleDownloadPdf = useCallback(async () => {
     setErr(null);
     if (!clientName.trim()) {
@@ -227,7 +391,7 @@ export function InvoiceBuilderModal({
     }
     const hasAmount = lineItems.some((li) => li.description.trim() && li.amount > 0);
     if (!lineItems.length || !hasAmount) {
-      setErr("Add at least one line item with a description and amount.");
+      setErr("Add at least one line item with a description and service price.");
       return;
     }
     setPdfBusy(true);
@@ -291,6 +455,19 @@ export function InvoiceBuilderModal({
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Edit details, then download a PDF or copy plain text.
             </p>
+            {leadId ? (
+              <p className="mt-2 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                Client block, line items, tax, discount, and notes are saved for this lead and
+                open pre-filled next time. Invoice # and date start fresh each visit.{" "}
+                <button
+                  type="button"
+                  onClick={() => void handleClearSavedInvoice()}
+                  className="font-semibold text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
+                >
+                  Clear saved invoice
+                </button>
+              </p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -492,7 +669,7 @@ export function InvoiceBuilderModal({
                     />
                   </label>
                   <label className="w-full shrink-0 text-sm sm:w-32">
-                    <span className="mb-1 block text-xs font-medium text-slate-500">Amount</span>
+                    <span className="mb-1 block text-xs font-medium text-slate-500">Service price</span>
                     <input
                       type="number"
                       inputMode="decimal"

@@ -32,6 +32,9 @@ export function LeadDetailPanel({
   const [notes, setNotes] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
   const [websiteQuote, setWebsiteQuote] = useState("");
+  const [pocName, setPocName] = useState("");
+  const [pocPhone, setPocPhone] = useState("");
+  const [pocEmail, setPocEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
@@ -42,6 +45,9 @@ export function LeadDetailPanel({
       if (l) {
         setNotes(l.notes ?? "");
         setWebsiteQuote(l.websiteQuote ?? "");
+        setPocName(l.pocName ?? "");
+        setPocPhone(l.pocPhone ?? "");
+        setPocEmail(l.pocEmail ?? "");
         setFollowUpDate(
           l.followUpDate ? new Date(l.followUpDate).toISOString().slice(0, 10) : ""
         );
@@ -59,8 +65,11 @@ export function LeadDetailPanel({
       notes: notes || undefined,
       followUpDate: followUpDate.trim() === "" ? null : followUpDate,
       websiteQuote,
+      pocName,
+      pocPhone,
+      pocEmail,
     }).then(refreshLead);
-  }, [leadId, notes, followUpDate, websiteQuote, refreshLead]);
+  }, [leadId, notes, followUpDate, websiteQuote, pocName, pocPhone, pocEmail, refreshLead]);
 
   const handleSave = useCallback(async () => {
     setSaveError(null);
@@ -84,16 +93,31 @@ export function LeadDetailPanel({
     }
   }, [persistLeadFields, router, onClose]);
 
-  /** Auto-save price (and other fields) shortly after you stop typing. */
+  /** Auto-save price + point of contact shortly after you stop typing. */
   useEffect(() => {
     if (!lead) return;
-    const saved = lead.websiteQuote ?? "";
-    if (websiteQuote === saved) return;
+    const savedQuote = lead.websiteQuote ?? "";
+    const savedPocName = lead.pocName ?? "";
+    const savedPocPhone = lead.pocPhone ?? "";
+    const savedPocEmail = lead.pocEmail ?? "";
+    const dirty =
+      websiteQuote !== savedQuote ||
+      pocName !== savedPocName ||
+      pocPhone !== savedPocPhone ||
+      pocEmail !== savedPocEmail;
+    if (!dirty) return;
     const t = window.setTimeout(() => {
       void persistLeadFields();
     }, 650);
     return () => window.clearTimeout(t);
-  }, [websiteQuote, lead, persistLeadFields]);
+  }, [
+    websiteQuote,
+    pocName,
+    pocPhone,
+    pocEmail,
+    lead,
+    persistLeadFields,
+  ]);
 
   if (loading || !lead) {
     return (
@@ -167,6 +191,9 @@ export function LeadDetailPanel({
       <InvoiceBuilderModal
         open={invoiceOpen}
         onClose={() => setInvoiceOpen(false)}
+        leadId={lead.id}
+        savedInvoiceDraft={lead.invoiceDraft}
+        onInvoiceDraftSaved={refreshLead}
         initialClientName={lead.business.name}
         initialClientAddress={lead.business.address ?? ""}
         initialWebsitePriceText={websiteQuote}
@@ -308,8 +335,78 @@ export function LeadDetailPanel({
               )}
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              Email is not provided by Google Places; look on their website or Maps listing.
+              Email is not provided by Google Places; look on their website or Maps listing, or add a contact below.
             </p>
+          </section>
+
+          <section>
+            <h3 className="mb-0.5 font-semibold text-slate-900 dark:text-white">
+              Point of contact
+            </h3>
+            <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+              Who you&apos;re working with at this business (optional). Saves like service price when you pause typing or leave a field.
+            </p>
+            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3 md:gap-3">
+              <div className="min-w-0">
+                <label
+                  htmlFor="lead-poc-name"
+                  className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                >
+                  Name
+                </label>
+                <input
+                  id="lead-poc-name"
+                  type="text"
+                  autoComplete="name"
+                  value={pocName}
+                  onChange={(e) => setPocName(e.target.value)}
+                  onBlur={() => void persistLeadFields()}
+                  placeholder="e.g. Jordan"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+              <div className="min-w-0">
+                <label
+                  htmlFor="lead-poc-phone"
+                  className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                >
+                  Number
+                </label>
+                <input
+                  id="lead-poc-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={pocPhone}
+                  onChange={(e) => setPocPhone(e.target.value)}
+                  onBlur={() => void persistLeadFields()}
+                  placeholder="Direct line or mobile"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+              <div className="min-w-0">
+                <label
+                  htmlFor="lead-poc-email"
+                  className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                >
+                  Email
+                </label>
+                <input
+                  id="lead-poc-email"
+                  type="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="email"
+                  value={pocEmail}
+                  onChange={(e) => setPocEmail(e.target.value)}
+                  onBlur={() => void persistLeadFields()}
+                  placeholder="name@company.com"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                />
+              </div>
+            </div>
           </section>
 
           <div>
