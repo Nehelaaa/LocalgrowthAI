@@ -145,10 +145,6 @@ export function PlaceResults({
         window.alert(
           `You have used all ${FREE_LEAD_LIMIT} Free-plan lead slots (lifetime total). Deleting leads does not free slots. Upgrade to Pro in Plan & billing for unlimited leads.`
         );
-      } else {
-        window.alert(
-          "This business is already a lead in the system (another account)."
-        );
       }
       setSaving(null);
       return;
@@ -172,10 +168,6 @@ export function PlaceResults({
               saved > 0
                 ? `Added ${saved} lead(s), then hit the Free plan limit (${FREE_LEAD_LIMIT} lifetime slots). Upgrade to Pro for unlimited leads.`
                 : `You have used all ${FREE_LEAD_LIMIT} Free-plan lead slots (lifetime). Upgrade to Pro for unlimited leads.`
-            );
-          } else {
-            window.alert(
-              `Skipped "${place.name}" — already another account's lead.`
             );
           }
           break;

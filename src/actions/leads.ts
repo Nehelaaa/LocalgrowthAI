@@ -23,7 +23,7 @@ export type ManualCrmLeadResult =
 /** Google Places → CRM lead (no thrown errors for expected limits; avoids Next.js dev error overlay). */
 export type SaveBusinessAsLeadResult =
   | { ok: true; leadId: string; isNew: boolean }
-  | { ok: false; code: "LEAD_LIMIT" | "BUSINESS_TAKEN" };
+  | { ok: false; code: "LEAD_LIMIT" };
 
 /**
  * Creates a Business + Lead without Google Places (manual entry from the field).
@@ -155,21 +155,29 @@ export async function saveBusinessAsLead(place: {
 }): Promise<SaveBusinessAsLeadResult> {
   const user = await requireUserForAction();
 
-  const existing = await prisma.business.findUnique({
+  const existingBusiness = await prisma.business.findUnique({
     where: { placeId: place.placeId },
-    include: { lead: true },
+    include: {
+      leads: { where: { userId: user.id }, take: 1 },
+    },
   });
-  if (existing?.lead) {
-    if (existing.lead.userId && existing.lead.userId !== user.id) {
-      return { ok: false, code: "BUSINESS_TAKEN" };
-    }
-    if (!existing.lead.userId) {
+  const myExistingLead = existingBusiness?.leads[0];
+  if (myExistingLead) {
+    return { ok: true, leadId: myExistingLead.id, isNew: false };
+  }
+
+  // Orphan lead (no user) on this business — claim it for the current account.
+  if (existingBusiness) {
+    const orphan = await prisma.lead.findFirst({
+      where: { businessId: existingBusiness.id, userId: null },
+    });
+    if (orphan) {
       await prisma.lead.update({
-        where: { id: existing.lead.id },
+        where: { id: orphan.id },
         data: { userId: user.id },
       });
+      return { ok: true, leadId: orphan.id, isNew: false };
     }
-    return { ok: true, leadId: existing.lead.id, isNew: false };
   }
 
   const { score, badge } = computeLeadScore({
@@ -435,7 +443,12 @@ export async function deleteLead(leadId: string) {
 
   await prisma.$transaction(async (tx) => {
     await tx.lead.delete({ where: { id: lead.id } });
-    await tx.business.delete({ where: { id: lead.businessId } });
+    const remaining = await tx.lead.count({
+      where: { businessId: lead.businessId },
+    });
+    if (remaining === 0) {
+      await tx.business.delete({ where: { id: lead.businessId } });
+    }
   });
 
   revalidatePath("/dashboard");

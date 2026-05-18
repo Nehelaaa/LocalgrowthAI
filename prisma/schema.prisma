@@ -258,14 +258,14 @@ model Business {
   photoUrl      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  lead          Lead?
+  leads         Lead[]
 }
 
 model Lead {
   id                   String        @id @default(cuid())
   userId               String?
   user                 User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businessId           String        @unique
+  businessId           String
   business             Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   leadScore            Int           // 0-100
   badge                LeadBadge
@@ -287,7 +287,9 @@ model Lead {
   outreachs            Outreach[]
   demoPages            DemoPage[]
 
+  @@unique([userId, businessId])
   @@index([userId])
+  @@index([businessId])
 }
 
 model Outreach {
