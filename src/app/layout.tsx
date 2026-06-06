@@ -15,9 +15,14 @@ export const metadata: Metadata = {
   description:
     "Local lead generation software: Google Places territory prospecting, opportunity signals, HOT/WARM/COLD scoring, CRM pipeline with follow-ups, and branded PDF invoices — one workspace for agencies, freelancers, and sales teams.",
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    shortcut: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/site.webmanifest",
   openGraph: {
