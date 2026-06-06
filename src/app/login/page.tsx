@@ -1,9 +1,12 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { isGoogleOAuthConfigured } from "@/lib/google-oauth";
-import { postLoginContinueUrl } from "@/lib/post-login-continue";
+import { postLoginContinueUrl, safeRelativeAppNextPath } from "@/lib/post-login-continue";
+import { getPostLoginDestination } from "@/actions/post-login-destination";
+import { getCurrentUser } from "@/lib/session-user";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
 import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
 
 /** OAuth error query params + env-dependent Google button must not be cached. */
@@ -26,6 +29,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const q = await searchParams;
   const callbackUrl = typeof q.callbackUrl === "string" ? q.callbackUrl : "/dashboard";
   const authError = typeof q.error === "string" ? q.error : null;
+
+  const user = await getCurrentUser();
+  if (user && !authError) {
+    redirect(await getPostLoginDestination(safeRelativeAppNextPath(callbackUrl)));
+  }
+
   /** After session exists, server decides /owner vs app (ADMIN, OWNER_EMAIL + OWNER_EMAILS). */
   const afterLoginUrl = postLoginContinueUrl(callbackUrl);
   return (

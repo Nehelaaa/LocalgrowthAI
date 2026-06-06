@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { getSession, signIn, signOut } from "next-auth/react";
+import { createPortal } from "react-dom";
+import { signIn } from "next-auth/react";
+import { AuthTransitionScreen } from "@/components/auth/AuthTransitionScreen";
 
 /**
  * Auth.js forbids GET /api/auth/signin/:provider — it throws UnknownAction ("Unsupported action").
@@ -78,11 +80,19 @@ export function GoogleSignInButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /** NextAuth v5 prefers redirectTo; callbackUrl still works but is deprecated on the client. */
   const redirectTo = normalizeRedirectTo(callbackUrl);
 
   return (
     <div className="space-y-2">
+      {loading && typeof document !== "undefined"
+        ? createPortal(
+            <AuthTransitionScreen
+              message="Connecting to Google…"
+              submessage="You'll return here automatically when sign-in completes."
+            />,
+            document.body
+          )
+        : null}
       <button
         type="button"
         disabled={loading}
@@ -91,24 +101,6 @@ export function GoogleSignInButton({
             setError(null);
             setLoading(true);
             try {
-              // Only sign out when a session exists. Unconditional signOut adds a slow extra round-trip
-              // before every Google sign-in (feels like a hang on slow networks).
-              // getSession() uses fetch(); during Turbopack/HMR or a briefly-down API route it can throw
-              // ClientFetchError — treat as "no session" so Google sign-in still runs.
-              try {
-                const session = await getSession();
-                if (session?.user) {
-                  try {
-                    await signOut({ redirect: false });
-                  } catch {
-                    /* ignore */
-                  }
-                }
-              } catch {
-                /* ignore */
-              }
-              // Prefer the official client helper (handles POST + redirects internally).
-              // Fall back to our manual csrf+POST if it fails in a given browser/runtime.
               try {
                 await signIn("google", { redirectTo, callbackUrl: redirectTo });
                 return;
@@ -136,7 +128,13 @@ export function GoogleSignInButton({
         }
       >
         {loading ? (
-          "…"
+          <>
+            <span
+              className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600 dark:border-slate-600 dark:border-t-indigo-400"
+              aria-hidden
+            />
+            Redirecting…
+          </>
         ) : (
           <>
             <GoogleIcon className="h-5 w-5 shrink-0" />
