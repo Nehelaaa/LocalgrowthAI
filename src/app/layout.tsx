@@ -15,14 +15,17 @@ export const metadata: Metadata = {
   description:
     "Local lead generation software: Google Places territory prospecting, opportunity signals, HOT/WARM/COLD scoring, CRM pipeline with follow-ups, and branded PDF invoices — one workspace for agencies, freelancers, and sales teams.",
   icons: {
+    // Safari ignores or mishandles SVG tab icons — use ICO/PNG only (no /favicon.svg here).
     icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
     shortcut: [{ url: "/favicon.ico" }],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon-precomposed.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   manifest: "/site.webmanifest",
   openGraph: {
@@ -59,6 +62,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
+      <head>
+        {/* Explicit fallbacks for Safari (also probes /favicon.ico and /apple-touch-icon.png directly). */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+      </head>
       <body className="min-h-[100dvh] antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <Script id="lgai-theme-boot" src="/lgai-theme-boot.js" strategy="beforeInteractive" />
         <ThemeProvider>

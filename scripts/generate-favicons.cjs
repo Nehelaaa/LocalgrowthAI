@@ -27,6 +27,7 @@ async function main() {
   writeFileSync(join(publicDir, "favicon-16x16.png"), buffers[16]);
   writeFileSync(join(publicDir, "favicon-32x32.png"), buffers[32]);
   writeFileSync(join(publicDir, "apple-touch-icon.png"), buffers[180]);
+  writeFileSync(join(publicDir, "apple-touch-icon-precomposed.png"), buffers[180]);
   writeFileSync(join(publicDir, "icon-192.png"), buffers[192]);
   writeFileSync(join(publicDir, "icon-512.png"), buffers[512]);
 

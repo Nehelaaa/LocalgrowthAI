@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node ./scripts/ensure-dev.cjs && next dev",
-    "build": "node ./scripts/prisma-generate-retry.cjs && node ./scripts/run-migrate-deploy.cjs && next build",
+    "build": "node ./scripts/generate-favicons.cjs && node ./scripts/prisma-generate-retry.cjs && node ./scripts/run-migrate-deploy.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "db:backfill": "node ./scripts/saas-backfill.cjs",
