@@ -23,10 +23,64 @@ function clampScale(scale: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function collisionRadius(pin: PlacedPin): number {
+  // Circle + city label below — expressed in 0–100 map coordinates.
+  return pin.size / 5 + 9;
+}
+
+function spreadCityPins(placed: PlacedPin[], padding: number): PlacedPin[] {
+  const pins = placed.map((p) => ({ ...p, ox: p.x, oy: p.y }));
+  const min = padding;
+  const max = 100 - padding;
+
+  for (let iter = 0; iter < 80; iter++) {
+    for (let i = 0; i < pins.length; i++) {
+      for (let j = i + 1; j < pins.length; j++) {
+        const a = pins[i];
+        const b = pins[j];
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let dist = Math.hypot(dx, dy);
+        const minDist = collisionRadius(a) + collisionRadius(b);
+
+        if (dist < 0.01) {
+          const angle = ((i * 17 + j * 31) % 360) * (Math.PI / 180);
+          dx = Math.cos(angle) * 0.01;
+          dy = Math.sin(angle) * 0.01;
+          dist = 0.01;
+        }
+
+        if (dist < minDist) {
+          const push = ((minDist - dist) / dist) * 0.55;
+          a.x -= dx * push;
+          a.y -= dy * push;
+          b.x += dx * push;
+          b.y += dy * push;
+        }
+      }
+    }
+
+    // Gentle pull back toward geographic position so layout stays regionally accurate.
+    const anchorStrength = iter < 40 ? 0.04 : 0.07;
+    for (const p of pins) {
+      p.x += (p.ox - p.x) * anchorStrength;
+      p.y += (p.oy - p.y) * anchorStrength;
+      p.x = clamp(p.x, min, max);
+      p.y = clamp(p.y, min, max);
+    }
+  }
+
+  return pins;
+}
+
 function projectCityPins(pins: DashboardCityMapPin[]): PlacedPin[] {
   if (pins.length === 0) return [];
 
-  const padding = 10;
+  const padding = 14;
   const lats = pins.map((p) => p.lat);
   const lngs = pins.map((p) => p.lng);
   let minLat = Math.min(...lats);
@@ -34,10 +88,18 @@ function projectCityPins(pins: DashboardCityMapPin[]): PlacedPin[] {
   let minLng = Math.min(...lngs);
   let maxLng = Math.max(...lngs);
 
-  const latSpan = Math.max(maxLat - minLat, 0.04);
-  const lngSpan = Math.max(maxLng - minLng, 0.04);
-  const latPad = latSpan * 0.2;
-  const lngPad = lngSpan * 0.2;
+  // Widen tight clusters so nearby cities don't start on top of each other.
+  const latSpan = Math.max(maxLat - minLat, 0.14);
+  const lngSpan = Math.max(maxLng - minLng, 0.18);
+  const latMid = (minLat + maxLat) / 2;
+  const lngMid = (minLng + maxLng) / 2;
+  minLat = latMid - latSpan / 2;
+  maxLat = latMid + latSpan / 2;
+  minLng = lngMid - lngSpan / 2;
+  maxLng = lngMid + lngSpan / 2;
+
+  const latPad = latSpan * 0.12;
+  const lngPad = lngSpan * 0.12;
   minLat -= latPad;
   maxLat += latPad;
   minLng -= lngPad;
@@ -50,30 +112,10 @@ function projectCityPins(pins: DashboardCityMapPin[]): PlacedPin[] {
     ...p,
     x: ((p.lng - minLng) / (maxLng - minLng)) * inner + padding,
     y: (1 - (p.lat - minLat) / (maxLat - minLat)) * inner + padding,
-    size: Math.round(26 + (p.count / maxCount) * 18),
+    size: Math.round(24 + (p.count / maxCount) * 16),
   }));
 
-  for (let i = 0; i < placed.length; i++) {
-    for (let j = i + 1; j < placed.length; j++) {
-      const a = placed[i];
-      const b = placed[j];
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const dist = Math.hypot(dx, dy);
-      const minDist = 11;
-      if (dist > 0 && dist < minDist) {
-        const push = (minDist - dist) / 2;
-        const nx = dx / dist;
-        const ny = dy / dist;
-        a.x = Math.max(padding, Math.min(100 - padding, a.x - nx * push));
-        a.y = Math.max(padding, Math.min(100 - padding, a.y - ny * push));
-        b.x = Math.max(padding, Math.min(100 - padding, b.x + nx * push));
-        b.y = Math.max(padding, Math.min(100 - padding, b.y + ny * push));
-      }
-    }
-  }
-
-  return placed;
+  return spreadCityPins(placed, padding);
 }
 
 function zoomAtPoint(

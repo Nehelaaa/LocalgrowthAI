@@ -497,11 +497,11 @@ function LeadMap({
         <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
       </div>
       <div className="grid gap-4 p-5 lg:grid-cols-[1fr_240px]">
-        <div className="relative h-[280px] overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-violet-50/30 to-indigo-50/40 dark:from-slate-900 dark:via-violet-950/20 dark:to-indigo-950/20">
+        <div className="relative h-[320px] overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-violet-50/30 to-indigo-50/40 dark:from-slate-900 dark:via-violet-950/20 dark:to-indigo-950/20">
           <LeadMapCanvas pins={cityPins} />
         </div>
         <div className="flex min-h-0 flex-col">
-          <ul className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+          <ul className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
             {cities.length === 0 ? (
               <li className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
                 No city data yet
