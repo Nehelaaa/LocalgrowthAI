@@ -33,6 +33,13 @@ export type DashboardCityPin = {
   count: number;
 };
 
+export type DashboardCityMapPin = {
+  city: string;
+  count: number;
+  lat: number;
+  lng: number;
+};
+
 export type DashboardMapMarker = {
   id: string;
   lat: number;
@@ -126,6 +133,7 @@ function resolveLeadCity(business: LeadForMap["business"]): string | null {
 function buildMapData(leads: LeadForMap[]): {
   mapMarkers: DashboardMapMarker[];
   mapCities: DashboardCityPin[];
+  mapCityPins: DashboardCityMapPin[];
   mapStats: DashboardMapStats;
 } {
   const derivedCentroids = deriveCityCentroids(
@@ -198,11 +206,41 @@ function buildMapData(leads: LeadForMap[]): {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([city, count]) => ({ city, count }));
 
+  const cityCoordSums = new Map<string, { latSum: number; lngSum: number; n: number }>();
+  for (const l of leads) {
+    const city = resolveLeadCity(l.business);
+    if (!city || !hasValidCoords(l.business.lat, l.business.lng)) continue;
+    const prev = cityCoordSums.get(city) ?? { latSum: 0, lngSum: 0, n: 0 };
+    cityCoordSums.set(city, {
+      latSum: prev.latSum + l.business.lat!,
+      lngSum: prev.lngSum + l.business.lng!,
+      n: prev.n + 1,
+    });
+  }
+
+  const mapCityPins: DashboardCityMapPin[] = mapCities.flatMap(({ city, count }) => {
+    const summed = cityCoordSums.get(city);
+    if (summed) {
+      return [
+        {
+          city,
+          count,
+          lat: summed.latSum / summed.n,
+          lng: summed.lngSum / summed.n,
+        },
+      ];
+    }
+    const fallback = resolveCityCoordinates(city, null, derivedCentroids);
+    if (!fallback) return [];
+    return [{ city, count, lat: fallback.lat, lng: fallback.lng }];
+  });
+
   const onMap = withCoords + withCityOnly;
 
   return {
     mapMarkers: markers,
     mapCities,
+    mapCityPins,
     mapStats: {
       activeLeads: leads.length,
       onMap,
@@ -396,7 +434,7 @@ export async function getDashboardData() {
     .slice(0, 8)
     .map(mapLeadRow);
 
-  const { mapMarkers, mapCities, mapStats } = buildMapData(activeLeadsForMap);
+  const { mapMarkers, mapCities, mapCityPins, mapStats } = buildMapData(activeLeadsForMap);
 
   const activityFromLeads: DashboardActivityItem[] = leadBundle.slice(0, 6).map((l) => ({
     id: `lead-${l.id}`,
@@ -445,6 +483,7 @@ export async function getDashboardData() {
     hotLeadsList: hotLeadRows.map(mapLeadRow),
     recentActivity,
     mapCities,
+    mapCityPins,
     mapMarkers,
     mapStats,
   };

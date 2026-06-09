@@ -1,21 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { AddManualLeadDialog } from "@/app/dashboard/leads/AddManualLeadDialog";
+import { LeadMapCanvas } from "@/components/dashboard/LeadMapCanvas";
 import type { DashboardMetrics, DashboardLeadRow } from "@/actions/metrics";
 import type { ContactStatus } from "@prisma/client";
-
-const LeadMapView = dynamic(
-  () => import("@/components/dashboard/LeadMapView").then((m) => m.LeadMapView),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[280px] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/60" />
-    ),
-  }
-);
 
 const panel =
   "rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/90";
@@ -486,29 +476,19 @@ function RecentActivity({ items }: { items: DashboardMetrics["recentActivity"] }
 
 function LeadMap({
   cities,
-  markers,
+  cityPins,
   mapStats,
 }: {
   cities: DashboardMetrics["mapCities"];
-  markers: DashboardMetrics["mapMarkers"];
+  cityPins: DashboardMetrics["mapCityPins"];
   mapStats: DashboardMetrics["mapStats"];
 }) {
-  const [dark, setDark] = useState(false);
   const { activeLeads, onMap, unmapped, cityCount } = mapStats;
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const sync = () => setDark(root.classList.contains("dark"));
-    sync();
-    const obs = new MutationObserver(sync);
-    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
 
   const subtitle =
     onMap === 0
       ? `${activeLeads} active leads — add location data to see them on the map`
-      : `${onMap} of ${activeLeads} active leads on map across ${cityCount} ${cityCount === 1 ? "city" : "cities"}`;
+      : `${onMap} of ${activeLeads} active leads across ${cityCount} ${cityCount === 1 ? "city" : "cities"}`;
 
   return (
     <section className={panel}>
@@ -517,14 +497,8 @@ function LeadMap({
         <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
       </div>
       <div className="grid gap-4 p-5 lg:grid-cols-[1fr_240px]">
-        <div className="relative h-[280px] overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-          {markers.length > 0 ? (
-            <LeadMapView markers={markers} dark={dark} />
-          ) : (
-            <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-slate-500 dark:text-slate-400">
-              Add leads with addresses to populate your map
-            </p>
-          )}
+        <div className="relative h-[280px] overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-violet-50/30 to-indigo-50/40 dark:from-slate-900 dark:via-violet-950/20 dark:to-indigo-950/20">
+          <LeadMapCanvas pins={cityPins} />
         </div>
         <div className="flex min-h-0 flex-col">
           <ul className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
@@ -637,11 +611,7 @@ export function DashboardOverview({
       </div>
 
       {/* Lead map */}
-      <LeadMap
-        cities={metrics.mapCities}
-        markers={metrics.mapMarkers}
-        mapStats={metrics.mapStats}
-      />
+      <LeadMap cities={metrics.mapCities} cityPins={metrics.mapCityPins} mapStats={metrics.mapStats} />
     </div>
   );
 }

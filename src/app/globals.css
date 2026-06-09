@@ -194,12 +194,3 @@ body {
     transform-origin: top center;
   }
 }
-
-.leaflet-container {
-  z-index: 0;
-  font-family: inherit;
-}
-
-.leaflet-popup-content-wrapper {
-  border-radius: 0.5rem;
-}
