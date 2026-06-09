@@ -100,7 +100,7 @@ export function BusinessSearchForm({
           <select
             value={radiusMiles}
             onChange={(e) => setRadiusMiles(Number(e.target.value))}
-            className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-slate-900 dark:text-white"
+            className="w-full min-h-[44px] rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-slate-900 dark:text-white"
           >
             {RADII.map((r) => (
               <option key={r} value={r}>
@@ -156,7 +156,7 @@ export function BusinessSearchForm({
               }}
               autoComplete="off"
               placeholder="e.g. med spa, HVAC, locksmith..."
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-slate-900 dark:text-white"
+              className="w-full min-h-[44px] rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-slate-900 dark:text-white"
               role="combobox"
               aria-expanded={bizTypeOpen}
               aria-controls="business-type-suggestions"

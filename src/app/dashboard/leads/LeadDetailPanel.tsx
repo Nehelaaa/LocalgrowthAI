@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { ContactStatusPicker } from "@/components/ContactStatusPicker";
 import { DeleteLeadDialog } from "@/components/DeleteLeadDialog";
 import { updateLeadStatus, updateLead, deleteLead } from "@/actions/leads";
@@ -16,17 +15,35 @@ import type { Lead, Business } from "@prisma/client";
 
 type LeadWithRelations = Lead & { business: Business };
 
+export type LeadDetailPanelPatch = Partial<
+  Pick<
+    Lead,
+    | "contactStatus"
+    | "notes"
+    | "followUpDate"
+    | "websiteQuote"
+    | "pocName"
+    | "pocPhone"
+    | "pocEmail"
+    | "invoiceDraft"
+  >
+>;
+
 export function LeadDetailPanel({
   leadId,
+  initialLead,
   onClose,
+  onLeadUpdated,
+  onLeadRemoved,
 }: {
   leadId: string;
+  initialLead?: LeadWithRelations;
   onClose: () => void;
+  onLeadUpdated?: (leadId: string, patch: LeadDetailPanelPatch) => void;
+  onLeadRemoved?: (leadId: string) => void;
 }) {
-  const router = useRouter();
-  const [, startTransition] = useTransition();
-  const [lead, setLead] = useState<LeadWithRelations | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [lead, setLead] = useState<LeadWithRelations | null>(initialLead ?? null);
+  const [loading, setLoading] = useState(!initialLead);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [notes, setNotes] = useState("");
@@ -40,45 +57,89 @@ export function LeadDetailPanel({
   const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   useEffect(() => {
-    getLeadById(leadId).then((l) => {
-      setLead(l);
-      if (l) {
-        setNotes(l.notes ?? "");
-        setWebsiteQuote(l.websiteQuote ?? "");
-        setPocName(l.pocName ?? "");
-        setPocPhone(l.pocPhone ?? "");
-        setPocEmail(l.pocEmail ?? "");
-        setFollowUpDate(
-          l.followUpDate ? new Date(l.followUpDate).toISOString().slice(0, 10) : ""
-        );
-      }
-    }).finally(() => setLoading(false));
-  }, [leadId]);
+    if (initialLead?.id === leadId) {
+      setLead(initialLead);
+      setNotes(initialLead.notes ?? "");
+      setWebsiteQuote(initialLead.websiteQuote ?? "");
+      setPocName(initialLead.pocName ?? "");
+      setPocPhone(initialLead.pocPhone ?? "");
+      setPocEmail(initialLead.pocEmail ?? "");
+      setFollowUpDate(
+        initialLead.followUpDate
+          ? new Date(initialLead.followUpDate).toISOString().slice(0, 10)
+          : ""
+      );
+      setLoading(false);
+      return;
+    }
 
-  const refreshLead = useCallback(() => {
-    getLeadById(leadId).then(setLead);
-  }, [leadId]);
+    setLoading(true);
+    getLeadById(leadId)
+      .then((l) => {
+        setLead(l);
+        if (l) {
+          setNotes(l.notes ?? "");
+          setWebsiteQuote(l.websiteQuote ?? "");
+          setPocName(l.pocName ?? "");
+          setPocPhone(l.pocPhone ?? "");
+          setPocEmail(l.pocEmail ?? "");
+          setFollowUpDate(
+            l.followUpDate ? new Date(l.followUpDate).toISOString().slice(0, 10) : ""
+          );
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [leadId, initialLead]);
 
-  const persistLeadFields = useCallback(() => {
-    return updateLead({
+  const applyLeadPatch = useCallback(
+    (patch: LeadDetailPanelPatch) => {
+      setLead((current) => (current ? { ...current, ...patch } : current));
+      onLeadUpdated?.(leadId, patch);
+    },
+    [leadId, onLeadUpdated]
+  );
+
+  const persistLeadFields = useCallback(
+    (opts?: { silent?: boolean }) => {
+      const followUp =
+        followUpDate.trim() === "" ? null : new Date(`${followUpDate}T12:00:00.000Z`);
+      return updateLead({
+        leadId,
+        notes: notes || undefined,
+        followUpDate: followUpDate.trim() === "" ? null : followUpDate,
+        websiteQuote,
+        pocName,
+        pocPhone,
+        pocEmail,
+        silent: opts?.silent ?? true,
+      }).then(() => {
+        applyLeadPatch({
+          notes: notes || null,
+          followUpDate: followUp,
+          websiteQuote: websiteQuote.trim() || null,
+          pocName: pocName.trim() || null,
+          pocPhone: pocPhone.trim() || null,
+          pocEmail: pocEmail.trim() || null,
+        });
+      });
+    },
+    [
       leadId,
-      notes: notes || undefined,
-      followUpDate: followUpDate.trim() === "" ? null : followUpDate,
+      notes,
+      followUpDate,
       websiteQuote,
       pocName,
       pocPhone,
       pocEmail,
-    }).then(refreshLead);
-  }, [leadId, notes, followUpDate, websiteQuote, pocName, pocPhone, pocEmail, refreshLead]);
+      applyLeadPatch,
+    ]
+  );
 
   const handleSave = useCallback(async () => {
     setSaveError(null);
     setSaving(true);
     try {
-      await persistLeadFields();
-      startTransition(() => {
-        router.refresh();
-      });
+      await persistLeadFields({ silent: false });
       onClose();
     } catch (e) {
       const msg =
@@ -91,7 +152,7 @@ export function LeadDetailPanel({
     } finally {
       setSaving(false);
     }
-  }, [persistLeadFields, router, onClose]);
+  }, [persistLeadFields, onClose]);
 
   /** Auto-save price + point of contact shortly after you stop typing. */
   useEffect(() => {
@@ -139,10 +200,8 @@ export function LeadDetailPanel({
     try {
       await deleteLead(leadId);
       setDeleteDialogOpen(false);
+      onLeadRemoved?.(leadId);
       onClose();
-      startTransition(() => {
-        router.refresh();
-      });
     } catch (e) {
       window.alert(
         e instanceof Error ? e.message : "Could not remove this lead."
@@ -193,7 +252,6 @@ export function LeadDetailPanel({
         onClose={() => setInvoiceOpen(false)}
         leadId={lead.id}
         savedInvoiceDraft={lead.invoiceDraft}
-        onInvoiceDraftSaved={refreshLead}
         initialClientName={lead.business.name}
         initialClientAddress={lead.business.address ?? ""}
         initialWebsitePriceText={websiteQuote}
@@ -360,7 +418,6 @@ export function LeadDetailPanel({
                   autoComplete="name"
                   value={pocName}
                   onChange={(e) => setPocName(e.target.value)}
-                  onBlur={() => void persistLeadFields()}
                   placeholder="e.g. Jordan"
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                 />
@@ -379,7 +436,6 @@ export function LeadDetailPanel({
                   autoComplete="tel"
                   value={pocPhone}
                   onChange={(e) => setPocPhone(e.target.value)}
-                  onBlur={() => void persistLeadFields()}
                   placeholder="Direct line or mobile"
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                 />
@@ -401,7 +457,6 @@ export function LeadDetailPanel({
                   autoComplete="email"
                   value={pocEmail}
                   onChange={(e) => setPocEmail(e.target.value)}
-                  onBlur={() => void persistLeadFields()}
                   placeholder="name@company.com"
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                 />
@@ -414,14 +469,27 @@ export function LeadDetailPanel({
               Contact status
             </label>
             <p className="mb-2 text-xs text-slate-500 dark:text-slate-500">
-              Each stage has a color: neutral → in motion → hot → won / lost.
+              Each stage has a color: neutral → in motion → hot → won / not interested.
             </p>
             <ContactStatusPicker
               variant="lead"
               value={lead.contactStatus}
               onChange={async (next) => {
-                await updateLeadStatus(leadId, next);
-                refreshLead();
+                const prev = lead.contactStatus;
+                applyLeadPatch({ contactStatus: next });
+                try {
+                  await updateLeadStatus(leadId, next, { silent: true });
+                } catch (e) {
+                  applyLeadPatch({ contactStatus: prev });
+                  window.alert(
+                    e instanceof Error ? e.message : "Could not update status."
+                  );
+                  return;
+                }
+                if (next === "CLOSED_LOST") {
+                  onLeadRemoved?.(leadId);
+                  onClose();
+                }
               }}
             />
           </div>
@@ -440,7 +508,6 @@ export function LeadDetailPanel({
               inputMode="decimal"
               value={websiteQuote}
               onChange={(e) => setWebsiteQuote(e.target.value)}
-              onBlur={() => void persistLeadFields()}
               placeholder="e.g. 3500, $3,500, or $3.5k"
               className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white"
             />
@@ -453,7 +520,6 @@ export function LeadDetailPanel({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              onBlur={() => void persistLeadFields()}
               placeholder="Add notes..."
               rows={3}
               className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white"
@@ -465,7 +531,6 @@ export function LeadDetailPanel({
               type="date"
               value={followUpDate}
               onChange={(e) => setFollowUpDate(e.target.value)}
-              onBlur={() => void persistLeadFields()}
               className="mt-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-slate-900 dark:text-white"
             />
           </section>

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { LeadDetailPanel } from "./LeadDetailPanel";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { LeadDetailPanel, type LeadDetailPanelPatch } from "./LeadDetailPanel";
 import { deleteLead } from "@/actions/leads";
 import {
   DeleteLeadDialog,
@@ -34,14 +33,42 @@ const BADGE_COLORS: Record<LeadBadge, string> = {
 };
 
 export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
-  const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [localLeads, setLocalLeads] = useState(leads);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{
     leadId: string;
     name: string;
   } | null>(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  useEffect(() => {
+    setLocalLeads(leads);
+  }, [leads]);
+
+  const leadsWithMaps = useMemo(
+    () =>
+      localLeads.map((lead) => ({
+        lead,
+        mapsUrl: googleMapsUrlForBusiness(lead.business),
+      })),
+    [localLeads]
+  );
+
+  const patchLeadInList = useCallback((leadId: string, patch: LeadDetailPanelPatch) => {
+    setLocalLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, ...patch } : l))
+    );
+  }, []);
+
+  const removeLeadFromList = useCallback((leadId: string) => {
+    setLocalLeads((prev) => prev.filter((l) => l.id !== leadId));
+    setSelectedId((id) => (id === leadId ? null : id));
+  }, []);
+
+  const selectedLead = useMemo(
+    () => localLeads.find((l) => l.id === selectedId),
+    [localLeads, selectedId]
+  );
 
   useEffect(() => {
     if (!deleteTarget) return;
@@ -59,10 +86,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
       await deleteLead(deleteTarget.leadId);
       const removedId = deleteTarget.leadId;
       setDeleteTarget(null);
-      setSelectedId((id) => (id === removedId ? null : id));
-      startTransition(() => {
-        router.refresh();
-      });
+      removeLeadFromList(removedId);
     } catch (e) {
       console.error(e);
       window.alert(
@@ -73,7 +97,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
     }
   };
 
-  if (leads.length === 0) {
+  if (localLeads.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200/90 bg-white/80 px-6 py-14 text-center dark:border-slate-700/80 dark:bg-slate-900/70">
         <p className="text-base font-medium text-slate-700 dark:text-slate-200">No leads yet</p>
@@ -135,8 +159,8 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
         onConfirm={() => void confirmDelete()}
       />
 
-      <div className="md:hidden space-y-3" role="list" aria-label="Leads list">
-        {leads.map((lead) => (
+      <div className="lg:hidden space-y-3" role="list" aria-label="Leads list">
+        {leadsWithMaps.map(({ lead, mapsUrl }) => (
           <div
             key={lead.id}
             role="listitem"
@@ -144,9 +168,9 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
           >
             <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-br from-violet-50/80 to-white px-4 py-3.5 dark:border-slate-800 dark:from-violet-950/25 dark:to-slate-900/80">
               <div className="min-w-0 flex-1">
-                {googleMapsUrlForBusiness(lead.business) ? (
+                {mapsUrl ? (
                   <a
-                    href={googleMapsUrlForBusiness(lead.business) ?? "#"}
+                    href={mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block font-semibold leading-snug text-slate-900 hover:text-violet-700 dark:text-white dark:hover:text-violet-300"
@@ -224,7 +248,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
         ))}
       </div>
 
-      <div className="hidden md:block rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+      <div className="hidden lg:block rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
         <div className="overflow-x-auto -mx-0">
           <table className="w-full min-w-[640px] text-left">
             <thead>
@@ -253,16 +277,16 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
+              {leadsWithMaps.map(({ lead, mapsUrl }) => (
                 <tr
                   key={lead.id}
                   className="border-b border-slate-100 dark:border-slate-800 transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
                 >
                   <td className="px-4 py-3">
                     <div>
-                      {googleMapsUrlForBusiness(lead.business) ? (
+                      {mapsUrl ? (
                         <a
-                          href={googleMapsUrlForBusiness(lead.business) ?? "#"}
+                          href={mapsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-medium text-slate-900 hover:text-indigo-700 hover:underline dark:text-white dark:hover:text-indigo-300"
@@ -314,12 +338,15 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
           </table>
         </div>
       </div>
-      {selectedId && (
+      {selectedId && selectedLead ? (
         <LeadDetailPanel
           leadId={selectedId}
+          initialLead={selectedLead}
           onClose={() => setSelectedId(null)}
+          onLeadUpdated={patchLeadInList}
+          onLeadRemoved={removeLeadFromList}
         />
-      )}
+      ) : null}
     </>
   );
 }

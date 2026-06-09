@@ -29,7 +29,7 @@ export const contactStatusLabel: Record<ContactStatus, string> = {
   CONTACTED: "Contacted",
   INTERESTED: "Interested",
   CLOSED_WON: "Closed Won",
-  CLOSED_LOST: "Closed Lost",
+  CLOSED_LOST: "Not interested",
 };
 
 /**

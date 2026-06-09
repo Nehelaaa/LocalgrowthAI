@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { ReactNode } from "react";
+import { useTransition, type ReactNode } from "react";
 
 const ROW_OPTIONS = [
   { value: "15", label: "15" },
@@ -44,6 +44,7 @@ function PagerChrome({ children }: { children: ReactNode }) {
 export function LeadsPagination({ total, page, perPage, totalPages, truncated }: Props) {
   const sp = useSearchParams();
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const perStr = perPage === "all" ? "all" : String(perPage);
   const from =
@@ -85,20 +86,23 @@ export function LeadsPagination({ total, page, perPage, totalPages, truncated }:
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <label className="flex w-full items-center justify-between gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 sm:w-auto sm:justify-start">
               <span className="whitespace-nowrap">Rows</span>
               <select
                 value={perStr}
+                disabled={isPending}
                 onChange={(e) => {
                   const v = e.target.value;
                   const href =
                     v === "all"
                       ? buildHref(sp, { perPage: "all", page: undefined })
                       : buildHref(sp, { perPage: v, page: undefined });
-                  router.push(href);
+                  startTransition(() => {
+                    router.replace(href, { scroll: false });
+                  });
                 }}
-                className="h-10 min-w-[8.5rem] cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm outline-none transition hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-indigo-500/40"
+                className="h-11 min-h-[44px] w-full min-w-0 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm outline-none transition hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-indigo-500/40 sm:min-w-[8.5rem] sm:w-auto"
               >
                 {ROW_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>

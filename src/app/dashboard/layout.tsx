@@ -44,7 +44,7 @@ export default async function DashboardLayout({
   const canCreateLeads = canCreateMoreLeads(user.lifetimeLeadsCreated, user);
   const usage = await getSearchUsageState(user);
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-slate-100/90 dark:bg-slate-950">
+    <div className="flex h-[100dvh] overflow-hidden bg-[#f6f7f9] dark:bg-slate-950">
       <DashboardNav
         user={{
           email: user.email,
@@ -56,7 +56,7 @@ export default async function DashboardLayout({
       />
       <main className="relative min-w-0 flex-1 overflow-x-hidden overflow-y-auto lg:pl-0">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.06),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]"
           aria-hidden
         />
         <StarterLimitOverlay

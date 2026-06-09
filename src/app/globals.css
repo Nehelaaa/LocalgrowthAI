@@ -117,3 +117,89 @@ body {
     transform: none;
   }
 }
+
+/* Dashboard overview — staggered entrance */
+@keyframes lgDashboardCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lgDashboardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lg-dashboard-card-in {
+    opacity: 0;
+    animation: lgDashboardCardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .lg-dashboard-fade-in {
+    animation: lgDashboardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .lg-dashboard-fade-in-delay-1 {
+    animation-delay: 80ms;
+    opacity: 0;
+    animation: lgDashboardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .lg-dashboard-fade-in-delay-2 {
+    animation-delay: 160ms;
+    opacity: 0;
+    animation: lgDashboardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-dashboard-card-in,
+  .lg-dashboard-fade-in,
+  .lg-dashboard-fade-in-delay-1,
+  .lg-dashboard-fade-in-delay-2 {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/* Invoice template grid thumbnails — Safari fails to paint nested content inside transform+overflow clips */
+.invoice-template-thumb-shell {
+  zoom: 0.46;
+}
+
+.invoice-template-thumb-shell--enlarged {
+  zoom: 0.52;
+}
+
+@supports not (zoom: 1) {
+  .invoice-template-thumb-shell {
+    transform: scale(0.46);
+    transform-origin: top center;
+  }
+
+  .invoice-template-thumb-shell--enlarged {
+    transform: scale(0.52);
+    transform-origin: top center;
+  }
+}
+
+.leaflet-container {
+  z-index: 0;
+  font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0.5rem;
+}

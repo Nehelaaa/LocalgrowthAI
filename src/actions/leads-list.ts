@@ -52,6 +52,9 @@ export async function getLeads(
   }
   if (filters?.contactStatus) {
     where.contactStatus = filters.contactStatus;
+  } else {
+    // Main CRM list: hide archived "not interested" leads unless explicitly filtered.
+    where.contactStatus = { not: "CLOSED_LOST" };
   }
   if (filters?.badge) {
     where.badge = filters.badge;

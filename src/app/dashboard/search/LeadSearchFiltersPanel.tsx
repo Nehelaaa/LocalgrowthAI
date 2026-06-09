@@ -70,7 +70,7 @@ function ToggleChip({
     <label
       htmlFor={id}
       className={
-        "flex min-h-[32px] cursor-pointer touch-manipulation items-center justify-center rounded-md border px-1.5 py-1 text-center text-[11px] font-medium transition sm:min-h-[34px] sm:px-2 sm:text-xs " +
+        "flex min-h-[44px] cursor-pointer touch-manipulation items-center justify-center rounded-md border px-2 py-2 text-center text-xs font-medium transition sm:min-h-[34px] sm:px-2 sm:py-1 sm:text-xs " +
         (checked
           ? "border-violet-500 bg-violet-50 text-violet-900 shadow-sm dark:border-violet-400/50 dark:bg-violet-950/35 dark:text-violet-100"
           : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500")
@@ -227,7 +227,7 @@ export function LeadSearchFiltersPanel({
               onClick={() => patch({ websiteMode: v })}
               title={tip}
               className={
-                "min-h-[32px] rounded-md px-1 py-1.5 text-center text-[10px] font-semibold leading-tight transition sm:min-h-[34px] sm:text-[11px] " +
+                "min-h-[44px] rounded-md px-2 py-2 text-center text-xs font-semibold leading-tight transition sm:min-h-[34px] sm:px-1 sm:py-1.5 sm:text-[11px] " +
                 (filters.websiteMode === v
                   ? "bg-white text-violet-700 shadow-sm dark:bg-slate-900 dark:text-violet-300"
                   : "text-slate-600 dark:text-slate-400")

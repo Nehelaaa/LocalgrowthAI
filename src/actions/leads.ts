@@ -220,9 +220,15 @@ export async function saveBusinessAsLead(place: {
       update: {
         name: place.name,
         address: place.address,
+        city: place.city,
+        state: place.state,
+        phone: place.phone,
         rating: place.rating,
         reviewCount: place.reviewCount,
         website: place.website,
+        businessType: place.businessType,
+        lat: place.lat,
+        lng: place.lng,
         hasSocialOnly: place.hasSocialOnly,
         photoUrl: place.photoUrl,
         googleMapsUrl: canonicalMapsUrl,
@@ -250,7 +256,6 @@ export async function saveBusinessAsLead(place: {
     return { ok: false, code: "LEAD_LIMIT" };
   }
 
-  revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");
   return { ok: true, leadId: result.leadId, isNew: true };
 }
@@ -273,6 +278,8 @@ const updateLeadSchema = z.object({
   pocName: z.string().optional(),
   pocPhone: z.string().optional(),
   pocEmail: z.string().optional(),
+  /** Skip cache revalidation (autosave / optimistic UI). */
+  silent: z.boolean().optional(),
 });
 
 function tagsToDb(tags: string[] | undefined): string | undefined {
@@ -331,6 +338,7 @@ export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
     pocName,
     pocPhone,
     pocEmail,
+    silent,
   } = parsed.data;
 
   const data: Prisma.LeadUpdateInput = {};
@@ -372,8 +380,9 @@ export async function updateLead(formData: z.infer<typeof updateLeadSchema>) {
     where: { id: leadId, userId: user.id },
     data,
   });
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/leads");
+  if (!silent) {
+    revalidatePath("/dashboard/leads");
+  }
 }
 
 export async function saveLeadInvoiceDraft(
@@ -397,8 +406,6 @@ export async function saveLeadInvoiceDraft(
     where: { id: leadId, userId: user.id },
     data: { invoiceDraft: parsed.data },
   });
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/leads");
 }
 
 export async function clearLeadInvoiceDraft(leadId: string) {
@@ -415,21 +422,21 @@ export async function clearLeadInvoiceDraft(leadId: string) {
     where: { id: leadId, userId: user.id },
     data: { invoiceDraft: Prisma.DbNull },
   });
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/leads");
 }
 
 export async function updateLeadStatus(
   leadId: string,
-  contactStatus: ContactStatus
+  contactStatus: ContactStatus,
+  options?: { silent?: boolean }
 ) {
   const user = await requireUserForAction();
   await prisma.lead.update({
     where: { id: leadId, userId: user.id },
     data: { contactStatus },
   });
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/leads");
+  if (!options?.silent) {
+    revalidatePath("/dashboard/leads");
+  }
 }
 
 /** Deletes the lead (and cascaded outreach / demos), then the linked business. */
@@ -451,6 +458,5 @@ export async function deleteLead(leadId: string) {
     }
   });
 
-  revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");
 }

@@ -88,15 +88,24 @@ export interface PlaceResult {
   photoUrl?: string;
 }
 
-function extractCityState(formattedAddress: string): { city?: string; state?: string } {
-  const parts = formattedAddress.split(",").map((p) => p.trim());
-  let state: string | undefined;
-  let city: string | undefined;
-  if (parts.length >= 2) {
-    state = parts[parts.length - 2].replace(/\s*\d{5}.*$/, "").trim();
-    city = parts[parts.length - 3];
+export function extractCityState(formattedAddress: string): { city?: string; state?: string } {
+  let parts = formattedAddress
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length < 2) return {};
+
+  const lastLower = parts[parts.length - 1].toLowerCase();
+  if (lastLower === "usa" || lastLower === "us" || lastLower === "united states") {
+    parts = parts.slice(0, -1);
   }
-  return { city, state };
+  if (parts.length < 2) return {};
+
+  const statePart = parts[parts.length - 1];
+  const state = statePart.replace(/\s*\d{5}(-\d{4})?.*$/, "").trim();
+  const city = parts[parts.length - 2];
+
+  return { city, state: state || undefined };
 }
 
 function sleep(ms: number): Promise<void> {

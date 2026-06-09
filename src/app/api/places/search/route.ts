@@ -4,6 +4,7 @@ import { enforceSameOrigin, rateLimitOr429, safeErrorMessage } from "@/lib/api-s
 import { searchPlaces } from "@/lib/google-places";
 import { prisma } from "@/lib/db";
 import { getCachedSearchResults, placesSearchCacheKey, setCachedSearchResults } from "@/lib/places-search-cache";
+import { excludeUserSavedPlaces } from "@/lib/search-exclude-saved-leads";
 import { getSearchUsageState, incrementGoogleSearchUsage } from "@/lib/search-usage";
 import { z } from "zod";
 
@@ -63,9 +64,11 @@ export async function POST(request: NextRequest) {
 
     const cached = await getCachedSearchResults(cacheKey);
     if (cached) {
+      const { places, hiddenCount } = await excludeUserSavedPlaces(user.id, cached);
       return NextResponse.json({
-        places: cached,
+        places,
         fromCache: true,
+        hiddenCount,
         usage: {
           mode: usageBefore.mode,
           used: usageBefore.used,
@@ -81,9 +84,11 @@ export async function POST(request: NextRequest) {
     await incrementGoogleSearchUsage(user.id);
 
     const usage = await getSearchUsageState(user);
+    const { places, hiddenCount } = await excludeUserSavedPlaces(user.id, results);
     return NextResponse.json({
-      places: results,
+      places,
       fromCache: false,
+      hiddenCount,
       usage: {
         mode: usage.mode,
         used: usage.used,

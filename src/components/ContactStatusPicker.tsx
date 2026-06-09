@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ContactStatus } from "@prisma/client";
 import {
   CONTACT_STATUS_ORDER,
@@ -25,6 +26,8 @@ type FilterVariant = {
 };
 
 type Props = LeadVariant | FilterVariant;
+
+type MenuPos = { top: number; left: number; width: number };
 
 function Chevron({ open }: { open: boolean }) {
   return (
@@ -76,7 +79,7 @@ function StatusRow({
       aria-selected={selected}
       onClick={() => void onSelect()}
       className={
-        "group/opt flex w-full touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition " +
+        "group/opt flex min-h-[44px] w-full touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition sm:min-h-0 " +
         (selected
           ? "bg-slate-100/90 dark:bg-slate-800/60"
           : "hover:bg-slate-50 dark:hover:bg-slate-800/50")
@@ -94,13 +97,48 @@ function StatusRow({
 export function ContactStatusPicker(props: Props) {
   const { variant, disabled } = props;
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [menuPos, setMenuPos] = useState<MenuPos | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
+  const buttonId = useId();
+
+  const updateMenuPos = () => {
+    const btn = buttonRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const width = Math.max(rect.width, 240);
+    let left = rect.left;
+    const maxLeft = window.innerWidth - width - 8;
+    if (left > maxLeft) left = Math.max(8, maxLeft);
+    setMenuPos({
+      top: rect.bottom + 8,
+      left,
+      width,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPos(null);
+      return;
+    }
+    updateMenuPos();
+    window.addEventListener("resize", updateMenuPos);
+    window.addEventListener("scroll", updateMenuPos, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuPos);
+      window.removeEventListener("scroll", updateMenuPos, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -121,28 +159,87 @@ export function ContactStatusPicker(props: Props) {
   const isAll =
     isFilter &&
     (!filterVal || !CONTACT_STATUS_ORDER.includes(filterVal as ContactStatus));
-  const current: { label: string; dot: string } | null =
-    isAll
-      ? { label: "All statuses", dot: "bg-slate-400" }
-      : (() => {
-          const s = (isFilter ? (filterVal as ContactStatus) : props.value) as ContactStatus;
-          return { label: contactStatusLabel[s], dot: contactStatusDotClass[s] };
-        })();
+  const current: { label: string; dot: string } | null = isAll
+    ? { label: "Active pipeline", dot: "bg-slate-400" }
+    : (() => {
+        const s = (isFilter ? (filterVal as ContactStatus) : props.value) as ContactStatus;
+        return { label: contactStatusLabel[s], dot: contactStatusDotClass[s] };
+      })();
+
+  const menuList = (
+    <ul
+      ref={menuRef}
+      className="max-h-[min(20rem,50dvh)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border border-slate-200/50 bg-white/95 p-1 shadow-xl shadow-slate-900/5 ring-1 ring-slate-900/[0.04] backdrop-blur-sm dark:border-slate-600/30 dark:bg-slate-900/95 dark:shadow-black/20 dark:ring-white/[0.06]"
+      role="listbox"
+      aria-labelledby={buttonId}
+      style={
+        menuPos
+          ? {
+              position: "fixed",
+              top: menuPos.top,
+              left: menuPos.left,
+              width: menuPos.width,
+              zIndex: 250,
+            }
+          : undefined
+      }
+    >
+      {isFilter && (
+        <li>
+          <StatusRow
+            dotClass="bg-slate-400 dark:bg-slate-500"
+            label="Active pipeline"
+            selected={isAll}
+            onSelect={() => {
+              props.onChange("");
+              setOpen(false);
+            }}
+          />
+        </li>
+      )}
+      {CONTACT_STATUS_ORDER.map((s) => {
+        const selected = props.value === s;
+        return (
+          <li key={s}>
+            <StatusRow
+              dotClass={contactStatusDotClass[s]}
+              label={contactStatusLabel[s]}
+              selected={selected}
+              onSelect={async () => {
+                setOpen(false);
+                if (props.variant === "lead") {
+                  setPending(true);
+                  try {
+                    await props.onChange(s);
+                  } finally {
+                    setPending(false);
+                  }
+                } else {
+                  props.onChange(s);
+                }
+              }}
+            />
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   return (
-    <div className="relative" ref={rootRef}>
+    <div className="relative min-w-0" ref={rootRef}>
       <button
+        ref={buttonRef}
         type="button"
-        id="contact-status-button"
-        disabled={disabled}
+        id={buttonId}
+        disabled={disabled || pending}
         onClick={() => !disabled && setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
         className={
           "group flex w-full touch-manipulation items-center justify-between gap-2 border border-slate-200/80 bg-white text-left shadow-sm transition " +
           (compact
-            ? "h-9 rounded-lg px-2.5 py-0 text-sm leading-none active:scale-[0.995] sm:px-3 "
-            : "gap-3 rounded-2xl px-4 py-3 hover:border-slate-300/90 hover:shadow-md active:scale-[0.995] ") +
+            ? "min-h-[44px] rounded-lg px-3 py-2 text-sm leading-none active:scale-[0.995] sm:min-h-9 sm:px-2.5 sm:py-0 "
+            : "min-h-[44px] gap-3 rounded-2xl px-4 py-3 hover:border-slate-300/90 hover:shadow-md active:scale-[0.995] ") +
           "hover:border-slate-300/80 " +
           "focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-0 " +
           "dark:border-slate-600/40 dark:bg-slate-900/30 dark:hover:border-slate-500/50" +
@@ -162,7 +259,7 @@ export function ContactStatusPicker(props: Props) {
               <span
                 className={
                   "truncate font-semibold tracking-tight text-slate-800 dark:text-slate-100 " +
-                  (compact ? "text-xs" : "text-sm")
+                  (compact ? "text-xs sm:text-sm" : "text-sm")
                 }
               >
                 {current.label}
@@ -173,47 +270,9 @@ export function ContactStatusPicker(props: Props) {
         <Chevron open={open} />
       </button>
 
-      {open && (
-        <ul
-          className="absolute z-50 mt-2 max-h-[min(20rem,50dvh)] w-full min-w-[240px] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border border-slate-200/50 bg-white/95 p-1 shadow-xl shadow-slate-900/5 ring-1 ring-slate-900/[0.04] backdrop-blur-sm dark:border-slate-600/30 dark:bg-slate-900/95 dark:shadow-black/20 dark:ring-white/[0.06]"
-          role="listbox"
-          aria-labelledby="contact-status-button"
-        >
-          {isFilter && (
-            <li>
-              <StatusRow
-                dotClass="bg-slate-400 dark:bg-slate-500"
-                label="All statuses"
-                selected={isAll}
-                onSelect={() => {
-                  props.onChange("");
-                  setOpen(false);
-                }}
-              />
-            </li>
-          )}
-          {CONTACT_STATUS_ORDER.map((s) => {
-            const selected = props.value === s;
-            return (
-              <li key={s}>
-                <StatusRow
-                  dotClass={contactStatusDotClass[s]}
-                  label={contactStatusLabel[s]}
-                  selected={selected}
-                  onSelect={async () => {
-                    if (props.variant === "lead") {
-                      await props.onChange(s);
-                    } else {
-                      props.onChange(s);
-                    }
-                    setOpen(false);
-                  }}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {open && menuPos && typeof document !== "undefined"
+        ? createPortal(menuList, document.body)
+        : null}
     </div>
   );
 }

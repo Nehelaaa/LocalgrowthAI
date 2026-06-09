@@ -25,6 +25,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
+  const [hiddenSavedCount, setHiddenSavedCount] = useState(0);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [lastSearch, setLastSearch] = useState<LastSearchMeta | null>(null);
   const [filters, setFilters] = useState<PlaceFilterState>(() => defaultPlaceFilterState());
@@ -55,6 +56,7 @@ export default function SearchPage() {
     setLoading(true);
     setError(null);
     setFromCache(false);
+    setHiddenSavedCount(0);
     try {
       const res = await fetch("/api/places/search", {
         method: "POST",
@@ -66,6 +68,7 @@ export default function SearchPage() {
         code?: string;
         places?: PlaceRow[];
         fromCache?: boolean;
+        hiddenCount?: number;
         usage?: UsageInfo;
       };
       if (!res.ok) {
@@ -79,6 +82,7 @@ export default function SearchPage() {
         );
       }
       setResults(data.places ?? []);
+      setHiddenSavedCount(data.hiddenCount ?? 0);
       setLastSearch({
         city: params.city,
         state: params.state,
@@ -100,8 +104,12 @@ export default function SearchPage() {
     }
   };
 
+  const removeFromResults = useCallback((placeId: string) => {
+    setResults((prev) => prev.filter((p) => p.placeId !== placeId));
+  }, []);
+
   return (
-    <div className="w-full min-w-0 max-w-4xl">
+    <div className="w-full min-w-0 max-w-4xl overflow-x-hidden">
       <h1 className="mb-2 text-xl font-bold text-slate-900 sm:mb-4 sm:text-2xl dark:text-white">
         Find businesses
       </h1>
@@ -146,9 +154,22 @@ export default function SearchPage() {
           Served from your recent cache — no new Google request.
         </p>
       )}
+      {results.length === 0 && hiddenSavedCount > 0 && !loading && (
+        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-400">
+          Every business in this search is already in your CRM. Try a different city, radius, or business type.
+        </div>
+      )}
+      {hiddenSavedCount > 0 && results.length > 0 && (
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+          {hiddenSavedCount === 1
+            ? "1 business already in your CRM was hidden from these results."
+            : `${hiddenSavedCount} businesses already in your CRM were hidden from these results.`}
+        </p>
+      )}
       <PlaceResults
         places={filteredPlaces}
         totalBeforeFilters={results.length > 0 ? results.length : undefined}
+        onPlaceAdded={removeFromResults}
       />
     </div>
   );

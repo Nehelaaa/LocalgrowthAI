@@ -7,9 +7,15 @@ import { saveManualCrmLeadForPipeline } from "@/actions/leads";
 type AddManualLeadDialogProps = {
   /** Merged into the trigger button (e.g. `w-full sm:w-auto` on mobile). */
   triggerClassName?: string;
+  triggerLabel?: string;
+  variant?: "primary" | "secondary";
 };
 
-export function AddManualLeadDialog({ triggerClassName = "" }: AddManualLeadDialogProps) {
+export function AddManualLeadDialog({
+  triggerClassName = "",
+  triggerLabel = "Add lead",
+  variant = "primary",
+}: AddManualLeadDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,17 +65,19 @@ export function AddManualLeadDialog({ triggerClassName = "" }: AddManualLeadDial
     }
   }
 
+  const triggerStyles =
+    variant === "secondary"
+      ? "inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-violet-200 hover:bg-violet-50/80 hover:text-violet-800 active:scale-[0.99] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-violet-500/40 dark:hover:bg-violet-950/30 "
+      : "inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:from-violet-500 hover:to-indigo-500 active:scale-[0.99] dark:shadow-indigo-900/30 ";
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={
-          "inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:from-violet-500 hover:to-indigo-500 active:scale-[0.99] dark:shadow-indigo-900/30 " +
-          triggerClassName
-        }
+        className={triggerStyles + triggerClassName}
       >
-        Add lead
+        {triggerLabel}
       </button>
 
       {open && (

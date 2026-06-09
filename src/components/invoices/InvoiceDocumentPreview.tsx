@@ -18,6 +18,10 @@ const SAMPLE_LINES = [
   { description: "Lead follow-up automation setup", amount: 300 },
 ];
 
+function previewLines(thumbnail?: boolean) {
+  return thumbnail ? SAMPLE_LINES.slice(0, 2) : SAMPLE_LINES;
+}
+
 function InvoicePreviewLogo({
   logoDataUrl,
   className,
@@ -28,7 +32,12 @@ function InvoicePreviewLogo({
   if (logoDataUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- user data URL
-      <img src={logoDataUrl} alt="" className={className} />
+      <img
+        src={logoDataUrl}
+        alt=""
+        decoding="async"
+        className={className}
+      />
     );
   }
   return <div className={className}>Logo</div>;
@@ -47,6 +56,8 @@ type Props = {
   logoDataUrl: string | null;
   density: InvoiceLayoutDensity;
   compact?: boolean;
+  /** Grid thumbnail: fewer rows, no CSS scale — Safari-safe in overflow clips. */
+  thumbnail?: boolean;
   documentTitle?: string;
   footerPhrase?: string;
   /**
@@ -63,6 +74,7 @@ export function InvoiceDocumentPreview({
   logoDataUrl,
   density,
   compact,
+  thumbnail,
   documentTitle: rawDocTitle,
   footerPhrase: rawFooter,
   className = "",
@@ -72,10 +84,11 @@ export function InvoiceDocumentPreview({
   const brand = businessName.trim() || defaultInvoiceCompanyName();
   const docTitle = sanitizeInvoiceDocumentTitle(rawDocTitle);
   const foot = sanitizeInvoiceFooterPhrase(rawFooter);
-  const pad = density === "compact" ? "p-3" : "p-4";
-  const scale = compact ? "scale-[0.92] origin-top" : "";
+  const pad = density === "compact" || thumbnail ? "p-3" : "p-4";
+  const scale = compact && !thumbnail ? "scale-[0.92] origin-top" : "";
+  const lines = previewLines(thumbnail);
 
-  const subtotal = SAMPLE_LINES.reduce((s, l) => s + l.amount, 0);
+  const subtotal = lines.reduce((s, l) => s + l.amount, 0);
   const tax = 0;
   const total = subtotal + tax;
 
@@ -100,9 +113,9 @@ export function InvoiceDocumentPreview({
         </div>
         <div className={`${pad} space-y-3 border-t-2 border-zinc-800`} style={{ borderTopColor: accent }}>
           <BillToBlock variant="mono" />
-          <PreviewTable variant="mono" accent={accent} density={density} />
+          <PreviewTable variant="mono" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="mono" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -137,9 +150,9 @@ export function InvoiceDocumentPreview({
               Thank you for your trust.
             </div>
           </div>
-          <PreviewTable variant="editorial" accent={accent} density={density} />
+          <PreviewTable variant="editorial" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="editorial" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -172,9 +185,9 @@ export function InvoiceDocumentPreview({
         </div>
         <div className={pad}>
           <BillToBlock variant="ledger" />
-          <PreviewTable variant="ledger" accent={accent} density={density} />
+          <PreviewTable variant="ledger" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="ledger" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -229,9 +242,9 @@ export function InvoiceDocumentPreview({
               details on PDF
             </div>
           </div>
-          <PreviewTable variant="accentBar" accent={accent} density={density} />
+          <PreviewTable variant="accentBar" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="accentBar" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -265,9 +278,9 @@ export function InvoiceDocumentPreview({
         </div>
         <div className={pad}>
           <BillToBlock variant="minimal" />
-          <PreviewTable variant="minimal" accent={accent} density={density} />
+          <PreviewTable variant="minimal" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="minimal" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -299,9 +312,9 @@ export function InvoiceDocumentPreview({
             </div>
           </div>
           <BillToBlock variant="accentBar" />
-          <PreviewTable variant="accentBar" accent={accent} density={density} />
+          <PreviewTable variant="accentBar" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="accentBar" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -332,9 +345,9 @@ export function InvoiceDocumentPreview({
         </div>
         <div className={pad}>
           <BillToBlock variant="blueprint" />
-          <PreviewTable variant="blueprint" accent={accent} density={density} />
+          <PreviewTable variant="blueprint" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="blueprint" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -366,9 +379,9 @@ export function InvoiceDocumentPreview({
           </div>
           <div className="my-3 h-1 w-full rounded-full" style={{ backgroundColor: accent }} aria-hidden />
           <BillToBlock variant="accentBar" />
-          <PreviewTable variant="accentBar" accent={accent} density={density} />
+          <PreviewTable variant="accentBar" accent={accent} density={density} lines={lines} />
           <PreviewTotals variant="accentBar" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-          <PreviewFooter phrase={foot} />
+          {!thumbnail && <PreviewFooter phrase={foot} />}
         </div>
       </div>
     );
@@ -408,9 +421,9 @@ export function InvoiceDocumentPreview({
           </div>
           <div className="mt-4 space-y-3">
             <BillToBlock variant="editorial" />
-            <PreviewTable variant="editorial" accent={accent} density={density} />
+            <PreviewTable variant="editorial" accent={accent} density={density} lines={lines} />
             <PreviewTotals variant="editorial" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-            <PreviewFooter phrase={foot} />
+            {!thumbnail && <PreviewFooter phrase={foot} />}
           </div>
         </div>
       </div>
@@ -444,9 +457,9 @@ export function InvoiceDocumentPreview({
         </div>
         <div className="my-4 h-px w-full bg-slate-200/90 dark:bg-slate-700" />
         <BillToBlock variant="minimal" />
-        <PreviewTable variant="minimal" accent={accent} density={density} />
+        <PreviewTable variant="minimal" accent={accent} density={density} lines={lines} />
         <PreviewTotals variant="minimal" accent={accent} subtotal={subtotal} tax={tax} total={total} />
-        <PreviewFooter phrase={foot} />
+        {!thumbnail && <PreviewFooter phrase={foot} />}
       </div>
     </div>
   );
@@ -504,10 +517,12 @@ function PreviewTable({
   variant,
   accent,
   density,
+  lines,
 }: {
   variant: string;
   accent: string;
   density: InvoiceLayoutDensity;
+  lines: typeof SAMPLE_LINES;
 }) {
   const cell = density === "compact" ? "px-2 py-1.5 text-[11px]" : "px-2.5 py-2 text-xs";
 
@@ -522,7 +537,7 @@ function PreviewTable({
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-slate-950">
-          {SAMPLE_LINES.map((row, i) => (
+          {lines.map((row, i) => (
             <tr key={row.description} className="border-t border-slate-200 font-mono dark:border-slate-700">
               <td className={`${cell} text-slate-500`}>{i + 1}</td>
               <td className={`${cell} text-slate-800 dark:text-slate-200`}>{row.description}</td>
@@ -554,7 +569,7 @@ function PreviewTable({
           </tr>
         </thead>
         <tbody>
-          {SAMPLE_LINES.map((row) => (
+          {lines.map((row) => (
             <tr key={row.description} className="font-serif text-stone-800 dark:text-stone-200">
               <td className={`${cell} border-b border-stone-100 dark:border-stone-800`}>{row.description}</td>
               <td className={`${cell} border-b border-stone-100 text-right tabular-nums dark:border-stone-800`}>
@@ -577,7 +592,7 @@ function PreviewTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-200 bg-zinc-50 dark:divide-zinc-700 dark:bg-zinc-900/50">
-          {SAMPLE_LINES.map((row, i) => (
+          {lines.map((row, i) => (
             <tr
               key={row.description}
               className={i % 2 === 0 ? "bg-white dark:bg-zinc-900" : "bg-zinc-100/80 dark:bg-zinc-800/40"}
@@ -603,7 +618,7 @@ function PreviewTable({
           </tr>
         </thead>
         <tbody>
-          {SAMPLE_LINES.map((row, i) => (
+          {lines.map((row, i) => (
             <tr key={row.description} className={i % 2 === 0 ? "bg-white dark:bg-slate-950" : "bg-slate-100/80 dark:bg-slate-900/60"}>
               <td className={`${cell} border-t border-blue-900/15 dark:border-slate-600`}>{row.description}</td>
               <td className={`${cell} border-t border-blue-900/15 text-right tabular-nums dark:border-slate-600`}>
@@ -626,7 +641,7 @@ function PreviewTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-700 dark:bg-slate-900">
-          {SAMPLE_LINES.map((row) => (
+          {lines.map((row) => (
             <tr key={row.description} className="text-slate-700 dark:text-slate-300">
               <td className={cell}>{row.description}</td>
               <td className={`${cell} text-right tabular-nums font-semibold`}>{formatMoneyUSD(row.amount)}</td>
@@ -650,7 +665,7 @@ function PreviewTable({
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-        {SAMPLE_LINES.map((row) => (
+        {lines.map((row) => (
           <tr key={row.description} className="text-slate-700 dark:text-slate-300">
             <td className={cell}>{row.description}</td>
             <td className={`${cell} text-right tabular-nums`}>{formatMoneyUSD(row.amount)}</td>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InvoiceDocumentPreview } from "@/components/invoices/InvoiceDocumentPreview";
+import { InvoiceTemplateThumbFrame } from "@/components/invoices/InvoiceTemplateThumbFrame";
 import {
   defaultInvoiceSenderTemplate,
   fileToInvoiceLogoDataUrl,
@@ -180,40 +181,21 @@ export function InvoiceTemplatesPageClient() {
                   aria-pressed={selected}
                   onClick={() => patch({ templateId: def.id })}
                   className={
-                    "group flex flex-col overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition-all duration-300 ease-out dark:bg-slate-900/90 " +
+                    "group flex flex-col overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition-[border-color,box-shadow,transform] duration-150 ease-out dark:bg-slate-900/90 " +
                     (selected
                       ? "z-[1] border-violet-500 shadow-lg shadow-violet-500/10 ring-2 ring-violet-500/25 dark:border-violet-400 dark:shadow-violet-900/20"
                       : "border-slate-200/90 hover:z-[1] hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-lg hover:shadow-slate-900/5 dark:border-slate-700 dark:hover:border-violet-500/50")
                   }
                 >
-                  <div
-                    className={
-                      "relative overflow-hidden border-b border-slate-100/90 bg-gradient-to-b from-slate-50 to-slate-100/50 transition-[height] duration-300 ease-out dark:border-slate-800 dark:from-slate-800/50 dark:to-slate-900/40 " +
-                      (selected
-                        ? "h-[9rem] sm:h-[9.75rem]"
-                        : "h-[5.25rem] group-hover:h-[6rem] sm:h-[5.75rem] sm:group-hover:h-[6.5rem]")
-                    }
-                  >
-                    <div
-                      className={
-                        "absolute left-1/2 top-0 w-[min(100%,26rem)] max-w-[200%] origin-top -translate-x-1/2 transition-transform duration-300 ease-out will-change-transform " +
-                        (selected
-                          ? "scale-[0.5] sm:scale-[0.54]"
-                          : "pointer-events-none scale-[0.44] group-hover:scale-[0.52] sm:scale-[0.47] sm:group-hover:scale-[0.56]")
-                      }
-                    >
-                      <InvoiceDocumentPreview
-                        templateId={def.id}
-                        accentHex={accentHex}
-                        businessName={t.businessName || "Your business"}
-                        logoDataUrl={t.logoDataUrl}
-                        density="compact"
-                        compact
-                        documentTitle={t.documentTitle}
-                        footerPhrase={t.footerPhrase}
-                      />
-                    </div>
-                  </div>
+                  <InvoiceTemplateThumbFrame
+                    templateId={def.id}
+                    accentHex={accentHex}
+                    businessName={t.businessName || "Your business"}
+                    logoDataUrl={t.logoDataUrl}
+                    documentTitle={t.documentTitle}
+                    footerPhrase={t.footerPhrase}
+                    enlarged={selected}
+                  />
                   <div className="space-y-1 bg-slate-50/40 p-3 dark:bg-slate-950/20 sm:p-3.5">
                     <div className="flex items-center justify-between gap-2">
                       <span
@@ -322,7 +304,7 @@ export function InvoiceTemplatesPageClient() {
                   title={p.label}
                   onClick={() => patch({ accentHex: p.hex })}
                   className={
-                    "h-8 w-8 rounded-full border-2 transition " +
+                    "h-11 w-11 rounded-full border-2 transition sm:h-8 sm:w-8 " +
                     (accent.toLowerCase() === p.hex.toLowerCase()
                       ? "border-slate-900 ring-2 ring-offset-2 ring-violet-500 dark:border-white dark:ring-offset-slate-900"
                       : "border-white/80 shadow hover:scale-105 dark:border-slate-700")
@@ -433,7 +415,7 @@ export function InvoiceTemplatesPageClient() {
                   aria-pressed={!previewOverlayOpen}
                   onClick={() => setPreviewOverlayOpen(false)}
                   className={
-                    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition " +
+                    "inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition sm:min-h-0 sm:px-2.5 sm:py-1.5 " +
                     (!previewOverlayOpen
                       ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm dark:from-violet-500 dark:to-indigo-500"
                       : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")
@@ -447,7 +429,7 @@ export function InvoiceTemplatesPageClient() {
                   aria-pressed={previewOverlayOpen}
                   onClick={() => setPreviewOverlayOpen(true)}
                   className={
-                    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition " +
+                    "inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition sm:min-h-0 sm:px-2.5 sm:py-1.5 " +
                     (previewOverlayOpen
                       ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm dark:from-violet-500 dark:to-indigo-500"
                       : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")

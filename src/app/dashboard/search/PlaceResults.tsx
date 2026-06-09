@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { saveBusinessAsLead } from "@/actions/leads";
 import { FREE_LEAD_LIMIT } from "@/lib/entitlements";
@@ -49,12 +48,14 @@ function placeToPayload(place: Place) {
 export function PlaceResults({
   places,
   totalBeforeFilters,
+  onPlaceAdded,
 }: {
   places: Place[];
   /** When refining, total raw results from search (for “X of Y”). */
   totalBeforeFilters?: number;
+  /** Remove a place from the parent list after it is saved (or was already saved). */
+  onPlaceAdded?: (placeId: string) => void;
 }) {
-  const router = useRouter();
   const [uiPage, setUiPage] = useState(1);
   const [saving, setSaving] = useState<string | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
@@ -149,8 +150,18 @@ export function PlaceResults({
       setSaving(null);
       return;
     }
-    showFeedback(`"${place.name}" added to CRM.`);
-    router.refresh();
+    if (r.isNew) {
+      showFeedback(`"${place.name}" added to CRM.`);
+    } else {
+      showFeedback(`"${place.name}" is already in your CRM — removed from results.`);
+    }
+    onPlaceAdded?.(place.placeId);
+    setSelected((prev) => {
+      if (!prev.has(place.placeId)) return prev;
+      const next = new Set(prev);
+      next.delete(place.placeId);
+      return next;
+    });
     setSaving(null);
   };
 
@@ -160,6 +171,7 @@ export function PlaceResults({
     setBulkSaving(true);
     try {
       let saved = 0;
+      let skipped = 0;
       for (const place of toAdd) {
         const r = await saveBusinessAsLead(placeToPayload(place));
         if (!r.ok) {
@@ -172,12 +184,23 @@ export function PlaceResults({
           }
           break;
         }
-        saved += 1;
+        if (r.isNew) saved += 1;
+        else skipped += 1;
+        onPlaceAdded?.(place.placeId);
       }
-      if (saved > 0) {
+      if (saved > 0 || skipped > 0) {
         setSelected(new Set());
-        showFeedback(saved === 1 ? "1 lead added to CRM." : `${saved} leads added to CRM.`);
-        router.refresh();
+        if (saved > 0 && skipped > 0) {
+          showFeedback(`${saved} added · ${skipped} already in CRM (hidden).`);
+        } else if (saved > 0) {
+          showFeedback(saved === 1 ? "1 lead added to CRM." : `${saved} leads added to CRM.`);
+        } else {
+          showFeedback(
+            skipped === 1
+              ? "1 business was already in your CRM."
+              : `${skipped} businesses were already in your CRM.`
+          );
+        }
       }
     } finally {
       setBulkSaving(false);
@@ -221,7 +244,7 @@ export function PlaceResults({
               checked={allVisibleSelected}
               onChange={toggleSelectAllVisible}
               disabled={busy || visiblePage.length === 0}
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              className="h-5 w-5 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             Select all on this page
           </label>
@@ -229,7 +252,7 @@ export function PlaceResults({
             type="button"
             onClick={() => void handleBulkAdd()}
             disabled={busy || selectedCount === 0}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-h-[44px] touch-manipulation rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {bulkSaving
               ? "Adding…"
@@ -250,7 +273,7 @@ export function PlaceResults({
                 checked={selected.has(place.placeId)}
                 onChange={() => toggle(place.placeId)}
                 disabled={busy}
-                className="mt-1 sm:mt-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="mt-1 sm:mt-0 h-5 w-5 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 aria-label={`Select ${place.name}`}
               />
               {place.photoUrl && (
@@ -316,7 +339,7 @@ export function PlaceResults({
                 type="button"
                 onClick={() => void handleAdd(place)}
                 disabled={busy}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+                className="min-h-[44px] touch-manipulation rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 transition disabled:opacity-50"
               >
                 {saving === place.placeId ? "Adding…" : "Add to leads"}
               </button>
@@ -339,7 +362,7 @@ export function PlaceResults({
               type="button"
               onClick={() => setUiPage((p) => Math.max(1, p - 1))}
               disabled={busy || safeUiPage <= 1}
-              className="min-h-10 min-w-[7rem] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="min-h-11 min-w-[7rem] touch-manipulation rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               Previous
             </button>
@@ -347,7 +370,7 @@ export function PlaceResults({
               type="button"
               onClick={() => setUiPage((p) => Math.min(totalUiPages, p + 1))}
               disabled={busy || safeUiPage >= totalUiPages}
-              className="min-h-10 min-w-[7rem] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="min-h-11 min-w-[7rem] touch-manipulation rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               Next
             </button>
