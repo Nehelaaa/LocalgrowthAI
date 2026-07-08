@@ -13,7 +13,8 @@
     "db:sync-lifetime": "node ./scripts/sync-lifetime-lead-count.cjs",
     "favicons": "node ./scripts/generate-favicons.cjs",
     "demo:import-templates": "node ./scripts/import-portfolio-templates.cjs",
-    "demo:test": "npx --yes tsx ./scripts/test-render.mjs"
+    "demo:test": "npx --yes tsx ./scripts/test-render.mjs",
+    "invoice:test": "npx --yes tsx ./scripts/test-invoice-api.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
