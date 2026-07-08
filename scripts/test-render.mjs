@@ -21,6 +21,30 @@ const cases = [
   { name: "Vincent's Barbershop", businessType: "barber shop", city: "Boston", state: "MA", phone: "(617) 555-0142", rating: 4.9, reviewCount: 88 },
 ];
 
+function validateImages(html) {
+  const issues = [];
+  const withoutFix = html.replace(
+    /<style id="localleadster-demo-fix">[\s\S]*?<\/style>/i,
+    ""
+  );
+  const imgs = [...(withoutFix.matchAll(/<img\b[^>]*>/gi) ?? [])];
+  if (imgs.length === 0) issues.push("no images");
+  for (const tag of imgs) {
+    const src = tag[0].match(/\ssrc=["']([^"']+)["']/i)?.[1] ?? "";
+    if (!src) issues.push("empty img src");
+    else if (!src.startsWith("http") && !src.startsWith("data:")) {
+      issues.push(`relative img: ${src.slice(0, 40)}`);
+    }
+  }
+  if (
+    [...withoutFix.matchAll(/style="[^"]*clip-path:\s*inset\([^"]*100%/gi)]
+      .length > 0
+  ) {
+    issues.push("hidden clip-path");
+  }
+  return issues;
+}
+
 function validate(html, input) {
   const issues = [];
   if (!html || html.length < 3000) issues.push("too short");
@@ -41,6 +65,7 @@ function validate(html, input) {
   if (html && /max-h-0 opacity-100/i.test(html)) issues.push("mobile menu forced open");
   if (html && !/<base\s+href=/i.test(html)) issues.push("no base");
   if (html && !html.includes("localleadster-demo-fix")) issues.push("no fix css");
+  issues.push(...validateImages(html));
   return issues;
 }
 

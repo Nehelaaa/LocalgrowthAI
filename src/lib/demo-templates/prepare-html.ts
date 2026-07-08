@@ -92,6 +92,31 @@ export function absolutizeTemplateUrls(html: string, origin: string): string {
   return out;
 }
 
+/** Catch any remaining root-relative image URLs after other passes. */
+export function fixRemainingRelativeImages(html: string, origin: string): string {
+  const base = origin.replace(/\/$/, "");
+  let out = html;
+
+  out = out.replace(
+    /\ssrc="\/(?!\/)([^"]+)"/gi,
+    (_m, path: string) => ` src="${base}/${path.replace(/^\//, "")}"`
+  );
+  out = out.replace(
+    /\ssrcset="\/(?!\/)/gi,
+    ` srcset="${base}/`
+  );
+  out = out.replace(
+    /imageSrcSet="\/(?!\/)/gi,
+    ` imageSrcSet="${base}/`
+  );
+  out = out.replace(
+    /url\(\s*\/(?!\/)([^)]+)\)/gi,
+    (_m, path: string) => `url(${base}/${path.replace(/^\//, "")})`
+  );
+
+  return out;
+}
+
 export function ensureBaseHref(html: string, origin: string): string {
   const base = origin.replace(/\/$/, "") + "/";
   if (/<base\s/i.test(html)) {
@@ -115,13 +140,29 @@ export function revealHiddenSsrContent(html: string): string {
     if (/max-height:\s*0|max-h:\s*0/i.test(style)) return `style="${style}"`;
 
     let next = style;
+    // Clip-path wipes (common on portfolio about/gallery images without JS).
+    if (/clip-path:\s*inset/i.test(next)) {
+      next = next.replace(/clip-path:\s*inset\([^)]+\)/gi, "clip-path:inset(0)");
+    }
     // Entrance fades tied to transform/translateY — show content without JS/framer.
     if (/opacity:\s*0/i.test(next) && /transform:/i.test(next)) {
       next = next
         .replace(/opacity:\s*0(\s|;|$)/gi, "opacity:1$1")
         .replace(/transform:\s*[^;]+/gi, "transform:none");
+    } else if (/opacity:\s*0/i.test(next)) {
+      next = next.replace(/opacity:\s*0(\s|;|$)/gi, "opacity:1$1");
     }
     return `style="${next}"`;
+  });
+}
+
+/** Unhide images hidden via clip-path/opacity rules inside inlined stylesheets. */
+export function revealHiddenMediaInStyles(html: string): string {
+  return html.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (full, css: string) => {
+    let next = css;
+    next = next.replace(/clip-path:\s*inset\([^)]*100%[^)]*\)/gi, "clip-path:inset(0)");
+    next = next.replace(/clip-path:\s*inset\(50%\)/gi, "clip-path:inset(0)");
+    return full.replace(css, next);
   });
 }
 
@@ -129,6 +170,9 @@ export function injectDemoFixStyles(html: string): string {
   const css = `<style id="localleadster-demo-fix">
     html, body { opacity: 1 !important; visibility: visible !important; }
     img[src=""], img:not([src]) { display: none; }
+    img, picture, video { opacity: 1 !important; visibility: visible !important; }
+    [style*="clip-path:inset(0 0 100%"] { clip-path: inset(0) !important; -webkit-clip-path: inset(0) !important; }
+    [style*="clip-path:inset(50%)"] { clip-path: inset(0) !important; -webkit-clip-path: inset(0) !important; }
     /* Keep collapsed mobile drawers closed after static export */
     .max-h-0.opacity-0 { max-height: 0 !important; opacity: 0 !important; overflow: hidden !important; }
   </style>`;
@@ -270,6 +314,7 @@ export async function preparePortfolioHtml(
   let out = html;
   out = ensureBaseHref(out, origin);
   out = absolutizeTemplateUrls(out, origin);
+  out = fixRemainingRelativeImages(out, origin);
   out = stripHydrationScripts(out);
   out = revealHiddenSsrContent(out);
   out = replaceTemplateLogos(out, vars.business_name);
@@ -277,6 +322,7 @@ export async function preparePortfolioHtml(
   // After absolutize — only rewrite page routes, never css/js/asset hrefs.
   out = rewriteTemplateNavLinks(out, origin);
   out = await inlineExternalStylesheets(out, origin);
+  out = revealHiddenMediaInStyles(out);
   out = injectDemoFixStyles(out);
 
   out = out.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(vars.business_name)}</title>`);
