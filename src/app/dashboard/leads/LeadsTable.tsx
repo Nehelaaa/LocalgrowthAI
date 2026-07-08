@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { LeadDetailPanel, type LeadDetailPanelPatch } from "./LeadDetailPanel";
-import { deleteLead } from "@/actions/leads";
+import { apiDeleteLead } from "@/lib/lead-api-client";
 import {
   DeleteLeadDialog,
   TrashIconButton,
@@ -83,7 +83,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
     if (!deleteTarget) return;
     setDeleteSubmitting(true);
     try {
-      await deleteLead(deleteTarget.leadId);
+      await apiDeleteLead(deleteTarget.leadId);
       const removedId = deleteTarget.leadId;
       setDeleteTarget(null);
       removeLeadFromList(removedId);

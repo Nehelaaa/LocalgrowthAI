@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { canCreateMoreLeads } from "@/lib/entitlements";
 import { computeLeadScore } from "@/lib/lead-score";
 import { googleMapsListingUrl } from "@/lib/google-maps-links";
+import { deleteLeadForUser } from "@/lib/lead-delete";
 import type { LeadInvoiceDraftV1 } from "@/lib/lead-invoice-draft";
 import {
   clearLeadInvoiceDraftForUser,
@@ -431,21 +432,6 @@ export async function updateLeadStatus(
 /** Deletes the lead (and cascaded outreach / demos), then the linked business. */
 export async function deleteLead(leadId: string) {
   const user = await requireUserForAction();
-  const lead = await prisma.lead.findFirst({
-    where: { id: leadId, userId: user.id },
-    select: { id: true, businessId: true },
-  });
-  if (!lead) throw new Error("Lead not found");
-
-  await prisma.$transaction(async (tx) => {
-    await tx.lead.delete({ where: { id: lead.id } });
-    const remaining = await tx.lead.count({
-      where: { businessId: lead.businessId },
-    });
-    if (remaining === 0) {
-      await tx.business.delete({ where: { id: lead.businessId } });
-    }
-  });
-
+  await deleteLeadForUser(user.id, leadId);
   revalidatePath("/dashboard/leads");
 }
