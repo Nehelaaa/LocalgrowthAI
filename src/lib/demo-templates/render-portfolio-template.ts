@@ -9,6 +9,7 @@ import { templatesForNiche } from "@/lib/demo-templates/template-registry";
 import type { DemoWebsiteInput } from "@/lib/demo-website/types";
 import type { DemoTemplateVars, TemplateManifestEntry } from "@/lib/demo-templates/types";
 import { preparePortfolioHtml } from "@/lib/demo-templates/prepare-html";
+import { personalizeTemplateBranding } from "@/lib/demo-templates/personalize-branding";
 
 const TEMPLATE_DIR = path.join(process.cwd(), "src/lib/demo-templates");
 
@@ -156,6 +157,10 @@ export async function renderPortfolioTemplate(
   if (!html) return null;
   const vars = buildTemplateVars(input);
   let rendered = applyTemplatePlaceholders(html, vars);
+
+  const templateBrandName =
+    loadManifest().find((m) => m.id === id)?.name ?? input.name;
+  rendered = personalizeTemplateBranding(rendered, templateBrandName, vars);
 
   const origin = getTemplateOrigin(id);
   if (origin) {

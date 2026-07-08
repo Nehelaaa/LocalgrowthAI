@@ -17,6 +17,7 @@ const cases = [
   { name: "Green Lawn Landscaping", businessType: "landscaping", city: "Newton", state: "MA" },
   { name: "Bright Smile Dental", businessType: "dentist", city: "Arlington", state: "MA" },
   { name: "Metro Realty Group", businessType: "real estate agent", city: "Boston", state: "MA" },
+  { name: "Vincent's Barbershop", businessType: "barber shop", city: "Boston", state: "MA", phone: "(617) 555-0142", rating: 4.9, reviewCount: 88 },
 ];
 
 function validate(html, input) {
@@ -78,6 +79,26 @@ for (const t of listPortfolioTemplates()) {
   } else {
     const inlined = (html?.match(/data-inlined-from=/g) || []).length;
     console.log(`✓ ${t.id} (${Math.round((html?.length ?? 0) / 1024)}KB${inlined ? `, ${inlined} css inlined` : ""})`);
+  }
+}
+
+console.log("\n=== Branding personalization ===\n");
+const vincent = cases.find((c) => c.name === "Vincent's Barbershop");
+if (vincent) {
+  const tid = pickTemplateId(vincent);
+  const html = await renderPortfolioTemplate(vincent, tid);
+  const hero = html?.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? "";
+  const heroPlain = hero.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const hasHeights = /Heights/i.test(hero) || /<text[^>]*>Heights<\/text>/i.test(html ?? "");
+  const hasVincent = html?.includes("Vincent") ?? false;
+  if (tid === "heights-barber" && hasHeights) {
+    console.log(`✗ Vincent's Barbershop still shows Heights template brand in hero/logo`);
+    failed++;
+  } else if (!hasVincent) {
+    console.log(`✗ Vincent's Barbershop missing business name in rendered HTML`);
+    failed++;
+  } else {
+    console.log(`✓ Vincent's Barbershop → ${tid} hero="${heroPlain.slice(0, 48)}"`);
   }
 }
 
