@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { AddManualLeadDialog } from "@/app/dashboard/leads/AddManualLeadDialog";
 import { LeadMapCanvas } from "@/components/dashboard/LeadMapCanvas";
 import type { DashboardMetrics, DashboardLeadRow } from "@/actions/metrics";
+import { formatBusinessLocation } from "@/lib/format-business-location";
+import { explainLeadScore } from "@/lib/lead-score";
 import type { ContactStatus } from "@prisma/client";
 
 const panel =
@@ -61,6 +63,47 @@ function stagePillClass(status: ContactStatus): string {
     default:
       return "bg-slate-100 text-slate-700";
   }
+}
+
+function formatLeadLocation(lead: Pick<DashboardLeadRow, "city" | "state" | "address">): string {
+  return formatBusinessLocation({
+    city: lead.city,
+    state: lead.state,
+    address: lead.address,
+  });
+}
+
+function LeadScoreBadge({ lead }: { lead: DashboardLeadRow }) {
+  const reasons = explainLeadScore({
+    rating: lead.rating,
+    reviewCount: lead.reviewCount,
+    noWebsite: !lead.hasWebsite,
+    hasSocialOnly: lead.hasSocialOnly,
+  });
+
+  return (
+    <span className="group/score relative inline-flex">
+      <span
+        className="cursor-help font-mono tabular-nums text-slate-700 underline decoration-dotted decoration-slate-400 underline-offset-2 dark:text-slate-300 dark:decoration-slate-500"
+        tabIndex={0}
+      >
+        {lead.leadScore}
+      </span>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-52 -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-[11px] leading-snug text-slate-600 opacity-0 shadow-lg transition-opacity group-hover/score:opacity-100 group-focus-within/score:opacity-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+      >
+        <span className="mb-1 block font-semibold text-slate-900 dark:text-white">
+          Score {lead.leadScore}
+        </span>
+        <ul className="space-y-0.5">
+          {reasons.map((r) => (
+            <li key={r}>· {r}</li>
+          ))}
+        </ul>
+      </span>
+    </span>
+  );
 }
 
 function SummaryStrip({ metrics }: { metrics: DashboardMetrics }) {
@@ -120,7 +163,6 @@ function LeadFunnel({ metrics }: { metrics: DashboardMetrics }) {
     { key: "new", label: "New", count: funnel.new },
     { key: "contacted", label: "Contacted", count: funnel.contacted },
     { key: "interested", label: "Interested", count: funnel.interested },
-    { key: "proposalSent", label: "Proposal Sent", count: funnel.proposalSent },
     { key: "closed", label: "Closed", count: funnel.closed },
   ];
   const max = Math.max(...stages.map((s) => s.count), 1);
@@ -164,7 +206,14 @@ function LeadFunnel({ metrics }: { metrics: DashboardMetrics }) {
               Find new businesses →
             </Link>
           </p>
-        ) : null}
+        ) : (
+          <p className="border-t border-slate-100 pt-3 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            {metrics.funnelTotal} active leads
+            {funnel.proposalSent > 0
+              ? ` · ${funnel.proposalSent} with proposals out`
+              : ""}
+          </p>
+        )}
       </div>
     </section>
   );
@@ -172,23 +221,13 @@ function LeadFunnel({ metrics }: { metrics: DashboardMetrics }) {
 
 function RecentLeadActions({ lead }: { lead: DashboardLeadRow }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {lead.phone ? (
-        <a
-          href={`tel:${lead.phone.replace(/\D/g, "")}`}
-          className="inline-flex min-h-[44px] flex-1 items-center justify-center whitespace-nowrap rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-violet-300 hover:text-violet-700 sm:flex-none sm:px-3 sm:text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-violet-500/50 dark:hover:text-violet-300"
-        >
-          Contact
-        </a>
-      ) : null}
-      <Link
-        href={`/dashboard/leads?search=${encodeURIComponent(lead.businessName)}`}
-        className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 sm:flex-none sm:px-3 sm:text-xs dark:bg-violet-500 dark:hover:bg-violet-400"
-      >
-        View
-        <span aria-hidden className="text-violet-200 dark:text-violet-300/80">→</span>
-      </Link>
-    </div>
+    <Link
+      href={`/dashboard/leads?search=${encodeURIComponent(lead.businessName)}`}
+      className="inline-flex min-h-[44px] w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 sm:w-auto sm:px-3 sm:text-xs dark:bg-violet-500 dark:hover:bg-violet-400"
+    >
+      View
+      <span aria-hidden className="text-violet-200 dark:text-violet-300/80">→</span>
+    </Link>
   );
 }
 
@@ -223,7 +262,7 @@ function RecentLeadsTable({ leads }: { leads: DashboardLeadRow[] }) {
                 <div className="min-w-0">
                   <p className="font-medium text-slate-900 dark:text-white">{lead.businessName}</p>
                   <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                    {[lead.city, lead.state].filter(Boolean).join(", ") || "—"}
+                    {formatLeadLocation(lead)}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -242,7 +281,7 @@ function RecentLeadsTable({ leads }: { leads: DashboardLeadRow[] }) {
                     {lead.hasWebsite ? "Has site" : "No website"}
                   </span>
                   <span className="font-mono text-slate-600 dark:text-slate-300">
-                    Score {lead.leadScore}
+                    Score <LeadScoreBadge lead={lead} />
                   </span>
                   {lead.badge === "HOT" ? (
                     <span className="font-bold uppercase tracking-wide text-orange-600 dark:text-orange-400">
@@ -265,7 +304,7 @@ function RecentLeadsTable({ leads }: { leads: DashboardLeadRow[] }) {
                   <th className="px-3 py-3">Website</th>
                   <th className="px-3 py-3">Stage</th>
                   <th className="px-3 py-3">Score</th>
-                  <th className="w-40 min-w-40 px-5 py-3 text-right">Action</th>
+                  <th className="w-28 min-w-28 px-5 py-3 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -280,7 +319,7 @@ function RecentLeadsTable({ leads }: { leads: DashboardLeadRow[] }) {
                       ) : null}
                     </td>
                     <td className="px-3 py-3.5 text-slate-600 dark:text-slate-400">
-                      {[lead.city, lead.state].filter(Boolean).join(", ") || "—"}
+                      {formatLeadLocation(lead)}
                     </td>
                     <td className="px-3 py-3.5">
                       <span
@@ -300,27 +339,17 @@ function RecentLeadsTable({ leads }: { leads: DashboardLeadRow[] }) {
                         {STAGE_LABELS[lead.contactStatus]}
                       </span>
                     </td>
-                    <td className="px-3 py-3.5 font-mono text-slate-700 dark:text-slate-300">
-                      {lead.leadScore}
+                    <td className="px-3 py-3.5">
+                      <LeadScoreBadge lead={lead} />
                     </td>
-                    <td className="w-40 min-w-40 px-5 py-3.5">
-                      <div className="flex flex-nowrap items-center justify-end gap-1.5">
-                        {lead.phone ? (
-                          <a
-                            href={`tel:${lead.phone.replace(/\D/g, "")}`}
-                            className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:border-violet-300 hover:text-violet-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-violet-500/50 dark:hover:text-violet-300"
-                          >
-                            Contact
-                          </a>
-                        ) : null}
-                        <Link
-                          href={`/dashboard/leads?search=${encodeURIComponent(lead.businessName)}`}
-                          className="inline-flex h-9 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md bg-violet-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-violet-500 dark:bg-violet-500 dark:hover:bg-violet-400"
-                        >
-                          View
-                          <span aria-hidden className="text-violet-200 dark:text-violet-300/80">→</span>
-                        </Link>
-                      </div>
+                    <td className="w-28 min-w-28 px-5 py-3.5 text-right">
+                      <Link
+                        href={`/dashboard/leads?search=${encodeURIComponent(lead.businessName)}`}
+                        className="inline-flex h-9 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md bg-violet-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-violet-500 dark:bg-violet-500 dark:hover:bg-violet-400"
+                      >
+                        View
+                        <span aria-hidden className="text-violet-200 dark:text-violet-300/80">→</span>
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -427,8 +456,8 @@ function HotLeadsList({ leads }: { leads: DashboardLeadRow[] }) {
                 <span className="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-white">
                   {lead.businessName}
                 </span>
-                <span className="shrink-0 rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-bold tabular-nums text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
-                  {lead.leadScore}
+                <span className="shrink-0 rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-bold text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
+                  <LeadScoreBadge lead={lead} />
                 </span>
               </Link>
             </li>

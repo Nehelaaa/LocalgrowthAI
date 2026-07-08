@@ -7,10 +7,12 @@ import { DeleteLeadDialog } from "@/components/DeleteLeadDialog";
 import { updateLeadStatus, updateLead, deleteLead } from "@/actions/leads";
 import { InvoiceBuilderModal } from "@/components/invoices/InvoiceBuilderModal";
 import { getLeadById } from "@/actions/leads-list";
+import { generateDemoPage } from "@/actions/demo";
 import {
   resolveGoogleMapsDirectionsUrl,
   resolveGoogleMapsListingUrl,
 } from "@/lib/google-maps-links";
+import { formatBusinessLocation } from "@/lib/format-business-location";
 import type { Lead, Business } from "@prisma/client";
 
 type LeadWithRelations = Lead & { business: Business };
@@ -55,6 +57,8 @@ export function LeadDetailPanel({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [demoGenerating, setDemoGenerating] = useState(false);
+  const [demoStatus, setDemoStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialLead?.id === leadId) {
@@ -212,6 +216,11 @@ export function LeadDetailPanel({
   };
 
   const biz = lead.business;
+  const locationLabel = formatBusinessLocation({
+    city: biz.city,
+    state: biz.state,
+    address: biz.address,
+  });
   const mapsListing = resolveGoogleMapsListingUrl({
     placeId: biz.placeId,
     name: biz.name,
@@ -231,6 +240,29 @@ export function LeadDetailPanel({
     lat: biz.lat,
     lng: biz.lng,
   });
+
+  const handleGenerateWebsite = async () => {
+    setDemoGenerating(true);
+    setDemoStatus(null);
+    try {
+      const result = await generateDemoPage(leadId);
+      setDemoStatus(
+        result.templateName
+          ? `Opened ${result.nicheLabel} mockup (${result.templateName})`
+          : "Website mockup opened in a new tab"
+      );
+      window.open(`/demo/${result.slug}`, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Could not generate website mockup.";
+      if (msg === "PRO_REQUIRED") {
+        setDemoStatus("Upgrade to Pro to generate website mockups.");
+      } else {
+        setDemoStatus(msg);
+      }
+    } finally {
+      setDemoGenerating(false);
+    }
+  };
 
   return createPortal(
     <div
@@ -252,6 +284,9 @@ export function LeadDetailPanel({
         onClose={() => setInvoiceOpen(false)}
         leadId={lead.id}
         savedInvoiceDraft={lead.invoiceDraft}
+        onInvoiceDraftSaved={(draft) => {
+          applyLeadPatch({ invoiceDraft: draft });
+        }}
         initialClientName={lead.business.name}
         initialClientAddress={lead.business.address ?? ""}
         initialWebsitePriceText={websiteQuote}
@@ -280,8 +315,7 @@ export function LeadDetailPanel({
                 {lead.business.name}
               </h2>
               <p className="mt-1 break-words text-sm text-slate-500 dark:text-slate-400">
-                {lead.business.city}, {lead.business.state} · Score {lead.leadScore}{" "}
-                · {lead.badge}
+                {locationLabel} · Score {lead.leadScore} · {lead.badge}
               </p>
             </div>
             <div className="flex w-full min-w-0 max-w-full flex-col gap-2 sm:w-auto sm:max-w-[min(100%,24rem)] sm:flex-none sm:flex-row sm:flex-wrap sm:justify-end sm:gap-2">
@@ -299,6 +333,26 @@ export function LeadDetailPanel({
                 </svg>
                 Generate invoice
               </button>
+              <button
+                type="button"
+                onClick={() => void handleGenerateWebsite()}
+                disabled={demoGenerating}
+                className="inline-flex min-h-[44px] w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-800 shadow-sm transition hover:bg-violet-100 disabled:opacity-60 sm:w-auto sm:min-w-[10rem] dark:border-violet-500/30 dark:bg-violet-950/40 dark:text-violet-100 dark:hover:bg-violet-900/50"
+              >
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A8.966 8.966 0 0 1 3 12c0-1.264.26-2.467.732-3.553"
+                  />
+                </svg>
+                {demoGenerating ? "Building…" : "Generate website"}
+              </button>
+              {demoStatus ? (
+                <p className="w-full text-center text-xs text-violet-700 sm:text-right dark:text-violet-300">
+                  {demoStatus}
+                </p>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setDeleteDialogOpen(true)}

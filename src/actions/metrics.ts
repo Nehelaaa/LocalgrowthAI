@@ -12,7 +12,11 @@ export type DashboardLeadRow = {
   businessName: string;
   city: string | null;
   state: string | null;
+  address: string | null;
   hasWebsite: boolean;
+  hasSocialOnly: boolean;
+  rating: number | null;
+  reviewCount: number;
   contactStatus: ContactStatus;
   leadScore: number;
   badge: LeadBadge;
@@ -275,7 +279,11 @@ function mapLeadRow(l: {
     name: string;
     city: string | null;
     state: string | null;
+    address: string | null;
     website: string | null;
+    hasSocialOnly: boolean;
+    rating: number | null;
+    reviewCount: number;
     phone: string | null;
   };
 }): DashboardLeadRow {
@@ -284,7 +292,11 @@ function mapLeadRow(l: {
     businessName: l.business.name,
     city: l.business.city,
     state: l.business.state,
-    hasWebsite: Boolean(l.business.website),
+    address: l.business.address,
+    hasWebsite: Boolean(l.business.website) && !l.business.hasSocialOnly,
+    hasSocialOnly: l.business.hasSocialOnly,
+    rating: l.business.rating,
+    reviewCount: l.business.reviewCount,
     contactStatus: l.contactStatus,
     leadScore: l.leadScore,
     badge: l.badge,
@@ -421,13 +433,16 @@ export async function getDashboardData() {
 
   const proposalSent = activeQuotedLeads.length;
 
+  // Mutually exclusive pipeline stages — sum equals activeLeads.
   const funnel = {
     new: countFor("NOT_CONTACTED"),
     contacted: countFor("CONTACTED"),
     interested: countFor("INTERESTED"),
-    proposalSent,
     closed: closedWon,
+    proposalSent,
   };
+
+  const funnelTotal = funnel.new + funnel.contacted + funnel.interested + funnel.closed;
 
   const recentLeads = leadBundle
     .filter((l) => l.contactStatus !== "CLOSED_LOST")
@@ -466,6 +481,7 @@ export async function getDashboardData() {
     hotLeads,
     pipelineValue,
     funnel,
+    funnelTotal,
     pipeline: {
       notContacted: funnel.new,
       contacted: funnel.contacted,

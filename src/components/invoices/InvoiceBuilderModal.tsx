@@ -48,7 +48,7 @@ type Props = {
   leadId?: string;
   /** `Lead.invoiceDraft` from the server (parsed when the modal opens). */
   savedInvoiceDraft?: unknown;
-  onInvoiceDraftSaved?: () => void;
+  onInvoiceDraftSaved?: (draft: LeadInvoiceDraftV1 | null) => void;
   initialClientName: string;
   initialClientAddress: string;
   initialWebsitePriceText: string;
@@ -103,8 +103,13 @@ export function InvoiceBuilderModal({
   /** True for the whole time the modal stays open (so server refetches don’t reset the form). */
   const invoiceInitDoneRef = useRef(false);
   const lastPersistedDraftRef = useRef<string>("");
+  const saveDebounceRef = useRef<number | null>(null);
+  const leadInvoiceDraftPayloadRef = useRef<LeadInvoiceDraftV1 | null>(null);
   /** False until the open-layout pass has applied saved draft or defaults (avoids persisting empty state). */
   const [invoiceReady, setInvoiceReady] = useState(false);
+  const [draftSaveState, setDraftSaveState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
 
   useLayoutEffect(() => {
     if (!open) {
@@ -210,25 +215,70 @@ export function InvoiceBuilderModal({
     };
   }, [clientName, clientAddress, lineItems, notes, taxPercent, discountAmount]);
 
+  leadInvoiceDraftPayloadRef.current = leadInvoiceDraftPayload;
+
+  const persistLeadInvoiceDraft = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!leadId || !invoiceReady) return;
+      const payload = leadInvoiceDraftPayloadRef.current;
+      if (!payload) return;
+      const next = serializeLeadInvoiceDraftStable(payload);
+      if (next === lastPersistedDraftRef.current) return;
+      if (!opts?.silent) setDraftSaveState("saving");
+      try {
+        await saveLeadInvoiceDraft(leadId, payload);
+        lastPersistedDraftRef.current = next;
+        if (!opts?.silent) {
+          setDraftSaveState("saved");
+          window.setTimeout(() => {
+            setDraftSaveState((state) => (state === "saved" ? "idle" : state));
+          }, 2000);
+        }
+        onInvoiceDraftSaved?.(payload);
+      } catch (e) {
+        setDraftSaveState("error");
+        setErr(
+          e instanceof Error ? e.message : "Could not save invoice defaults."
+        );
+        throw e;
+      }
+    },
+    [leadId, invoiceReady, onInvoiceDraftSaved]
+  );
+
+  const requestClose = useCallback(async () => {
+    if (saveDebounceRef.current) {
+      window.clearTimeout(saveDebounceRef.current);
+      saveDebounceRef.current = null;
+    }
+    if (leadId && invoiceReady) {
+      try {
+        await persistLeadInvoiceDraft({ silent: true });
+      } catch {
+        return;
+      }
+    }
+    onClose();
+  }, [leadId, invoiceReady, persistLeadInvoiceDraft, onClose]);
+
   useEffect(() => {
     if (!open || !leadId || !invoiceReady) return;
     const next = serializeLeadInvoiceDraftStable(leadInvoiceDraftPayload);
     if (next === lastPersistedDraftRef.current) return;
-    const t = window.setTimeout(() => {
-      void (async () => {
-        try {
-          await saveLeadInvoiceDraft(leadId, leadInvoiceDraftPayload);
-          lastPersistedDraftRef.current = next;
-          onInvoiceDraftSaved?.();
-        } catch (e) {
-          setErr(
-            e instanceof Error ? e.message : "Could not save invoice defaults."
-          );
-        }
-      })();
+    if (saveDebounceRef.current) {
+      window.clearTimeout(saveDebounceRef.current);
+    }
+    saveDebounceRef.current = window.setTimeout(() => {
+      saveDebounceRef.current = null;
+      void persistLeadInvoiceDraft();
     }, 850);
-    return () => window.clearTimeout(t);
-  }, [open, leadId, invoiceReady, leadInvoiceDraftPayload, onInvoiceDraftSaved]);
+    return () => {
+      if (saveDebounceRef.current) {
+        window.clearTimeout(saveDebounceRef.current);
+        saveDebounceRef.current = null;
+      }
+    };
+  }, [open, leadId, invoiceReady, leadInvoiceDraftPayload, persistLeadInvoiceDraft]);
 
   useEffect(() => {
     if (!open) return;
@@ -370,7 +420,8 @@ export function InvoiceBuilderModal({
         taxPercent: 0,
         discountAmount: 0,
       });
-      onInvoiceDraftSaved?.();
+      onInvoiceDraftSaved?.(null);
+      setDraftSaveState("idle");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not clear saved invoice.");
     }
@@ -437,7 +488,7 @@ export function InvoiceBuilderModal({
       aria-modal
       aria-labelledby="invoice-builder-title"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) void requestClose();
       }}
     >
       <div
@@ -457,8 +508,17 @@ export function InvoiceBuilderModal({
             </p>
             {leadId ? (
               <p className="mt-2 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                Client block, line items, tax, discount, and notes are saved for this lead and
+                Client block, line items, tax, discount, and notes auto-save for this lead and
                 open pre-filled next time. Invoice # and date start fresh each visit.{" "}
+                {draftSaveState === "saving" ? (
+                  <span className="font-medium text-slate-500 dark:text-slate-400">
+                    Saving…
+                  </span>
+                ) : draftSaveState === "saved" ? (
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                    Draft saved
+                  </span>
+                ) : null}{" "}
                 <button
                   type="button"
                   onClick={() => void handleClearSavedInvoice()}
@@ -471,7 +531,7 @@ export function InvoiceBuilderModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => void requestClose()}
             className="min-h-11 min-w-11 shrink-0 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             aria-label="Close invoice builder"
           >

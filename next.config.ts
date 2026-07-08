@@ -60,6 +60,27 @@ const nextConfig: NextConfig = {
 
     return [
       {
+        source: "/demo/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self' https: data: blob:",
+              "base-uri 'self' https:",
+              "object-src 'none'",
+              "frame-ancestors 'none'",
+              "img-src 'self' https: data: blob:",
+              "font-src 'self' https: data:",
+              "style-src 'self' 'unsafe-inline' https:",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+              "connect-src 'self' https: wss:",
+            ].join("; "),
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+      {
         source: "/:path*",
         headers: common,
       },

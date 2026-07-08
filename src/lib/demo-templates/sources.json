@@ -1,0 +1,252 @@
+[
+  {
+    "id": "heights-barber",
+    "name": "Heights Barber",
+    "sourceUrl": "https://heights-barbershop.vercel.app/",
+    "category": "barber",
+    "niches": [
+      "barber",
+      "barbershop",
+      "grooming"
+    ],
+    "file": "html/heights-barber.html",
+    "bytes": 174399
+  },
+  {
+    "id": "maison-noir-barber",
+    "name": "Maison Noir Barber",
+    "sourceUrl": "https://luxe-trim-co.vercel.app/",
+    "category": "barber",
+    "niches": [
+      "barber",
+      "barbershop",
+      "grooming",
+      "luxury"
+    ],
+    "file": "html/maison-noir-barber.html",
+    "bytes": 147476
+  },
+  {
+    "id": "rays-auto",
+    "name": "Ray's Auto",
+    "sourceUrl": "https://rays-auto.vercel.app/",
+    "category": "auto_repair",
+    "niches": [
+      "auto",
+      "repair",
+      "mechanic",
+      "garage",
+      "automotive"
+    ],
+    "file": "html/rays-auto.html",
+    "bytes": 146583
+  },
+  {
+    "id": "grub-kebab",
+    "name": "Grub Kebab",
+    "sourceUrl": "https://kebabit.netlify.app/",
+    "category": "restaurant",
+    "niches": [
+      "restaurant",
+      "food",
+      "cafe",
+      "kitchen",
+      "grill",
+      "kebab"
+    ],
+    "file": "html/grub-kebab.html",
+    "bytes": 50348
+  },
+  {
+    "id": "amora-salon",
+    "name": "Amora Leah Salon",
+    "sourceUrl": "https://suave-salon-space.vercel.app/",
+    "category": "salon",
+    "niches": [
+      "salon",
+      "spa",
+      "beauty",
+      "hair",
+      "bridal"
+    ],
+    "file": "html/amora-salon.html",
+    "bytes": 104229
+  },
+  {
+    "id": "paw-co",
+    "name": "Paw & Co",
+    "sourceUrl": "https://petvibee.netlify.app/",
+    "category": "pet",
+    "niches": [
+      "pet",
+      "ecommerce",
+      "retail",
+      "shop"
+    ],
+    "file": "html/paw-co.html",
+    "bytes": 138401
+  },
+  {
+    "id": "expert-auto",
+    "name": "Expert Auto Shop",
+    "sourceUrl": "https://expert-auto-boost.lovable.app/",
+    "category": "auto_repair",
+    "niches": [
+      "auto",
+      "repair",
+      "mechanic",
+      "garage"
+    ],
+    "file": "html/expert-auto.html",
+    "bytes": 85344
+  },
+  {
+    "id": "bills-auto",
+    "name": "Bill's Auto Services",
+    "sourceUrl": "https://bill-waltham-revamp.lovable.app/",
+    "category": "auto_repair",
+    "niches": [
+      "auto",
+      "repair",
+      "mechanic",
+      "garage"
+    ],
+    "file": "html/bills-auto.html",
+    "bytes": 88517
+  },
+  {
+    "id": "nouve-bakery",
+    "name": "Nouve Bakery",
+    "sourceUrl": "https://nouveau-sweet-lexington.lovable.app/",
+    "category": "bakery",
+    "niches": [
+      "bakery",
+      "baker",
+      "pastry"
+    ],
+    "file": "html/nouve-bakery.html",
+    "bytes": 27751
+  },
+  {
+    "id": "mk-detailing",
+    "name": "MK Detailing",
+    "sourceUrl": "https://mk-detailing.lovable.app/",
+    "category": "detailing",
+    "niches": [
+      "detailing",
+      "car wash",
+      "cleaning"
+    ],
+    "file": "html/mk-detailing.html",
+    "bytes": 11453
+  },
+  {
+    "id": "gleam-ride",
+    "name": "Kleins Auto Perfection",
+    "sourceUrl": "https://gleam-ride-hub.vercel.app/",
+    "category": "detailing",
+    "niches": [
+      "detailing",
+      "car wash"
+    ],
+    "file": "html/gleam-ride.html",
+    "bytes": 24227
+  },
+  {
+    "id": "entoscapes",
+    "name": "Entoscapes",
+    "sourceUrl": "https://entoscapes-dream-refresh.vercel.app/",
+    "category": "landscaping",
+    "niches": [
+      "landscaping",
+      "environmental",
+      "garden",
+      "lawn"
+    ],
+    "file": "html/entoscapes.html",
+    "bytes": 17800
+  },
+  {
+    "id": "crest-property",
+    "name": "Crest Property",
+    "sourceUrl": "https://crest-property-showcase-q6kmxsatd.vercel.app/",
+    "category": "real_estate",
+    "niches": [
+      "real estate",
+      "property",
+      "realtor",
+      "homes"
+    ],
+    "file": "html/crest-property.html",
+    "bytes": 39416
+  },
+  {
+    "id": "zoumi-rental",
+    "name": "Zoumi Auto Rental",
+    "sourceUrl": "https://www.zoumirentals.com/",
+    "category": "car_rental",
+    "niches": [
+      "rental",
+      "car rental"
+    ],
+    "file": "html/zoumi-rental.html",
+    "bytes": 41755
+  },
+  {
+    "id": "elite-drive",
+    "name": "Cambridge Black Limo",
+    "sourceUrl": "https://elite-drive-network.vercel.app/",
+    "category": "limo",
+    "niches": [
+      "limo",
+      "transport",
+      "chauffeur",
+      "travel"
+    ],
+    "file": "html/elite-drive.html",
+    "bytes": 87268
+  },
+  {
+    "id": "mnandi-salon",
+    "name": "Mnandi Salon & Spa",
+    "sourceUrl": "https://www.mnandisalonspa.com/",
+    "category": "salon",
+    "niches": [
+      "salon",
+      "spa",
+      "beauty",
+      "hair",
+      "bridal"
+    ],
+    "file": "html/mnandi-salon.html",
+    "bytes": 169917
+  },
+  {
+    "id": "franklin-tire",
+    "name": "Franklin Tire & Auto",
+    "sourceUrl": "https://www.franklintireauto.com/",
+    "category": "auto_repair",
+    "niches": [
+      "auto",
+      "repair",
+      "mechanic",
+      "tire"
+    ],
+    "file": "html/franklin-tire.html",
+    "bytes": 976181
+  },
+  {
+    "id": "westneuro",
+    "name": "WestNeuro",
+    "sourceUrl": "https://westneuro.com/",
+    "category": "healthcare",
+    "niches": [
+      "healthcare",
+      "neurology",
+      "medical",
+      "clinic"
+    ],
+    "file": "html/westneuro.html",
+    "bytes": 65128
+  }
+]

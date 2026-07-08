@@ -26,9 +26,11 @@ function oauthUrlErrorMessage(code: string | null | undefined): string | null {
     case "Configuration":
       return "Server auth check failed (often missing AUTH_SECRET on the host). In Vercel: Settings → Environment Variables — add AUTH_SECRET (run: openssl rand -base64 32), AUTH_URL as your exact live URL (https://…, no trailing slash), production DATABASE_URL, and Google OAuth keys; redeploy. In Google Cloud, add redirect URI https://YOUR_DOMAIN/api/auth/callback/google.";
     case "AccessDenied":
-      return "Google denied access. If your OAuth app is in Testing mode, add this Google account under Test users in Google Cloud.";
+      return "Google denied access. If your OAuth consent screen is in Testing mode, open Google Cloud → OAuth consent screen → Test users, and add the exact Gmail you’re using.";
+    case "Verification":
+      return "Google is still verifying this app. Keep OAuth consent in Testing and add your Gmail under Test users.";
     default:
-      return `Sign-in could not complete (code: ${code}). Check the terminal where the dev server runs for details, and the tips under Google sign-in.`;
+      return `Sign-in could not complete (code: ${code}). On localhost, confirm Google Cloud has redirect URI http://localhost:3000/api/auth/callback/google (exact match), then restart npm run dev.`;
   }
 }
 

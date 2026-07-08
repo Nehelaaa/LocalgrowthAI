@@ -260,6 +260,11 @@ export function LeadMapCanvas({ pins }: { pins: DashboardCityMapPin[] }) {
             transformOrigin: "0 0",
           }}
         >
+          {/* Faint geographic context under the grid */}
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_55%_45%,rgba(99,102,241,0.08),transparent_70%)] dark:bg-[radial-gradient(ellipse_80%_70%_at_55%_45%,rgba(99,102,241,0.12),transparent_70%)]"
+            aria-hidden
+          />
           <svg
             className="absolute inset-0 h-full w-full text-slate-200/80 dark:text-slate-700/50"
             aria-hidden

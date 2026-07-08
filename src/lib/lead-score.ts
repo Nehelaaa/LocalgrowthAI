@@ -37,3 +37,40 @@ export function computeLeadScore(input: ScoreInput): { score: number; badge: Lea
 
   return { score: clamped, badge };
 }
+
+/** Human-readable score breakdown for tooltips. */
+export function explainLeadScore(input: ScoreInput): string[] {
+  const lines: string[] = [];
+
+  if (input.rating != null && input.rating >= 4) {
+    lines.push(`Strong rating (${input.rating}★)`);
+  } else if (input.rating != null && input.rating >= 3) {
+    lines.push(`Decent rating (${input.rating}★)`);
+  } else if (input.rating != null) {
+    lines.push(`Lower rating (${input.rating}★)`);
+  }
+
+  if (input.reviewCount >= 50) {
+    lines.push(`${input.reviewCount} reviews — high visibility`);
+  } else if (input.reviewCount >= 20) {
+    lines.push(`${input.reviewCount} reviews`);
+  } else if (input.reviewCount >= 5) {
+    lines.push(`${input.reviewCount} reviews`);
+  } else if (input.reviewCount > 0) {
+    lines.push(`${input.reviewCount} review${input.reviewCount === 1 ? "" : "s"}`);
+  }
+
+  if (input.noWebsite) {
+    lines.push("No website — top opportunity");
+  } else if (input.hasSocialOnly) {
+    lines.push("Social-only web presence");
+  } else {
+    lines.push("Has a website");
+  }
+
+  if (input.hasRecentPhotos) {
+    lines.push("Recent photos on listing");
+  }
+
+  return lines;
+}

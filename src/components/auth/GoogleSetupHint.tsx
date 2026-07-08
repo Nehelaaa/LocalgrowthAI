@@ -21,7 +21,7 @@ export function GoogleSetupHint() {
         </code>
       </p>
       <p className="mt-2 text-xs text-amber-800/80 dark:text-amber-300/80">
-        Authorized <strong>redirect</strong> URIs (add your port + both hosts if needed):
+        Authorized <strong>redirect</strong> URIs (exact match required — no trailing slash):
       </p>
       <code className="mt-1 block whitespace-pre-wrap font-mono text-[11px]">
         http://localhost:3000/api/auth/callback/google{"\n"}
@@ -32,6 +32,12 @@ export function GoogleSetupHint() {
         <code className="font-mono">http://localhost:3000</code>,{" "}
         <code className="font-mono">http://127.0.0.1:3000</code>
         {" — plus production when you deploy."}
+      </p>
+      <p className="mt-2 text-xs text-amber-800/80 dark:text-amber-300/80">
+        If Google says the app isn&apos;t verified / Access blocked: consent screen must be{" "}
+        <strong>Testing</strong>, and your Gmail must be listed under <strong>Test users</strong>.
+        Use <code className="font-mono">http://localhost:3000</code> in the browser (not a different
+        port) after saving credentials and restarting the dev server.
       </p>
       <a
         className="mt-2 inline-block text-sm font-medium text-indigo-700 underline hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200"

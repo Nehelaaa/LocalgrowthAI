@@ -22,7 +22,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, iconOnly, em
   const { preference, setPreference, mounted } = useThemePreference();
   const effective = mounted ? resolveEffectiveColorScheme(preference) : readDomColorScheme();
   const isDark = effective === "dark";
-  const actionLabel = isDark ? "Light" : "Dark";
+  const modeLabel = isDark ? "Dark" : "Light";
 
   const wantsFullWidth = !embed && !hideCaption;
   const controlButtonClass = embed
@@ -63,7 +63,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, iconOnly, em
         controlButtonClass + (!mounted ? "cursor-wait opacity-70" : "touch-manipulation")
       }
     >
-      {!iconOnly && <span className="tabular-nums">{actionLabel}</span>}
+      {!iconOnly && <span className="tabular-nums">{modeLabel}</span>}
       {track}
     </button>
   );
@@ -77,7 +77,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, iconOnly, em
           <span className="sr-only">Loading theme preference</span>
         ) : (
           <span className="sr-only">
-            Color theme: {effective}. Switch to {actionLabel.toLowerCase()} mode.
+            Color theme: {effective}. Currently {modeLabel.toLowerCase()} mode.
           </span>
         )}
       </div>
@@ -92,7 +92,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, iconOnly, em
           <span className="sr-only">Loading theme preference</span>
         ) : (
           <span className="sr-only">
-            Color theme: {effective}. Switch to {actionLabel.toLowerCase()} mode.
+            Color theme: {effective}. Currently {modeLabel.toLowerCase()} mode.
           </span>
         )}
       </div>
@@ -115,7 +115,7 @@ export function ThemeToggle({ className = "", compact, hideCaption, iconOnly, em
         <span className="sr-only">Loading theme preference</span>
       ) : (
         <span className="sr-only">
-          Color theme: {effective}. Switch to {actionLabel.toLowerCase()} mode.
+          Color theme: {effective}. Currently {modeLabel.toLowerCase()} mode.
         </span>
       )}
     </div>
