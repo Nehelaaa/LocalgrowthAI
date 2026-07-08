@@ -3,11 +3,11 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { consumeInvoicePdfSlot } from "@/actions/invoice-pdf-quota";
 import {
-  clearLeadInvoiceDraft,
-  saveLeadInvoiceDraft,
-} from "@/actions/leads";
+  apiClearLeadInvoiceDraft,
+  apiConsumeInvoicePdfSlot,
+  apiSaveLeadInvoiceDraft,
+} from "@/lib/invoice-api-client";
 import { FREE_INVOICE_PDF_LIMIT } from "@/lib/entitlements";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
@@ -226,7 +226,7 @@ export function InvoiceBuilderModal({
       if (next === lastPersistedDraftRef.current) return;
       if (!opts?.silent) setDraftSaveState("saving");
       try {
-        await saveLeadInvoiceDraft(leadId, payload);
+        await apiSaveLeadInvoiceDraft(leadId, payload);
         lastPersistedDraftRef.current = next;
         if (!opts?.silent) {
           setDraftSaveState("saved");
@@ -395,7 +395,7 @@ export function InvoiceBuilderModal({
     if (!leadId) return;
     setErr(null);
     try {
-      await clearLeadInvoiceDraft(leadId);
+      await apiClearLeadInvoiceDraft(leadId);
       const defaultAmt = parseMoneyFromQuote(initialWebsitePriceText);
       const defaultLineItems: InvoiceLineItem[] = [
         { id: newLineId(), description: "Service", amount: defaultAmt },
@@ -447,7 +447,7 @@ export function InvoiceBuilderModal({
     }
     setPdfBusy(true);
     try {
-      const quota = await consumeInvoicePdfSlot();
+      const quota = await apiConsumeInvoicePdfSlot();
       if (!quota.ok) {
         if (quota.code === "LIMIT") {
           setErr(

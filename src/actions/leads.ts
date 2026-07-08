@@ -7,10 +7,11 @@ import { prisma } from "@/lib/db";
 import { canCreateMoreLeads } from "@/lib/entitlements";
 import { computeLeadScore } from "@/lib/lead-score";
 import { googleMapsListingUrl } from "@/lib/google-maps-links";
+import type { LeadInvoiceDraftV1 } from "@/lib/lead-invoice-draft";
 import {
-  leadInvoiceDraftV1Schema,
-  type LeadInvoiceDraftV1,
-} from "@/lib/lead-invoice-draft";
+  clearLeadInvoiceDraftForUser,
+  persistLeadInvoiceDraftForUser,
+} from "@/lib/lead-invoice-draft-persist";
 import type { ContactStatus } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -390,38 +391,26 @@ export async function saveLeadInvoiceDraft(
   draft: LeadInvoiceDraftV1
 ) {
   const user = await requireUserForAction();
-  const parsed = leadInvoiceDraftV1Schema.safeParse(draft);
-  if (!parsed.success) {
-    throw new Error("Invalid invoice draft.");
-  }
   try {
-    await assertOwnsLead(user.id, leadId);
+    await persistLeadInvoiceDraftForUser(user.id, leadId, draft);
   } catch (e) {
     if (e instanceof Error && e.message === "FORBIDDEN") {
       throw new Error("You can’t update this lead.");
     }
     throw e;
   }
-  await prisma.lead.update({
-    where: { id: leadId, userId: user.id },
-    data: { invoiceDraft: parsed.data },
-  });
 }
 
 export async function clearLeadInvoiceDraft(leadId: string) {
   const user = await requireUserForAction();
   try {
-    await assertOwnsLead(user.id, leadId);
+    await clearLeadInvoiceDraftForUser(user.id, leadId);
   } catch (e) {
     if (e instanceof Error && e.message === "FORBIDDEN") {
       throw new Error("You can’t update this lead.");
     }
     throw e;
   }
-  await prisma.lead.update({
-    where: { id: leadId, userId: user.id },
-    data: { invoiceDraft: Prisma.DbNull },
-  });
 }
 
 export async function updateLeadStatus(
