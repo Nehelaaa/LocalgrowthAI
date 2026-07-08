@@ -1,5 +1,6 @@
 import { renderPortfolioTemplate, pickTemplateId, listPortfolioTemplates } from "../src/lib/demo-templates/render-portfolio-template.ts";
 import { resolveDemoNicheCategory } from "../src/lib/demo-templates/niche-match.ts";
+import { findTemplateBrandLeaks } from "../src/lib/demo-templates/personalize-branding.ts";
 import { TEMPLATES_BY_NICHE } from "../src/lib/demo-templates/template-registry.ts";
 
 /** Templates that are JS-only shells — excluded from niche pools but listed in manifest. */
@@ -86,18 +87,15 @@ console.log("\n=== Branding personalization ===\n");
 const vincent = cases.find((c) => c.name === "Vincent's Barbershop");
 if (vincent) {
   const tid = pickTemplateId(vincent);
+  const template = listPortfolioTemplates().find((t) => t.id === tid);
   const html = await renderPortfolioTemplate(vincent, tid);
-  const hero = html?.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? "";
-  const heroPlain = hero.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  const hasHeights = /Heights/i.test(hero) || /<text[^>]*>Heights<\/text>/i.test(html ?? "");
-  const hasVincent = html?.includes("Vincent") ?? false;
-  if (tid === "heights-barber" && hasHeights) {
-    console.log(`✗ Vincent's Barbershop still shows Heights template brand in hero/logo`);
-    failed++;
-  } else if (!hasVincent) {
-    console.log(`✗ Vincent's Barbershop missing business name in rendered HTML`);
+  const issues = findTemplateBrandLeaks(html ?? "", template?.name ?? "", vincent.name);
+  if (issues.length) {
+    console.log(`✗ Vincent's Barbershop → ${tid}: ${issues.join(", ")}`);
     failed++;
   } else {
+    const hero = html?.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? "";
+    const heroPlain = hero.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     console.log(`✓ Vincent's Barbershop → ${tid} hero="${heroPlain.slice(0, 48)}"`);
   }
 }

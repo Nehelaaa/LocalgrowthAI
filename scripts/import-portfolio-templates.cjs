@@ -258,6 +258,11 @@ function applyReplacements(html, replaceMap) {
   const entries = Object.entries(replaceMap).sort((a, b) => b[0].length - a[0].length);
   let out = html;
   for (const [from, to] of entries) {
+    // Never replace bare short numbers — they corrupt SVG paths and coordinates.
+    if (/^\d{1,2}$/.test(from)) {
+      console.warn(`  skip unsafe numeric replacement: "${from}"`);
+      continue;
+    }
     out = out.split(from).join(to);
   }
   return out;
