@@ -4,6 +4,8 @@ import { FAQSection } from "@/components/marketing/FAQSection";
 import { HeroHeadlines } from "@/components/marketing/HeroHeadlines";
 import { HeroWorkflowStrip } from "@/components/marketing/HeroWorkflowStrip";
 import { HowItWorksSection } from "@/components/marketing/HowItWorksSection";
+import { MarketingDemoWebsiteSection } from "@/components/marketing/MarketingDemoWebsiteSection";
+import { MarketingFounderNote } from "@/components/marketing/MarketingFounderNote";
 import { MarketingMapsCompareSection } from "@/components/marketing/MarketingMapsCompareSection";
 import { MarketingOpportunitySignalsSection } from "@/components/marketing/MarketingOpportunitySignalsSection";
 import { MarketingReveal } from "@/components/marketing/MarketingReveal";
@@ -31,6 +33,11 @@ const FEATURE_CARDS = [
     icon: "🎯",
   },
   {
+    t: "One-click demo websites",
+    d: "Generate a niche-matched live mockup from a saved lead and share the URL in your pitch.",
+    icon: "🌐",
+  },
+  {
     t: "Outreach-ready pipeline",
     d: "Pipeline stages, clear next actions, and follow-up dates on each lead — your call sheet stays current in one workspace.",
     icon: "📋",
@@ -39,11 +46,6 @@ const FEATURE_CARDS = [
     t: "Branded PDF invoices",
     d: "Generate client-ready invoices from the same row — no extra export step.",
     icon: "📄",
-  },
-  {
-    t: "Account-scoped data",
-    d: "Leads belong to your team’s login — built for serious client work.",
-    icon: "🔐",
   },
   {
     t: "Close & revenue view",
@@ -70,27 +72,25 @@ export default function HomePage() {
         >
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-              Local prospecting & outreach workflows
+              Local prospecting · demo websites · CRM
             </p>
             <HeroHeadlines />
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
-              Run repeatable territory searches, qualify with signals, then keep outreach organized — pipeline stages,
-              follow-up tracking, and next actions — in{" "}
-              <span className="font-semibold text-slate-800 dark:text-slate-200">one LocalLeadster workspace</span>
-              {" "}(including branded PDF invoices when it’s time to bill).
+              Search any city, get local businesses ranked by opportunity, and generate a live
+              demo of their new website in one click. Free to start.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/register"
                 className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-violet-500 hover:to-indigo-500"
               >
-                Get started free
+                Start free — no card required
               </Link>
               <a
-                href="#how-it-works"
+                href="#demo-websites"
                 className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-slate-200/90 bg-white/80 px-6 py-3.5 text-base font-medium text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50/80 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:border-indigo-500/40"
               >
-                How it works
+                See demo websites
               </a>
             </div>
             <p className="mt-6 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -128,6 +128,8 @@ export default function HomePage() {
         <MarketingWorkflowReplacementSection />
 
         <MarketingOpportunitySignalsSection />
+
+        <MarketingDemoWebsiteSection />
 
         <MarketingReveal>
           <HowItWorksSection />
@@ -175,6 +177,10 @@ export default function HomePage() {
 
         <MarketingReveal>
           <PricingSection />
+        </MarketingReveal>
+
+        <MarketingReveal>
+          <MarketingFounderNote />
         </MarketingReveal>
 
         <MarketingReveal>

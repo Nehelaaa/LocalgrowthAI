@@ -88,5 +88,11 @@ export async function registerUser(
     Prisma.sql`UPDATE "Lead" SET "userId" = ${user.id} WHERE "userId" IS NULL`
   );
 
+  const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+  await captureServerEvent(user.id, "signup_completed", {
+    method: "email",
+    email: user.email,
+  });
+
   return { success: true };
 }

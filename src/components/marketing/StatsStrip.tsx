@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 const stats = [
   { label: "Cities to search", value: 200, suffix: "+", from: 0 },
   { label: "Lead quality tiers", value: 3, suffix: "", from: 0 },
-  { label: "Outreach types", value: 4, suffix: "", from: 0 },
+  { label: "Pipeline stages", value: 5, suffix: "", from: 0 },
 ];
 
 function useCountTo(target: number, durationMs: number) {

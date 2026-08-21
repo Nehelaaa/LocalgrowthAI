@@ -103,6 +103,12 @@ export async function saveManualCrmLeadForPipeline(input: {
   if (!out.ok) {
     return { ok: false, code: "LEAD_LIMIT" };
   }
+  const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+  await captureServerEvent(user.id, "lead_saved", {
+    source: "manual",
+    leadId: out.leadId,
+    isNew: true,
+  });
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/leads");
   return { ok: true, leadId: out.leadId, isNew: true };
@@ -257,6 +263,14 @@ export async function saveBusinessAsLead(place: {
   if (!result.ok) {
     return { ok: false, code: "LEAD_LIMIT" };
   }
+
+  const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+  await captureServerEvent(user.id, "lead_saved", {
+    source: "places",
+    leadId: result.leadId,
+    isNew: true,
+    placeId: place.placeId,
+  });
 
   revalidatePath("/dashboard/leads");
   return { ok: true, leadId: result.leadId, isNew: true };

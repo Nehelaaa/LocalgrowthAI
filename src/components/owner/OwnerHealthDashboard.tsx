@@ -22,7 +22,10 @@ export type BillingFeedItem = {
 
 type Metrics = {
   totalUsers: number;
-  payingUsers: number;
+  /** DB plan flags (grandfathered/comped included) — not Stripe MRR. */
+  proEntitledAccounts: number;
+  /** Live Stripe active subscription count. */
+  payingSubscribers: number;
   freeUsers: number;
   pastDueUsers: number;
   searchesToday: number;
@@ -62,7 +65,9 @@ export function OwnerHealthDashboard({ series, billingEvents, metrics }: Props) 
   }, [series, chartMode]);
 
   const payRatio =
-    metrics.totalUsers > 0 ? Math.round((metrics.payingUsers / metrics.totalUsers) * 100) : 0;
+    metrics.totalUsers > 0
+      ? Math.round((metrics.proEntitledAccounts / metrics.totalUsers) * 100)
+      : 0;
   const healthRatio =
     metrics.totalUsers > 0
       ? Math.round(((metrics.totalUsers - metrics.pastDueUsers) / metrics.totalUsers) * 100)
@@ -95,7 +100,11 @@ export function OwnerHealthDashboard({ series, billingEvents, metrics }: Props) 
         <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Plan mix</h2>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Paying (Pro / billed) vs free accounts.
+            Pro-entitled (DB flags) vs everyone else. Stripe paying subscribers:{" "}
+            <span className="font-semibold tabular-nums text-slate-800 dark:text-slate-200">
+              {metrics.payingSubscribers}
+            </span>
+            .
           </p>
           <div className="mt-4 h-4 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
             <div
@@ -106,15 +115,15 @@ export function OwnerHealthDashboard({ series, billingEvents, metrics }: Props) 
           <div className="mt-2 flex justify-between text-xs text-slate-600 dark:text-slate-300">
             <span>
               <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                {metrics.payingUsers}
+                {metrics.proEntitledAccounts}
               </span>{" "}
-              paying
+              Pro-entitled
             </span>
             <span>
               <span className="font-semibold text-slate-700 dark:text-slate-200">
                 {metrics.freeUsers}
               </span>{" "}
-              free
+              free / other
             </span>
           </div>
         </div>

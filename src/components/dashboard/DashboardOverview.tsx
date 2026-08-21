@@ -124,7 +124,7 @@ function SummaryStrip({ metrics }: { metrics: DashboardMetrics }) {
       href: "/dashboard/leads?badge=HOT",
     },
     {
-      label: "Outreach Sent",
+      label: "Contacted",
       value: metrics.contactsMade.toLocaleString(),
       href: "/dashboard/leads",
     },
@@ -473,7 +473,7 @@ function RecentActivity({ items }: { items: DashboardMetrics["recentActivity"] }
     <SidebarPanel title="Recent activity">
       {items.length === 0 ? (
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Activity will appear here as you work leads and generate outreach.
+          Activity will appear here as you update leads in your pipeline.
         </p>
       ) : (
         <ul className="space-y-3">

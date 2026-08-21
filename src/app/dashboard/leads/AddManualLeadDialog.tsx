@@ -9,17 +9,34 @@ type AddManualLeadDialogProps = {
   triggerClassName?: string;
   triggerLabel?: string;
   variant?: "primary" | "secondary";
+  /** Prefill from Chrome extension / deep link query params. */
+  initialValues?: {
+    businessName?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    notes?: string;
+  };
+  /** Open the dialog on mount (e.g. extension deep link). */
+  autoOpen?: boolean;
 };
 
 export function AddManualLeadDialog({
   triggerClassName = "",
   triggerLabel = "Add lead",
   variant = "primary",
+  initialValues,
+  autoOpen = false,
 }: AddManualLeadDialogProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(autoOpen);
   const [loading, setLoading] = useState(false);
   const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autoOpen) setOpen(true);
+  }, [autoOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -117,6 +134,7 @@ export function AddManualLeadDialog({
                   required
                   autoComplete="organization"
                   placeholder="e.g. Main St. Bakery"
+                  defaultValue={initialValues?.businessName ?? ""}
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                 />
               </div>
@@ -132,6 +150,7 @@ export function AddManualLeadDialog({
                     type="tel"
                     autoComplete="tel"
                     placeholder="Optional"
+                    defaultValue={initialValues?.phone ?? ""}
                     className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
@@ -158,6 +177,9 @@ export function AddManualLeadDialog({
                   id="manual-type"
                   name="businessType"
                   placeholder="e.g. Plumber, Restaurant"
+                  defaultValue={
+                    initialValues?.businessName ? "Google Maps extension" : ""
+                  }
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                 />
               </div>
@@ -171,6 +193,7 @@ export function AddManualLeadDialog({
                   name="address"
                   autoComplete="street-address"
                   placeholder="Optional"
+                  defaultValue={initialValues?.address ?? ""}
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                 />
               </div>
@@ -185,6 +208,7 @@ export function AddManualLeadDialog({
                     name="city"
                     autoComplete="address-level2"
                     placeholder="Optional"
+                    defaultValue={initialValues?.city ?? ""}
                     className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
@@ -197,6 +221,7 @@ export function AddManualLeadDialog({
                     name="state"
                     autoComplete="address-level1"
                     placeholder="e.g. MA"
+                    defaultValue={initialValues?.state ?? ""}
                     className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
@@ -211,6 +236,12 @@ export function AddManualLeadDialog({
                   name="notes"
                   rows={3}
                   placeholder="How you found them, next step…"
+                  defaultValue={
+                    initialValues?.notes ??
+                    (initialValues?.businessName
+                      ? "Added from Google Maps (Chrome extension)"
+                      : "")
+                  }
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                 />
               </div>

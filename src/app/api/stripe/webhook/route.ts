@@ -4,7 +4,14 @@ import { prisma } from "@/lib/db";
 import {
   createOwnerBillingEvent,
   findUserIdByStripeCustomerId,
+  hasProcessedStripeEvent,
 } from "@/lib/owner-billing-events";
+import {
+  checkoutCompletedTitle,
+  subscriptionUpdateAlert,
+  subscriptionCanceledTitle,
+  type SubPrev,
+} from "@/lib/owner-billing-alert-titles";
 import { getStripe, isStripeConfigured, stripeWebhookSecretResolved } from "@/lib/stripe";
 import { subscriptionToUserData, syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";
 import type Stripe from "stripe";
@@ -78,6 +85,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // Idempotency: Stripe retries with the same event.id — skip side effects + logging.
+  if (await hasProcessedStripeEvent(event.id)) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -142,13 +154,32 @@ export async function POST(request: Request) {
 
           await createOwnerBillingEvent({
             kind: "subscription_updated",
-            severity: "info",
-            title: "Checkout completed (subscription)",
+            severity: sub.status === CANCELED || sub.status === "unpaid" ? "warning" : "info",
+            title: checkoutCompletedTitle(sub),
             body: `Subscription ${sub.id} is ${sub.status}.`,
+            stripeEventId: event.id,
             stripeCustomerId: customerId,
             stripeSubscriptionId: sub.id,
             userId: mappedUserId,
-            metadata: { checkoutSessionId: s.id },
+            metadata: { checkoutSessionId: s.id, subscriptionStatus: sub.status },
+          });
+
+          const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+          await captureServerEvent(mappedUserId ?? customerId, "checkout_completed", {
+            stripeCheckoutSessionId: s.id,
+            stripeSubscriptionId: sub.id,
+            stripeCustomerId: customerId,
+            subscriptionStatus: sub.status,
+          });
+        } else {
+          // Still record the Stripe event id so retries are no-ops.
+          await createOwnerBillingEvent({
+            kind: "other",
+            severity: "info",
+            title: "Checkout completed (non-subscription)",
+            body: s.id ? `Checkout session ${s.id} (mode ${s.mode ?? "unknown"}).` : "Checkout completed.",
+            stripeEventId: event.id,
+            metadata: { mode: s.mode, sessionId: s.id },
           });
         }
         break;
@@ -159,6 +190,7 @@ export async function POST(request: Request) {
         const customerId =
           typeof sub.customer === "string" ? sub.customer : sub.customer.id;
         const mappedUserId = await findUserIdByStripeCustomerId(customerId);
+        const previous = (event.data.previous_attributes ?? undefined) as SubPrev | undefined;
 
         if (event.type === "customer.subscription.deleted" || sub.status === CANCELED) {
           await prisma.user.updateMany({
@@ -189,14 +221,12 @@ export async function POST(request: Request) {
           await createOwnerBillingEvent({
             kind: "subscription_canceled",
             severity: "warning",
-            title:
-              event.type === "customer.subscription.deleted"
-                ? "Subscription deleted"
-                : "Subscription canceled",
+            title: subscriptionCanceledTitle(event.type),
             body:
               cancelReason || cancelComment
                 ? `Stripe subscription ${sub.id} ended (${sub.status}).${cancelReason ? ` Reason: ${cancelReason}.` : ""}${cancelComment ? ` Note: ${cancelComment}` : ""}`
                 : `Stripe subscription ${sub.id} ended with status ${sub.status}.`,
+            stripeEventId: event.id,
             stripeCustomerId: customerId,
             stripeSubscriptionId: sub.id,
             userId: mappedUserId,
@@ -206,6 +236,7 @@ export async function POST(request: Request) {
               cancellationReason: cancelReason,
               cancellationComment: cancelComment,
               canceledAt: canceledAtIso,
+              previousAttributes: previous ?? null,
             },
           });
         } else {
@@ -214,18 +245,22 @@ export async function POST(request: Request) {
             data: { ...subscriptionToUserData(sub) },
           });
 
-          if (sub.cancel_at_period_end) {
-            await createOwnerBillingEvent({
-              kind: "subscription_updated",
-              severity: "warning",
-              title: "Subscription set to cancel at period end",
-              body: `Stripe subscription ${sub.id} will cancel at period end.`,
-              stripeCustomerId: customerId,
-              stripeSubscriptionId: sub.id,
-              userId: mappedUserId,
-              metadata: { cancelAtPeriodEnd: true, status: sub.status },
-            });
-          }
+          const alert = subscriptionUpdateAlert(sub, previous);
+          await createOwnerBillingEvent({
+            kind: "subscription_updated",
+            severity: alert.severity,
+            title: alert.title,
+            body: alert.body,
+            stripeEventId: event.id,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: sub.id,
+            userId: mappedUserId,
+            metadata: {
+              cancelAtPeriodEnd: sub.cancel_at_period_end,
+              status: sub.status,
+              previousAttributes: previous ?? null,
+            },
+          });
         }
         break;
       }
@@ -243,6 +278,7 @@ export async function POST(request: Request) {
           body: inv.id
             ? `Invoice ${inv.id} failed (attempt ${attemptCount || 1}).`
             : `Payment failed (attempt ${attemptCount || 1}).`,
+          stripeEventId: event.id,
           stripeCustomerId: customerId,
           stripeInvoiceId: inv.id ?? null,
           stripeSubscriptionId: subscriptionIdFromInvoice(inv),
@@ -272,6 +308,7 @@ export async function POST(request: Request) {
                 ? "Subscription payment succeeded"
                 : "Subscription renewed",
             body: inv.id ? `Invoice ${inv.id} paid.` : "Invoice paid.",
+            stripeEventId: event.id,
             stripeCustomerId: customerId,
             stripeInvoiceId: inv.id ?? null,
             stripeSubscriptionId: subscriptionIdFromInvoice(inv),
@@ -298,6 +335,7 @@ export async function POST(request: Request) {
           severity: fullyRefunded ? "warning" : "info",
           title: fullyRefunded ? "Charge fully refunded" : "Charge partially refunded",
           body: [ch.id ? `Charge ${ch.id}.` : null, amountLabel].filter(Boolean).join(" "),
+          stripeEventId: event.id,
           stripeCustomerId: customerId,
           stripeChargeId: ch.id,
           userId: mappedUserId,
@@ -305,7 +343,6 @@ export async function POST(request: Request) {
             amount: amountMinor,
             amountRefunded: refundedMinor,
             currency: ch.currency,
-            stripeEventId: event.id,
           },
         });
         break;
@@ -333,6 +370,7 @@ export async function POST(request: Request) {
           severity,
           title: `Stripe dispute: ${event.type}`,
           body: d.id ? `Dispute ${d.id} · status ${d.status}` : `Dispute status ${d.status}`,
+          stripeEventId: event.id,
           stripeCustomerId: customerId,
           stripeChargeId: chId ?? null,
           userId: mappedUserId,

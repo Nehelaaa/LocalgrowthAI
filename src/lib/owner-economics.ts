@@ -77,12 +77,25 @@ export async function sumPaidInvoicesSince(
   return { cents, invoiceCount, truncated };
 }
 
-/** Rough MRR from active Stripe subscriptions (same idea as owner revenue page). */
-export async function estimateStripeMrrCents(): Promise<number> {
-  if (!isStripeConfigured()) return 0;
+export type StripeActiveSubscriptionSnapshot = {
+  configured: boolean;
+  /** Count of Stripe subscriptions with status=active (paginated first page, limit 100). */
+  activeSubscriptionCount: number;
+  /** Rough MRR in cents from those active subscription line items. */
+  mrrCents: number;
+};
+
+/**
+ * Single source of truth for owner Overview + Revenue + Costs MRR cards.
+ * Same formula previously inlined on /owner/revenue.
+ */
+export async function getStripeActiveSubscriptionSnapshot(): Promise<StripeActiveSubscriptionSnapshot> {
+  if (!isStripeConfigured()) {
+    return { configured: false, activeSubscriptionCount: 0, mrrCents: 0 };
+  }
   const stripe = getStripe();
   const subs = await stripe.subscriptions.list({ status: "active", limit: 100 });
-  return subs.data.reduce((sum, s) => {
+  const mrrCents = subs.data.reduce((sum, s) => {
     const item = s.items.data[0];
     const price = item?.price?.unit_amount ?? 0;
     const interval = item?.price?.recurring?.interval ?? "month";
@@ -94,4 +107,44 @@ export async function estimateStripeMrrCents(): Promise<number> {
           : price;
     return sum + monthly;
   }, 0);
+  return {
+    configured: true,
+    activeSubscriptionCount: subs.data.length,
+    mrrCents,
+  };
+}
+
+/** @deprecated Prefer getStripeActiveSubscriptionSnapshot — kept for call-site convenience. */
+export async function estimateStripeMrrCents(): Promise<number> {
+  const snap = await getStripeActiveSubscriptionSnapshot();
+  return snap.mrrCents;
+}
+
+/** Distinct userIds with SearchDayUsage, AiDayUsage, or Lead activity since `since`. */
+export async function countActiveUsersSince(since: Date): Promise<number> {
+  const sinceDay = since.toISOString().slice(0, 10);
+  const [searchRows, aiRows, leadRows] = await Promise.all([
+    prisma.searchDayUsage.findMany({
+      where: { day: { gte: sinceDay } },
+      distinct: ["userId"],
+      select: { userId: true },
+    }),
+    prisma.aiDayUsage.findMany({
+      where: { day: { gte: sinceDay } },
+      distinct: ["userId"],
+      select: { userId: true },
+    }),
+    prisma.lead.findMany({
+      where: { updatedAt: { gte: since }, userId: { not: null } },
+      distinct: ["userId"],
+      select: { userId: true },
+    }),
+  ]);
+  const ids = new Set<string>();
+  for (const r of searchRows) ids.add(r.userId);
+  for (const r of aiRows) ids.add(r.userId);
+  for (const r of leadRows) {
+    if (r.userId) ids.add(r.userId);
+  }
+  return ids.size;
 }

@@ -20,10 +20,11 @@ const personas: Record<
     eyebrow: "Freelancers & solo operators",
     title: "Book more clients without living in spreadsheets.",
     subtitle:
-      "Search a city, grab qualified leads, and keep follow-ups organized until you close the deal.",
+      "Search a city, grab qualified leads, generate a live website demo they can open, and keep follow-ups organized until you close.",
     bullets: [
       "Find under-served businesses fast",
       "Prioritize with simple signals & presets",
+      "One-click demo websites from any saved lead (Pro)",
       "Branded PDF invoices from any saved lead",
       "Track follow-ups in one pipeline",
       "Great for consultants, creatives, marketers, and local services",
@@ -31,32 +32,37 @@ const personas: Record<
     workflow: [
       { t: "Pick a niche", d: "Choose what you sell (ads, SEO, coaching, video, cleaning, accounting, etc.)." },
       { t: "Search your territory", d: "Pick a city + category and pull real businesses from Google Places." },
+      { t: "Show the gap", d: "Generate a niche-matched demo site and share the live URL in your pitch." },
       { t: "Work the list", d: "Save leads, track status, and run follow-ups without losing context." },
     ],
     proof: [
+      { t: "Demo before the call ends", d: "Prospects see a real page for their business — not a vague mockup deck." },
       { t: "Works across niches", d: "Same workflow whether you sell services, retainers, or one-off projects." },
       { t: "Exports when you need them (Pro)", d: "Push lists into Sheets, Airtable, or automation without losing context." },
     ],
     Illustration: IllustrationRadar,
   },
   agencies: {
-    eyebrow: "Agencies & teams",
+    eyebrow: "Agencies & operators",
     title: "Turn territory searches into a predictable pipeline.",
     subtitle:
-      "Standardize prospecting across the team, keep context on every lead, and scale outreach without chaos.",
+      "Run a repeatable process every rep on your team can run in their own account — search, qualify, demo a better site, and keep context on every lead.",
     bullets: [
-      "Team-ready workflow",
+      "A repeatable process every rep can run in their own account",
+      "One-click demo websites to show the rebuild pitch (Pro)",
       "Exports + billing on Pro",
-      "Invoice templates the whole team can reuse",
+      "Invoice templates you can reuse across clients",
       "Clean pipeline — active deals stay on top",
     ],
     workflow: [
       { t: "Define your ICP", d: "Territory + trade + signals: build a repeatable list-building motion." },
       { t: "Score + stage", d: "Tiers + CRM stages keep everyone aligned on what happens next." },
+      { t: "Pitch with a live demo", d: "Generate a shareable site mockup from the lead before the proposal." },
       { t: "Close faster", d: "Run follow-ups, export to your stack, and keep a clean audit trail." },
     ],
     proof: [
-      { t: "Less context switching", d: "Search, CRM, and outreach live in one place." },
+      { t: "Less context switching", d: "Search, CRM, demos, and invoices live in one place." },
+      { t: "Stronger first meetings", d: "Show a live demo URL instead of talking about websites in the abstract." },
     ],
     Illustration: IllustrationPipeline,
   },
@@ -68,6 +74,7 @@ const personas: Record<
     bullets: [
       "Targeted prospecting",
       "Segment by signals & presets",
+      "Optional demo websites when the pitch needs proof (Pro)",
       "PDF quotes from any pipeline row",
       "Track outcomes and follow-ups",
     ],
@@ -87,7 +94,11 @@ const personas: Record<
     title: "Turn local partnerships into referrals.",
     subtitle:
       "Find high-quality local businesses and service pros, then organize outreach to build referral partners and vendor networks.",
-    bullets: ["Find local partners", "Track relationship outreach", "Simple pipeline for follow-ups"],
+    bullets: [
+      "Find local partners",
+      "Track relationship outreach",
+      "Simple pipeline for follow-ups",
+    ],
     workflow: [
       { t: "Search local service pros", d: "Build a targeted list in your market (inspectors, movers, contractors, etc.)." },
       { t: "Prioritize your outreach", d: "Tier and stage leads so you know who to contact next." },
@@ -134,7 +145,7 @@ export function PersonaPage({ persona }: { persona: Persona }) {
               Start free
             </Link>
             <Link
-              href="/#pricing"
+              href="/pricing"
               className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-slate-200/90 bg-white/80 px-6 py-3.5 text-base font-medium text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50/80 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:border-indigo-500/40"
             >
               See pricing

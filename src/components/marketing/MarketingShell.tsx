@@ -60,7 +60,7 @@ export function MarketingShell({
             <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#solutions">
               Solutions
             </Link>
-            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#pricing">
+            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/pricing">
               Pricing
             </Link>
           </nav>
@@ -112,7 +112,7 @@ export function MarketingShell({
             <Link href="/for/realtors" className="hover:underline">
               Realtors
             </Link>
-            <Link href="/#pricing" className="hover:underline">
+            <Link href="/pricing" className="hover:underline">
               Pricing
             </Link>
             <Link
@@ -120,6 +120,12 @@ export function MarketingShell({
               className="text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
             >
               Contact us
+            </Link>
+            <Link href="/terms" className="hover:underline">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:underline">
+              Privacy
             </Link>
           </nav>
         </div>

@@ -179,6 +179,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           onboardingComplete: false,
         },
       });
+      const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+      await captureServerEvent(user.id, "signup_completed", {
+        method: "google",
+        email: user.email ?? undefined,
+      });
     },
     async linkAccount() {
       // Do not change onboarding or profession when linking Google to an existing account.

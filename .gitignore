@@ -33,6 +33,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!.env.test.example
 
 # local DBs
 *.db
@@ -44,3 +45,7 @@ prisma/dev.db
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+test-results/
+playwright-report/
+

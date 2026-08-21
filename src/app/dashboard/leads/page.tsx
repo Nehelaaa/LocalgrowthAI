@@ -58,6 +58,18 @@ export default async function LeadsPage({
   ]);
   const canExportCsv = hasProEntitlement(user);
 
+  const extPrefill =
+    params.ext === "1"
+      ? {
+          businessName: typeof params.name === "string" ? params.name : undefined,
+          phone: typeof params.phone === "string" ? params.phone : undefined,
+          address: typeof params.address === "string" ? params.address : undefined,
+          city: typeof params.city === "string" ? params.city : undefined,
+          state: typeof params.state === "string" ? params.state : undefined,
+        }
+      : undefined;
+  const autoOpenAdd = Boolean(extPrefill?.businessName);
+
   return (
     <div className="w-full min-w-0 max-w-6xl space-y-4 pb-2">
       <div className="flex flex-col gap-3 sm:mb-1 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -70,7 +82,11 @@ export default async function LeadsPage({
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-3">
-          <AddManualLeadDialog triggerClassName="w-full sm:w-auto justify-center" />
+          <AddManualLeadDialog
+            triggerClassName="w-full sm:w-auto justify-center"
+            initialValues={extPrefill}
+            autoOpen={autoOpenAdd}
+          />
           <ExportActions
             totalLeads={totalLeadsForExport}
             canExport={canExportCsv}

@@ -335,7 +335,6 @@ export async function getDashboardData() {
     leadBundle,
     todayFollowUpRows,
     hotLeadRows,
-    recentOutreach,
     activeQuotedLeads,
     activeLeadsForMap,
   ] = await Promise.all([
@@ -385,12 +384,6 @@ export async function getDashboardData() {
       include: { business: true },
       orderBy: { leadScore: "desc" },
       take: 6,
-    }),
-    prisma.outreach.findMany({
-      where: { lead: { userId: user.id } },
-      include: { lead: { include: { business: true } } },
-      orderBy: { generatedAt: "desc" },
-      take: 8,
     }),
     prisma.lead.findMany({
       where: {
@@ -458,14 +451,8 @@ export async function getDashboardData() {
     leadId: l.id,
   }));
 
-  const activityFromOutreach: DashboardActivityItem[] = recentOutreach.map((o) => ({
-    id: `outreach-${o.id}`,
-    message: `Outreach generated for ${o.lead.business.name}`,
-    time: o.generatedAt,
-    leadId: o.leadId,
-  }));
-
-  const recentActivity = [...activityFromOutreach, ...activityFromLeads]
+  // Outreach generator is not shipped yet — do not query Outreach rows for the activity feed.
+  const recentActivity = activityFromLeads
     .sort((a, b) => b.time.getTime() - a.time.getTime())
     .slice(0, 8);
 

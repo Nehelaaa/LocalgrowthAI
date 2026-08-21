@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type Stripe from "stripe";
+import { getStripeActiveSubscriptionSnapshot } from "@/lib/owner-economics";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 
@@ -40,8 +41,8 @@ export default async function OwnerRevenuePage() {
 
   const stripe = getStripe();
 
-  const [subs, invoices, refunds] = await Promise.all([
-    stripe.subscriptions.list({ status: "active", limit: 100 }),
+  const [stripeSnap, invoices, refunds] = await Promise.all([
+    getStripeActiveSubscriptionSnapshot(),
     stripe.invoices.list({ limit: 25 }),
     stripe.refunds.list({
       limit: 30,
@@ -49,19 +50,8 @@ export default async function OwnerRevenuePage() {
     }),
   ]);
 
-  const mrrCents = subs.data.reduce((sum, s) => {
-    const item = s.items.data[0];
-    const price = item?.price?.unit_amount ?? 0;
-    const interval = item?.price?.recurring?.interval ?? "month";
-    // Convert weekly/yearly to rough monthly
-    const monthly =
-      interval === "year"
-        ? Math.round(price / 12)
-        : interval === "week"
-          ? Math.round(price * 4.33)
-          : price;
-    return sum + monthly;
-  }, 0);
+  const mrrCents = stripeSnap.mrrCents;
+  const activeSubCount = stripeSnap.activeSubscriptionCount;
 
   return (
     <div className="w-full min-w-0 max-w-6xl space-y-6">
@@ -89,7 +79,7 @@ export default async function OwnerRevenuePage() {
             Active subscriptions
           </p>
           <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900 dark:text-white">
-            {subs.data.length}
+            {activeSubCount}
           </p>
         </div>
         <div className="rounded-2xl border border-indigo-200/60 bg-indigo-50/60 p-5 shadow-sm dark:border-indigo-500/20 dark:bg-indigo-950/20">

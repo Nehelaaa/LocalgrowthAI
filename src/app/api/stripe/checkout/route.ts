@@ -228,6 +228,11 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+    await captureServerEvent(u.id, "checkout_started", {
+      stripeCheckoutSessionId: checkout.id,
+      priceId: price,
+    });
     return NextResponse.json({ url: checkout.url });
   } catch (e) {
     console.error("[api/stripe/checkout]", e);

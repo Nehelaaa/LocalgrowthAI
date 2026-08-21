@@ -97,6 +97,8 @@ model OwnerBillingEvent {
   severity  String   @default("info")
   title     String
   body      String?
+  /// Stripe Event.id — unique so webhook retries do not duplicate alerts / re-apply side effects.
+  stripeEventId String? @unique
   stripeCustomerId String?
   stripeSubscriptionId String?
   stripeInvoiceId String?

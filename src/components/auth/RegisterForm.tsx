@@ -172,6 +172,17 @@ export function RegisterForm({
         >
           {pending ? "Creating…" : "Create account"}
         </button>
+        <p className="text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          By creating an account you agree to our{" "}
+          <Link className="font-medium text-indigo-600 hover:underline dark:text-indigo-400" href="/terms">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link className="font-medium text-indigo-600 hover:underline dark:text-indigo-400" href="/privacy">
+            Privacy Policy
+          </Link>
+          .
+        </p>
         <p className="text-center text-sm text-slate-600 dark:text-slate-400">
           Already have an account?{" "}
           <Link className="font-medium text-indigo-600 dark:text-indigo-400" href="/login">
@@ -191,7 +202,17 @@ export function RegisterForm({
             </div>
           </div>
           <GoogleSignInButton callbackUrl={googleAfterAuthUrl} label="Sign up with Google" />
-          <p className="text-center text-xs text-slate-500">Fastest way to get started.</p>
+          <p className="text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+            By continuing with Google you agree to our{" "}
+            <Link className="font-medium text-indigo-600 hover:underline dark:text-indigo-400" href="/terms">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link className="font-medium text-indigo-600 hover:underline dark:text-indigo-400" href="/privacy">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </>
       )}
     </div>

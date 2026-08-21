@@ -1,0 +1,21 @@
+# Optional local Postgres for integration tests when Docker is installed.
+# Usage:
+#   docker compose -f docker-compose.test.yml up -d
+#   $env:DATABASE_URL="postgresql://postgres:postgres@localhost:54329/localleadster_test"
+#   $env:DIRECT_URL=$env:DATABASE_URL
+#   npx prisma migrate deploy
+#   npm run test:integration
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "54329:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: localleadster_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d localleadster_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 15

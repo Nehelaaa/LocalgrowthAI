@@ -83,6 +83,16 @@ export async function POST(request: NextRequest) {
     await setCachedSearchResults(cacheKey, results);
     await incrementGoogleSearchUsage(user.id);
 
+    const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+    await captureServerEvent(user.id, "search_run", {
+      city: params.city,
+      state: params.state,
+      businessType: params.businessType,
+      radiusMiles: params.radiusMiles,
+      resultCount: results.length,
+      fromCache: false,
+    });
+
     const usage = await getSearchUsageState(user);
     const { places, hiddenCount } = await excludeUserSavedPlaces(user.id, results);
     return NextResponse.json({

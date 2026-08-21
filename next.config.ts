@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
       "https://cdn.tailwindcss.com",
       "https://accounts.google.com",
       "https://apis.google.com",
+      "https://*.posthog.com",
+      "https://us.i.posthog.com",
+      "https://eu.i.posthog.com",
     ].join(" ");
 
     const csp = [
@@ -36,7 +39,7 @@ const nextConfig: NextConfig = {
       // Next renders JSON-LD via inline <script>, and the demo page includes the Tailwind CDN script.
       scriptSrc,
       "style-src 'self' 'unsafe-inline' https:",
-      "connect-src 'self' https://api.stripe.com https://*.stripe.com https://places.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com",
+      "connect-src 'self' https://api.stripe.com https://*.stripe.com https://places.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com https://*.posthog.com https://us.i.posthog.com https://eu.i.posthog.com",
       "frame-src https://js.stripe.com https://accounts.google.com",
       ...(isProd ? ["upgrade-insecure-requests"] : []),
     ].join("; ");

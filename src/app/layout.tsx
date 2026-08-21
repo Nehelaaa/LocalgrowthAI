@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { PostHogRoot } from "@/components/analytics/PostHogRoot";
 import { getMetadataBase } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
@@ -71,7 +72,9 @@ export default function RootLayout({
       <body className="min-h-[100dvh] antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <Script id="lgai-theme-boot" src="/lgai-theme-boot.js" strategy="beforeInteractive" />
         <ThemeProvider>
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <PostHogRoot>{children}</PostHogRoot>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

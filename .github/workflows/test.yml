@@ -1,0 +1,105 @@
+name: Test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  unit:
+    name: Lint, types, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run test:unit
+
+  integration:
+    name: Owner regression (Postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: localleadster_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d localleadster_test"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/localleadster_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/localleadster_test?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Push Prisma schema to throwaway Postgres
+        run: npx prisma db push --accept-data-loss
+      - name: Write .env.test for Vitest setup
+        run: |
+          cat > .env.test <<'EOF'
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/localleadster_test?schema=public
+          DIRECT_URL=postgresql://postgres:postgres@localhost:5432/localleadster_test?schema=public
+          EOF
+      - run: npm run test:integration
+
+  e2e:
+    name: Critical-path E2E (optional)
+    runs-on: ubuntu-latest
+    # Requires repo secrets STRIPE_SECRET_KEY + STRIPE_PRICE_ID_PRO (test mode).
+    if: ${{ secrets.STRIPE_SECRET_KEY != '' }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: localleadster_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d localleadster_test"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/localleadster_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/localleadster_test?schema=public
+      AUTH_SECRET: e2e-ci-auth-secret-min-32-characters
+      AUTH_URL: http://127.0.0.1:3010
+      NEXTAUTH_URL: http://127.0.0.1:3010
+      ALLOWED_ORIGINS: http://127.0.0.1:3010
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3010
+      E2E_PORT: "3010"
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_PRICE_ID_PRO: ${{ secrets.STRIPE_PRICE_ID_PRO }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma db push --accept-data-loss
+      - run: npx playwright install chromium --with-deps
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<EOF
+          DATABASE_URL=$DATABASE_URL
+          DIRECT_URL=$DIRECT_URL
+          EOF
+      - run: npm run test:e2e

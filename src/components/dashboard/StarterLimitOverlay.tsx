@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { captureClientEvent } from "@/lib/analytics/posthog-client";
 
 type Props = {
   isPro: boolean;
@@ -28,6 +29,7 @@ export function StarterLimitOverlay({
 }: Props) {
   const pathname = usePathname();
   const [localDismissed, setLocalDismissed] = useState(false);
+  const trackedShownKey = useRef<string | null>(null);
 
   const dismissKey = useMemo(() => {
     const kind = atLeadCap && atSearchCap ? "both" : atLeadCap ? "leads" : "search";
@@ -59,12 +61,40 @@ export function StarterLimitOverlay({
         }
       })());
 
-  if (isPro) return null;
-  if (!atLeadCap && !atSearchCap) return null;
-  if (dismissed) return null;
+  const shouldShow =
+    !isPro &&
+    (atLeadCap || atSearchCap) &&
+    !dismissed &&
+    !pathname?.startsWith("/dashboard/plan");
 
-  // Allow access to the plan page so the user can upgrade.
-  if (pathname?.startsWith("/dashboard/plan")) return null;
+  useEffect(() => {
+    if (!shouldShow) return;
+    if (trackedShownKey.current === dismissKey) return;
+    trackedShownKey.current = dismissKey;
+    captureClientEvent("upgrade_overlay_shown", {
+      atLeadCap,
+      atSearchCap,
+      leadsUsed,
+      leadsLimit,
+      searchesUsed,
+      searchesLimit,
+      searchQuotaMode,
+      path: pathname ?? undefined,
+    });
+  }, [
+    shouldShow,
+    dismissKey,
+    atLeadCap,
+    atSearchCap,
+    leadsUsed,
+    leadsLimit,
+    searchesUsed,
+    searchesLimit,
+    searchQuotaMode,
+    pathname,
+  ]);
+
+  if (!shouldShow) return null;
 
   const title = atLeadCap
     ? "You’ve reached your Starter lead limit"

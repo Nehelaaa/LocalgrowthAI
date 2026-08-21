@@ -2,6 +2,10 @@ import Link from "next/link";
 import { ownerUsageLastNDays } from "@/actions/owner-usage";
 import { OwnerHealthDashboard } from "@/components/owner/OwnerHealthDashboard";
 import { prisma } from "@/lib/db";
+import {
+  countActiveUsersSince,
+  getStripeActiveSubscriptionSnapshot,
+} from "@/lib/owner-economics";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import { getUtcDayString } from "@/lib/search-usage";
 
@@ -26,8 +30,9 @@ export default async function OwnerOverviewPage() {
 
   const [
     totalUsers,
-    payingUsers,
+    proEntitledAccounts,
     activeUsers30d,
+    stripeSnap,
     totalSearchesToday,
     pastDueUsers,
     recentUsers,
@@ -36,12 +41,12 @@ export default async function OwnerOverviewPage() {
     usageSeriesRaw,
   ] = await Promise.all([
     prisma.user.count(),
+    // DB plan flags — NOT revenue. Includes grandfathered/comped/manual Pro rows.
     prisma.user.count({
       where: { plan: "pro", subscriptionStatus: { in: ["active", "trialing", "past_due"] } },
     }),
-    prisma.user.count({
-      where: { updatedAt: { gte: since30 } },
-    }),
+    countActiveUsersSince(since30),
+    getStripeActiveSubscriptionSnapshot(),
     prisma.searchDayUsage.aggregate({
       where: { day },
       _sum: { count: true },
@@ -106,7 +111,7 @@ export default async function OwnerOverviewPage() {
     signups: signupsByDay.get(r.day) ?? 0,
   }));
 
-  const freeUsers = Math.max(0, totalUsers - payingUsers);
+  const freeUsers = Math.max(0, totalUsers - proEntitledAccounts);
   const billingFeedPayload = billingEvents.map((e) => ({
     id: e.id,
     createdAt: e.createdAt.toISOString(),
@@ -116,10 +121,11 @@ export default async function OwnerOverviewPage() {
     userEmail: e.user?.email ?? null,
   }));
 
-  // Approx monthly revenue (best-effort): count pro users * env price (fallback $29)
-  const proMonthlyCents =
-    Math.round((Number(process.env.PRO_MONTHLY_PRICE_USD ?? "29") || 29) * 100);
-  const monthlyRevenueCents = payingUsers * proMonthlyCents;
+  const payingSubscribers = stripeSnap.activeSubscriptionCount;
+  const monthlyRevenueCents = stripeSnap.mrrCents;
+  const mrrHint = stripeSnap.configured
+    ? "Same Stripe active-sub MRR as /owner/revenue"
+    : "Stripe not configured — showing $0";
 
   return (
     <div className="w-full min-w-0 max-w-6xl space-y-6">
@@ -154,13 +160,22 @@ export default async function OwnerOverviewPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card label="Total users" value={totalUsers} hint="All accounts" />
-        <Card label="Active users" value={activeUsers30d} hint="Updated in last 30 days" />
-        <Card label="Paying users" value={payingUsers} hint="Pro active/trialing/past_due" />
         <Card
-          label="Monthly revenue (est.)"
-          value={moneyUSD(monthlyRevenueCents)}
-          hint={`Uses env PRO_MONTHLY_PRICE_USD (default $29)`}
+          label="Active users (30d)"
+          value={activeUsers30d}
+          hint="Search, AI, or lead activity in last 30 days"
         />
+        <Card
+          label="Pro-entitled accounts"
+          value={proEntitledAccounts}
+          hint="DB plan=pro + active/trialing/past_due — not Stripe revenue"
+        />
+        <Card
+          label="Paying subscribers"
+          value={payingSubscribers}
+          hint="Stripe subscriptions with status=active"
+        />
+        <Card label="MRR" value={moneyUSD(monthlyRevenueCents)} hint={mrrHint} />
         <Card
           label="API usage (today)"
           value={totalSearchesToday._sum.count ?? 0}
@@ -179,7 +194,8 @@ export default async function OwnerOverviewPage() {
         billingEvents={billingFeedPayload}
         metrics={{
           totalUsers,
-          payingUsers,
+          proEntitledAccounts,
+          payingSubscribers,
           freeUsers,
           pastDueUsers,
           searchesToday: totalSearchesToday._sum.count ?? 0,
@@ -299,4 +315,3 @@ function Card({
     </div>
   );
 }
-

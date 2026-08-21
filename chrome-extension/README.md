@@ -1,16 +1,26 @@
-# LocalLeadster – Chrome Extension (placeholder)
+# LocalLeadster – Chrome extension
 
-Basic structure for a future Chrome extension that:
+Adds an **Add to LocalLeadster** button on Google Maps place pages. Clicking it opens the CRM with the business name, address, city, state, and phone prefilled in the manual “Add lead” dialog (you must be signed in).
 
-- Detects when you're on a Google Maps page
-- Lets you click **"Add to LocalLeadster"** to send the current place to the app
+## How it works
 
-## Status
+1. Content script runs on `https://www.google.com/maps/*`.
+2. When a place listing is detected (URL `/maps/place/…` or Maps place `h1`), a floating button appears.
+3. Click opens `https://localleadster.com/dashboard/leads?ext=1&name=…&address=…&city=…&state=…&phone=…`.
+4. `/dashboard/leads` is already auth-gated via `proxy.ts` — unauthenticated users are sent to login with that URL as `callbackUrl`.
 
-Placeholder only. To implement:
+No Places API calls from the extension; parsing is DOM/URL only.
 
-1. Add icons (`icon48.png`).
-2. In `content.js`: parse the current place from the Maps URL or DOM.
-3. Either open your LocalLeadster dashboard with prefilled params, or call your API to add the place by ID/name.
+## Install (unpacked)
 
-Load in Chrome via **Extensions → Load unpacked** and select this folder.
+1. Chrome → **Extensions** → enable **Developer mode**.
+2. **Load unpacked** → select this `chrome-extension/` folder.
+3. Open a business on Google Maps and use **Add to LocalLeadster**.
+
+To point at local dev, change `APP_ORIGIN` in `content.js` to `http://localhost:3000`.
+
+## Files
+
+- `manifest.json` — MV3
+- `content.js` — inject button + open prefilled CRM URL
+- `icon48.png` — toolbar / store icon

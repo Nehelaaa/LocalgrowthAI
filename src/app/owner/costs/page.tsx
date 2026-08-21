@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireOwnerOrRedirect } from "@/lib/owner";
 import {
   aggregateApiUsageForDayRange,
-  estimateStripeMrrCents,
+  getStripeActiveSubscriptionSnapshot,
   sumPaidInvoicesSince,
   utcDayRangeStrings,
 } from "@/lib/owner-economics";
@@ -35,18 +35,19 @@ export default async function OwnerCostsPage() {
   const range7 = utcDayRangeStrings(d7, now);
   const range30 = utcDayRangeStrings(d30, now);
 
-  const [todayUsage, usage7, usage30, paid30, mrrCents] = await Promise.all([
+  const [todayUsage, usage7, usage30, paid30, stripeSnap] = await Promise.all([
     aggregateApiUsageForDayRange(today, today),
     aggregateApiUsageForDayRange(range7.startDay, range7.endDay),
     aggregateApiUsageForDayRange(range30.startDay, range30.endDay),
     sumPaidInvoicesSince(Math.floor(d30.getTime() / 1000)),
-    estimateStripeMrrCents(),
+    getStripeActiveSubscriptionSnapshot(),
   ]);
 
   const stripeOk = isStripeConfigured();
   const revenue30Usd = paid30.cents / 100;
   const cost30Usd = usage30.totalUsd;
   const net30Usd = revenue30Usd - cost30Usd;
+  const mrrCents = stripeSnap.mrrCents;
   const mrrUsd = mrrCents / 100;
   /** Rough: if MRR held steady, annualized API cost vs monthly revenue (not GAAP). */
   const estMonthlyApiCostFrom30d = (cost30Usd / 30) * 30;

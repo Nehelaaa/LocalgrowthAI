@@ -10,7 +10,10 @@ export async function GET() {
   const paths = [
     "/",
     "/register",
+    "/pricing",
     "/contact",
+    "/terms",
+    "/privacy",
     "/for/freelancers",
     "/for/agencies",
     "/for/sales",
