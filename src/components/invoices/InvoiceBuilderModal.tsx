@@ -579,6 +579,7 @@ export function InvoiceBuilderModal({
         businessName: business,
         invoiceNumber: snap.invoiceNumber,
         viewUrl: share.url,
+        paymentsEnabled: share.paymentsEnabled,
       });
       const href = buildInvoiceSmsHref(initialClientPhone, body);
       window.location.href = href;
@@ -1056,6 +1057,15 @@ export function InvoiceBuilderModal({
                       </span>
                     </span>
                   </button>
+                  <div className="border-t border-slate-100 px-3.5 py-2 dark:border-slate-700">
+                    <Link
+                      href="/dashboard/payments"
+                      className="text-xs font-medium text-teal-700 hover:underline dark:text-teal-300"
+                      onClick={() => setShareMenuOpen(false)}
+                    >
+                      Enable Pay now with Stripe →
+                    </Link>
+                  </div>
                 </div>
               ) : null}
             </div>

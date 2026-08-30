@@ -171,6 +171,41 @@ export async function POST(request: Request) {
             stripeCustomerId: customerId,
             subscriptionStatus: sub.status,
           });
+        } else if (
+          s.mode === "payment" &&
+          (s.payment_status === "paid" || s.status === "complete") &&
+          (s.metadata?.kind === "invoice_share_payment" ||
+            s.metadata?.invoiceShareToken ||
+            s.metadata?.invoiceShareId)
+        ) {
+          const { markInvoiceSharePaidFromCheckout } = await import("@/lib/stripe-connect");
+          const paid = await markInvoiceSharePaidFromCheckout(s);
+          await createOwnerBillingEvent({
+            kind: "other",
+            severity: "info",
+            title: "Invoice share payment completed",
+            body: paid
+              ? `Shared invoice ${paid.shareId} marked paid (session ${s.id}).`
+              : `Payment checkout ${s.id} completed (invoice share metadata missing match).`,
+            stripeEventId: event.id,
+            userId: paid?.userId ?? null,
+            metadata: {
+              mode: s.mode,
+              sessionId: s.id,
+              invoiceShareId: paid?.shareId ?? s.metadata?.invoiceShareId ?? null,
+              amountTotal: s.amount_total,
+              currency: s.currency,
+            },
+          });
+          if (paid) {
+            const { captureServerEvent } = await import("@/lib/analytics/posthog-server");
+            await captureServerEvent(paid.userId, "invoice_share_paid", {
+              invoiceShareId: paid.shareId,
+              stripeCheckoutSessionId: s.id,
+              amountTotal: s.amount_total,
+              currency: s.currency,
+            });
+          }
         } else {
           // Still record the Stripe event id so retries are no-ops.
           await createOwnerBillingEvent({
@@ -182,6 +217,57 @@ export async function POST(request: Request) {
             metadata: { mode: s.mode, sessionId: s.id },
           });
         }
+        break;
+      }
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        const { applyConnectAccountUpdated } = await import("@/lib/stripe-connect");
+        const userId = await applyConnectAccountUpdated(account);
+        await createOwnerBillingEvent({
+          kind: "other",
+          severity: "info",
+          title: "Stripe Connect account updated",
+          body: `Connect account ${account.id}: charges=${Boolean(account.charges_enabled)} details=${Boolean(account.details_submitted)}.`,
+          stripeEventId: event.id,
+          userId,
+          metadata: {
+            accountId: account.id,
+            chargesEnabled: account.charges_enabled,
+            detailsSubmitted: account.details_submitted,
+            payoutsEnabled: account.payouts_enabled,
+          },
+        });
+        break;
+      }
+      case "account.application.deauthorized": {
+        const app = event.data.object as { id?: string };
+        // Connected account revoked platform access — clear by account id on event account.
+        const accountId =
+          typeof (event as { account?: string }).account === "string"
+            ? (event as { account?: string }).account
+            : null;
+        if (accountId) {
+          await prisma.user.updateMany({
+            where: { stripeConnectAccountId: accountId },
+            data: {
+              stripeConnectAccountId: null,
+              stripeConnectDetailsSubmitted: false,
+              stripeConnectChargesEnabled: false,
+              stripeConnectPayoutsEnabled: false,
+              stripeConnectOnboardedAt: null,
+            },
+          });
+        }
+        await createOwnerBillingEvent({
+          kind: "other",
+          severity: "warning",
+          title: "Stripe Connect deauthorized",
+          body: accountId
+            ? `Connect account ${accountId} revoked platform access.`
+            : `Connect application deauthorized (${app.id ?? "unknown"}).`,
+          stripeEventId: event.id,
+          metadata: { accountId, applicationId: app.id ?? null },
+        });
         break;
       }
       case "customer.subscription.updated":
@@ -330,6 +416,18 @@ export async function POST(request: Request) {
           refundedMinor > 0
             ? `${(refundedMinor / 100).toLocaleString(undefined, { style: "currency", currency })} refunded`
             : undefined;
+
+        const piId =
+          typeof ch.payment_intent === "string"
+            ? ch.payment_intent
+            : ch.payment_intent?.id ?? null;
+        if (fullyRefunded && piId) {
+          const { markInvoiceShareRefundedFromPaymentIntent } = await import(
+            "@/lib/stripe-connect"
+          );
+          await markInvoiceShareRefundedFromPaymentIntent(piId);
+        }
+
         await createOwnerBillingEvent({
           kind: "refund",
           severity: fullyRefunded ? "warning" : "info",
@@ -343,6 +441,7 @@ export async function POST(request: Request) {
             amount: amountMinor,
             amountRefunded: refundedMinor,
             currency: ch.currency,
+            paymentIntentId: piId,
           },
         });
         break;

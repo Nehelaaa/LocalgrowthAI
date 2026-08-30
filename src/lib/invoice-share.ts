@@ -2,6 +2,12 @@ import { createHash, randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
+import {
+  canOfferInvoiceCheckout,
+  invoiceSnapshotAmountCents,
+  publicPaymentState,
+} from "@/lib/invoice-payment-money";
+import { canCollectInvoicePayments } from "@/lib/stripe-connect-entitlements";
 
 const SHARE_TTL_DAYS = 90;
 
@@ -76,7 +82,13 @@ export async function createInvoiceShareForUser(opts: {
   userId: string;
   leadId?: string | null;
   snapshot: InvoiceSnapshotShareInput;
-}): Promise<{ token: string; path: string }> {
+}): Promise<{
+  token: string;
+  path: string;
+  paymentStatus: string;
+  amountCents: number | null;
+  paymentsEnabled: boolean;
+}> {
   if (opts.leadId) {
     const lead = await prisma.lead.findFirst({
       where: { id: opts.leadId, userId: opts.userId },
@@ -87,7 +99,14 @@ export async function createInvoiceShareForUser(opts: {
     }
   }
 
+  const user = await prisma.user.findUnique({ where: { id: opts.userId } });
+  if (!user) throw new Error("FORBIDDEN");
+
   const snapshot = toPublicInvoiceSnapshot(opts.snapshot);
+  const amountCents = invoiceSnapshotAmountCents(snapshot);
+  const sellerReady = canCollectInvoicePayments(user);
+  const payable = sellerReady && canOfferInvoiceCheckout(amountCents);
+
   const token = newInvoiceShareToken();
   const expiresAt = new Date();
   expiresAt.setUTCDate(expiresAt.getUTCDate() + SHARE_TTL_DAYS);
@@ -99,28 +118,95 @@ export async function createInvoiceShareForUser(opts: {
       leadId: opts.leadId ?? null,
       snapshot,
       expiresAt,
+      amountCents: payable || amountCents > 0 ? amountCents : null,
+      currency: "usd",
+      paymentStatus: payable ? "unpaid" : "unpayable",
     },
   });
 
-  return { token, path: `/i/${token}` };
+  return {
+    token,
+    path: `/i/${token}`,
+    paymentStatus: payable ? "unpaid" : "unpayable",
+    amountCents: payable || amountCents > 0 ? amountCents : null,
+    paymentsEnabled: payable,
+  };
 }
+
+export type PublicInvoiceShare = {
+  snapshot: InvoiceSnapshot;
+  payment: ReturnType<typeof publicPaymentState>;
+  token: string;
+};
 
 export async function getValidInvoiceShareByToken(
   token: string
-): Promise<{ snapshot: InvoiceSnapshot } | null> {
+): Promise<PublicInvoiceShare | null> {
   const t = token.trim();
   if (!t || t.length > 64) return null;
 
   const row = await prisma.invoiceShare.findUnique({
     where: { token: t },
-    select: { snapshot: true, expiresAt: true },
+    include: {
+      user: {
+        select: {
+          plan: true,
+          subscriptionStatus: true,
+          grandfatheredPro: true,
+          stripeSubscriptionId: true,
+          stripeConnectAccountId: true,
+          stripeConnectChargesEnabled: true,
+          stripeConnectDetailsSubmitted: true,
+        },
+      },
+    },
   });
   if (!row) return null;
   if (row.expiresAt && row.expiresAt.getTime() < Date.now()) return null;
 
   const parsed = invoiceSnapshotShareSchema.safeParse(row.snapshot);
   if (!parsed.success) return null;
-  return { snapshot: toPublicInvoiceSnapshot(parsed.data) };
+
+  const sellerReady = canCollectInvoicePayments(row.user);
+  // If seller became ready after share was created as unpayable, upgrade unpaid when amount ok.
+  let paymentStatus = row.paymentStatus;
+  let amountCents = row.amountCents;
+  if (
+    paymentStatus === "unpayable" &&
+    sellerReady &&
+    amountCents != null &&
+    canOfferInvoiceCheckout(amountCents)
+  ) {
+    paymentStatus = "unpaid";
+    await prisma.invoiceShare.update({
+      where: { id: row.id },
+      data: { paymentStatus: "unpaid" },
+    });
+  } else if (
+    paymentStatus === "unpayable" &&
+    sellerReady &&
+    (amountCents == null || amountCents === 0)
+  ) {
+    const cents = invoiceSnapshotAmountCents(toPublicInvoiceSnapshot(parsed.data));
+    if (canOfferInvoiceCheckout(cents)) {
+      amountCents = cents;
+      paymentStatus = "unpaid";
+      await prisma.invoiceShare.update({
+        where: { id: row.id },
+        data: { paymentStatus: "unpaid", amountCents: cents },
+      });
+    }
+  }
+
+  return {
+    token: row.token,
+    snapshot: toPublicInvoiceSnapshot(parsed.data),
+    payment: publicPaymentState({
+      paymentStatus,
+      amountCents,
+      sellerReady,
+    }),
+  };
 }
 
 /** Optional fingerprint for cache keys (not security). */

@@ -60,7 +60,14 @@ export async function apiConsumeInvoicePdfSlot(): Promise<ConsumeInvoicePdfSlotR
 export async function apiCreateInvoiceShare(opts: {
   leadId?: string;
   snapshot: InvoiceSnapshot;
-}): Promise<{ token: string; path: string; url: string }> {
+}): Promise<{
+  token: string;
+  path: string;
+  url: string;
+  paymentsEnabled: boolean;
+  paymentStatus: string;
+  amountCents: number | null;
+}> {
   const res = await fetch("/api/invoices/share", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -76,10 +83,20 @@ export async function apiCreateInvoiceShare(opts: {
   const data = (await res.json()) as {
     token?: string;
     path?: string;
+    paymentsEnabled?: boolean;
+    paymentStatus?: string;
+    amountCents?: number | null;
   };
   if (!data.token || !data.path) {
     throw new Error("Could not create a share link.");
   }
   const url = `${window.location.origin}${data.path}`;
-  return { token: data.token, path: data.path, url };
+  return {
+    token: data.token,
+    path: data.path,
+    url,
+    paymentsEnabled: Boolean(data.paymentsEnabled),
+    paymentStatus: data.paymentStatus ?? "unpayable",
+    amountCents: data.amountCents ?? null,
+  };
 }

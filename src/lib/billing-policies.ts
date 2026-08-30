@@ -48,6 +48,7 @@ export const stripeOperatorChecklist = [
   "Hosted branding (Checkout + Customer portal landing): Stripe Dashboard → Settings → Branding — upload a square Icon (≥128px PNG/JPG) and set Accent color (page background tint) and Brand color (buttons) to match your app (defaults in code use violet #f5f3ff / #7c3aed). Set Public business name to “Localleadster”. Checkout also sends branding from this app (see `src/lib/stripe-branding.ts`); the portal’s “partners with Stripe” screen uses Dashboard branding, not our API.",
   "Logo file for Dashboard: run `node scripts/export-stripe-branding-pngs.mjs` in `localgrowth-app` to refresh `public/Localleadster-Stripe-logo.png` (horizontal) and `public/Localleadster-Stripe-logo-portal.png` (stacked, reads larger in the portal sidebar). Stripe allows one Logo upload—use portal if the header felt tiny, or horizontal if Checkout width matters more.",
   "Stripe invoice PDFs (Billing): the invoice template (e.g. Classic) is layout/type; **Brand color** under Settings → Branding still tints table headers and accent rules on the PDF—see Stripe docs “Customize invoices” / branding table. Match Brand color to the Classic neutrals (warm tan/brown) if you want it to look like the dashboard preview; Accent color does not apply to invoice PDFs.",
+  "Connect (invoice Pay now): Stripe Dashboard → Connect → enable Express. Webhook endpoint must also listen to **Connected account** events: account.updated, account.application.deauthorized, checkout.session.completed, charge.refunded. Optional STRIPE_CONNECT_APPLICATION_FEE_BPS (e.g. 100 = 1%) and STRIPE_CONNECT_DEFAULT_COUNTRY (default US).",
   "Optional: create a Customer portal configuration (Billing → Customer portal) and set STRIPE_BILLING_PORTAL_CONFIGURATION_ID so portal sessions use it.",
 ] as const;
 
@@ -62,6 +63,9 @@ export const stripeWebhookEventsRecommended = [
   "charge.dispute.created",
   "charge.dispute.funds_withdrawn",
   "charge.dispute.closed",
+  /** Connect: listen on Connected accounts (Stripe Dashboard → Webhooks → Connected accounts). */
+  "account.updated",
+  "account.application.deauthorized",
 ] as const;
 
 /**
@@ -109,6 +113,13 @@ export const billingSituations: Array<{
     customerExperience: "Handled in Stripe; access follows subscription state.",
     ownerWhereToLook: "/owner/alerts — refund or dispute severity.",
     appBehavior: "Events logged; subscription changes still come from subscription.* webhooks.",
+  },
+  {
+    situation: "Pro customer connects Stripe Express for invoice payments",
+    customerExperience: "Connects from Invoice payments; shared invoices show Pay when ready.",
+    ownerWhereToLook: "/owner/alerts — Connect account updated / invoice share payment completed.",
+    appBehavior:
+      "stripeConnect* fields sync from account.updated; checkout.session.completed (mode=payment) marks InvoiceShare paid.",
   },
   {
     situation: "Legacy Pro (grandfathered, no Stripe sub)",

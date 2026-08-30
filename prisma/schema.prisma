@@ -62,6 +62,12 @@ model User {
   lifetimeInvoicePdfsGenerated Int @default(0)
   /// Saved invoice branding (business name, logo data URL, template, accent, copy). Syncs across devices.
   invoiceSenderTemplate Json?
+  /// Stripe Connect Express account for collecting invoice payments from their clients.
+  stripeConnectAccountId String? @unique
+  stripeConnectDetailsSubmitted Boolean @default(false)
+  stripeConnectChargesEnabled Boolean @default(false)
+  stripeConnectPayoutsEnabled Boolean @default(false)
+  stripeConnectOnboardedAt DateTime?
   /// web_agency | real_estate | trades | sales | freelance | agency | other
   profession     String?
   accounts      Account[]
@@ -89,9 +95,18 @@ model InvoiceShare {
   snapshot  Json
   createdAt DateTime  @default(now())
   expiresAt DateTime?
+  /// unpayable | unpaid | paid | refunded
+  paymentStatus           String    @default("unpayable")
+  amountCents             Int?
+  currency                String    @default("usd")
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  paidAt                  DateTime?
 
   @@index([userId])
   @@index([expiresAt])
+  @@index([paymentStatus])
+  @@index([stripeCheckoutSessionId])
 }
 
 /// One-time email/password reset tokens (credentials users only).

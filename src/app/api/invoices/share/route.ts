@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
         ok: true,
         token: share.token,
         path: share.path,
+        paymentStatus: share.paymentStatus,
+        amountCents: share.amountCents,
+        paymentsEnabled: share.paymentsEnabled,
       });
     } catch (e) {
       if (e instanceof Error && e.message === "FORBIDDEN") {

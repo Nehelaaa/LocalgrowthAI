@@ -21,7 +21,11 @@ export function buildInvoiceSmsBody(opts: {
   businessName: string;
   invoiceNumber: string;
   viewUrl: string;
+  paymentsEnabled?: boolean;
 }): string {
   const from = opts.businessName.trim() || "us";
+  if (opts.paymentsEnabled) {
+    return `Hi! Invoice ${opts.invoiceNumber} from ${from} — view & pay here: ${opts.viewUrl}`;
+  }
   return `Hi! Here's your invoice ${opts.invoiceNumber} from ${from}: ${opts.viewUrl}`;
 }
