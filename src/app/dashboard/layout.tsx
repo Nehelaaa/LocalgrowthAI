@@ -4,6 +4,7 @@ import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { StarterLimitOverlay } from "@/components/dashboard/StarterLimitOverlay";
 import { InvoiceSenderHydrator } from "@/components/invoices/InvoiceSenderHydrator";
 import { prisma } from "@/lib/db";
+import { parseInvoiceSenderTemplate } from "@/lib/invoice-sender-template";
 import { getCurrentUser } from "@/lib/session-user";
 import { canCreateMoreLeads, FREE_LEAD_LIMIT, hasProEntitlement } from "@/lib/entitlements";
 import { isOwnerEmail } from "@/lib/owner";
@@ -44,9 +45,13 @@ export default async function DashboardLayout({
   const isPro = hasProEntitlement(user);
   const canCreateLeads = canCreateMoreLeads(user.lifetimeLeadsCreated, user);
   const usage = await getSearchUsageState(user);
+  const invoiceSenderTemplate =
+    user.invoiceSenderTemplate != null
+      ? parseInvoiceSenderTemplate(user.invoiceSenderTemplate)
+      : null;
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[#f6f7f9] dark:bg-slate-950">
-      <InvoiceSenderHydrator />
+      <InvoiceSenderHydrator serverTemplate={invoiceSenderTemplate} />
       <DashboardNav
         user={{
           email: user.email,

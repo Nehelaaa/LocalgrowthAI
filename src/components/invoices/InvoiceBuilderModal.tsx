@@ -106,6 +106,9 @@ export function InvoiceBuilderModal({
   const [copyDone, setCopyDone] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [lastShareUrl, setLastShareUrl] = useState<string | null>(null);
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [brandingReady, setBrandingReady] = useState(false);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [senderBusinessName, setSenderBusinessName] = useState("");
   const [senderLogoDataUrl, setSenderLogoDataUrl] = useState<string | null>(null);
@@ -141,6 +144,8 @@ export function InvoiceBuilderModal({
     setLinkCopied(false);
     setLastShareUrl(null);
     setSmsBusy(false);
+    setShareMenuOpen(false);
+    setBrandingReady(false);
     const sender = loadInvoiceSenderTemplate();
     setSenderBusinessName(sender.businessName);
     setSenderLogoDataUrl(sender.logoDataUrl);
@@ -298,8 +303,13 @@ export function InvoiceBuilderModal({
   }, [open, leadId, invoiceReady, leadInvoiceDraftPayload, persistLeadInvoiceDraft]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setBrandingReady(false);
+      setShareMenuOpen(false);
+      return;
+    }
     let cancelled = false;
+    setBrandingReady(false);
     void hydrateInvoiceSenderTemplate().then((sender) => {
       if (cancelled) return;
       const tid = normalizeInvoiceTemplateId(sender.templateId);
@@ -310,6 +320,7 @@ export function InvoiceBuilderModal({
         normalizeHexColor(sender.accentHex, getInvoiceTemplate(tid).defaultAccentHex)
       );
       setInvoiceLayoutDensity(sender.density === "compact" ? "compact" : "comfortable");
+      setBrandingReady(true);
     });
     return () => {
       cancelled = true;
@@ -317,7 +328,7 @@ export function InvoiceBuilderModal({
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !brandingReady) return;
     const id = window.setTimeout(() => {
       const cur = loadInvoiceSenderTemplate();
       persistInvoiceSenderTemplateEverywhere({
@@ -331,10 +342,11 @@ export function InvoiceBuilderModal({
         ),
         density: invoiceLayoutDensity,
       });
-    }, 400);
+    }, 500);
     return () => window.clearTimeout(id);
   }, [
     open,
+    brandingReady,
     senderBusinessName,
     senderLogoDataUrl,
     invoiceTemplateId,
@@ -343,18 +355,41 @@ export function InvoiceBuilderModal({
   ]);
 
   useEffect(() => {
+    if (!shareMenuOpen) return;
+    const onPointer = (e: MouseEvent | TouchEvent) => {
+      const el = shareMenuRef.current;
+      if (!el) return;
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setShareMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShareMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [shareMenuOpen]);
+
+  useEffect(() => {
     if (!open || typeof document === "undefined") return;
     const syncFromStorage = () => {
       if (document.visibilityState !== "visible") return;
-      const sender = loadInvoiceSenderTemplate();
-      const tid = normalizeInvoiceTemplateId(sender.templateId);
-      setSenderBusinessName(sender.businessName);
-      setSenderLogoDataUrl(sender.logoDataUrl);
-      setInvoiceTemplateId(tid);
-      setInvoiceAccentHex(
-        normalizeHexColor(sender.accentHex, getInvoiceTemplate(tid).defaultAccentHex)
-      );
-      setInvoiceLayoutDensity(sender.density === "compact" ? "compact" : "comfortable");
+      void hydrateInvoiceSenderTemplate().then((sender) => {
+        const tid = normalizeInvoiceTemplateId(sender.templateId);
+        setSenderBusinessName(sender.businessName);
+        setSenderLogoDataUrl(sender.logoDataUrl);
+        setInvoiceTemplateId(tid);
+        setInvoiceAccentHex(
+          normalizeHexColor(sender.accentHex, getInvoiceTemplate(tid).defaultAccentHex)
+        );
+        setInvoiceLayoutDensity(sender.density === "compact" ? "compact" : "comfortable");
+      });
     };
     document.addEventListener("visibilitychange", syncFromStorage);
     window.addEventListener("focus", syncFromStorage);
@@ -507,6 +542,7 @@ export function InvoiceBuilderModal({
 
   const handleCopyText = useCallback(async () => {
     setErr(null);
+    setShareMenuOpen(false);
     try {
       const text = formatInvoicePlainText(mergeLatestSavedPdfLook(snapshot));
       await navigator.clipboard.writeText(text);
@@ -519,6 +555,7 @@ export function InvoiceBuilderModal({
 
   const handleTextInvoiceLink = useCallback(async () => {
     setErr(null);
+    setShareMenuOpen(false);
     if (!clientName.trim()) {
       setErr("Add a client name before texting.");
       return;
@@ -556,11 +593,13 @@ export function InvoiceBuilderModal({
     setErr(null);
     if (!clientName.trim()) {
       setErr("Add a client name before sharing.");
+      setShareMenuOpen(false);
       return;
     }
     const hasAmount = lineItems.some((li) => li.description.trim() && li.amount > 0);
     if (!lineItems.length || !hasAmount) {
       setErr("Add at least one line item with a description and service price.");
+      setShareMenuOpen(false);
       return;
     }
     setSmsBusy(true);
@@ -579,6 +618,7 @@ export function InvoiceBuilderModal({
       window.setTimeout(() => setLinkCopied(false), 2000);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not copy invoice link.");
+      setShareMenuOpen(false);
     } finally {
       setSmsBusy(false);
     }
@@ -759,6 +799,11 @@ export function InvoiceBuilderModal({
                 onClick={(e) => {
                   e.stopPropagation();
                   setSenderLogoDataUrl(null);
+                  const cur = loadInvoiceSenderTemplate();
+                  persistInvoiceSenderTemplateEverywhere(
+                    { ...cur, logoDataUrl: null, businessName: senderBusinessName },
+                    { allowClearLogo: true }
+                  );
                 }}
                 className="mt-2 text-sm font-semibold text-slate-600 underline hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               >
@@ -921,45 +966,108 @@ export function InvoiceBuilderModal({
         </div>
 
         <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-900 sm:px-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-            <button
-              type="button"
-              onClick={() => void handleCopyText()}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-            >
-              {copyDone ? "Copied!" : "Copy invoice text"}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleCopyShareLink()}
-              disabled={smsBusy}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-            >
-              {linkCopied ? "Link copied!" : "Copy view link"}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleTextInvoiceLink()}
-              disabled={smsBusy}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-teal-600/30 bg-teal-50 px-4 text-sm font-semibold text-teal-900 shadow-sm hover:bg-teal-100 disabled:opacity-60 dark:border-teal-500/40 dark:bg-teal-950/50 dark:text-teal-100 dark:hover:bg-teal-900/60"
-            >
-              {smsBusy ? "Preparing…" : "Text invoice link"}
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-0 flex-1 sm:flex-none" ref={shareMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShareMenuOpen((v) => !v)}
+                disabled={smsBusy}
+                aria-expanded={shareMenuOpen}
+                aria-haspopup="menu"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 sm:w-auto"
+              >
+                {smsBusy ? "Working…" : linkCopied ? "Link copied" : copyDone ? "Text copied" : "Share"}
+                <svg
+                  className={`h-4 w-4 text-slate-400 transition ${shareMenuOpen ? "rotate-180" : ""}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              {shareMenuOpen ? (
+                <div
+                  role="menu"
+                  className="absolute bottom-[calc(100%+0.5rem)] left-0 z-20 w-[min(100vw-2rem,17.5rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-800"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => void handleTextInvoiceLink()}
+                    className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700/80"
+                  >
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-200">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.76 9.76 0 0 1-2.555-.337L3 21l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                      </svg>
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-slate-900 dark:text-white">
+                        Text link
+                      </span>
+                      <span className="mt-0.5 block text-xs leading-snug text-slate-500 dark:text-slate-400">
+                        Opens Messages
+                        {initialClientPhone.trim() ? " with their number" : ""}
+                      </span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => void handleCopyShareLink()}
+                    className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700/80"
+                  >
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                      </svg>
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-slate-900 dark:text-white">
+                        {linkCopied ? "Link copied" : "Copy view link"}
+                      </span>
+                      <span className="mt-0.5 block text-xs leading-snug text-slate-500 dark:text-slate-400">
+                        Shareable invoice page
+                      </span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => void handleCopyText()}
+                    className="flex w-full items-start gap-3 px-3.5 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700/80"
+                  >
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                      </svg>
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-slate-900 dark:text-white">
+                        {copyDone ? "Copied" : "Copy invoice text"}
+                      </span>
+                      <span className="mt-0.5 block text-xs leading-snug text-slate-500 dark:text-slate-400">
+                        Plain text for email or notes
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
             <button
               type="button"
               onClick={() => void handleDownloadPdf()}
               disabled={pdfBusy}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400 sm:flex-none"
             >
               {pdfBusy ? "Building PDF…" : "Download PDF"}
             </button>
           </div>
-          <p className="mt-2 text-center text-[11px] leading-snug text-slate-500 dark:text-slate-400 sm:text-right">
-            Text opens your phone’s Messages app with a link they can open to view this invoice.
-            {!initialClientPhone.trim()
-              ? " Add a point-of-contact phone on the lead to prefill the recipient."
-              : null}
-          </p>
         </div>
       </div>
     </div>

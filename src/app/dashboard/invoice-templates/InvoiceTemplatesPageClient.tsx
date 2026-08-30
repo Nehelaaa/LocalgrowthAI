@@ -55,20 +55,25 @@ export function InvoiceTemplatesPageClient() {
   const logoRef = useRef<HTMLInputElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scheduleSave = useCallback((next: InvoiceSenderTemplate) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      persistInvoiceSenderTemplateEverywhere(next);
-      setSavedFlash(true);
-      window.setTimeout(() => setSavedFlash(false), 1600);
-    }, 350);
-  }, []);
+  const scheduleSave = useCallback(
+    (next: InvoiceSenderTemplate, opts?: { allowClearLogo?: boolean }) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        persistInvoiceSenderTemplateEverywhere(next, opts);
+        setSavedFlash(true);
+        window.setTimeout(() => setSavedFlash(false), 1600);
+      }, 350);
+    },
+    []
+  );
 
   const patch = useCallback(
     (p: Partial<InvoiceSenderTemplate>) => {
       setT((prev) => {
         const next: InvoiceSenderTemplate = { ...prev, ...p };
-        scheduleSave(next);
+        scheduleSave(next, {
+          allowClearLogo: Object.prototype.hasOwnProperty.call(p, "logoDataUrl") && !p.logoDataUrl,
+        });
         return next;
       });
     },
