@@ -26,6 +26,8 @@ const personas: Record<
       "Prioritize with simple signals & presets",
       "One-click demo websites from any saved lead (Pro)",
       "Branded PDF invoices from any saved lead",
+      "Text invoice links via SMS",
+      "Pro: connect Stripe — clients Pay on the shared invoice",
       "Track follow-ups in one pipeline",
       "Great for consultants, creatives, marketers, and local services",
     ],
@@ -52,6 +54,7 @@ const personas: Record<
       "One-click demo websites to show the rebuild pitch (Pro)",
       "Exports + billing on Pro",
       "Invoice templates you can reuse across clients",
+      "Pro: Stripe Connect — get paid on shared invoices",
       "Clean pipeline — active deals stay on top",
     ],
     workflow: [
@@ -76,6 +79,7 @@ const personas: Record<
       "Segment by signals & presets",
       "Optional demo websites when the pitch needs proof (Pro)",
       "PDF quotes from any pipeline row",
+      "Text invoices & Pro Pay now via your Stripe",
       "Track outcomes and follow-ups",
     ],
     workflow: [
@@ -98,6 +102,7 @@ const personas: Record<
       "Find local partners",
       "Track relationship outreach",
       "Simple pipeline for follow-ups",
+      "Invoice partners with shareable Pay links (Pro)",
     ],
     workflow: [
       { t: "Search local service pros", d: "Build a targeted list in your market (inspectors, movers, contractors, etc.)." },

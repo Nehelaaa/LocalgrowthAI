@@ -37,9 +37,9 @@ const steps = [
   },
   {
     id: 4,
-    title: "Invoice from the same row",
-    body: "Generate a branded PDF invoice without exporting to another tool. Same context, less admin, faster payment conversations.",
-    eyebrow: "Branded PDFs",
+    title: "Invoice, text, and get paid",
+    body: "Build a branded invoice from the lead, share a view link or open Messages with a prefilled SMS. On Pro, connect your Stripe so clients can Pay on that same link — funds go to you.",
+    eyebrow: "Invoices & payments",
     accent: "sky" as const,
   },
   {

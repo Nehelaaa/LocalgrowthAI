@@ -23,7 +23,7 @@ export function homeJsonLd() {
         name: "LocalLeadster",
         url: site,
         description:
-          "Local lead generation software for freelancers, agencies, marketers, consultants, appointment setters, sales teams, and realtors. Automate Google Places territory prospecting, qualify with signals, run a CRM pipeline, and send branded PDF invoices from one workspace.",
+          "Local lead generation software for freelancers, agencies, marketers, consultants, appointment setters, sales teams, and realtors. Automate Google Places territory prospecting, qualify with signals, run a CRM pipeline, text branded invoices, and collect Pay now via your Stripe account.",
         publisher: { "@id": organizationId },
         inLanguage: "en-US",
       },
@@ -33,7 +33,7 @@ export function homeJsonLd() {
         url: `${site}/`,
         name: "LocalLeadster — Local B2B lead generation & pipeline",
         description:
-          "Find high-intent local businesses in minutes. Automate territory search, reduce manual Google Maps work, organize outreach, and close more deals with CRM + branded invoices.",
+          "Find high-intent local businesses in minutes. Automate territory search, organize outreach, send invoices by SMS, and get paid on the same link with Stripe Connect.",
         isPartOf: { "@id": websiteId },
         about: { "@id": softwareId },
         primaryImageOfPage: { "@type": "ImageObject", url: pageHeroImage },
@@ -48,13 +48,13 @@ export function homeJsonLd() {
         operatingSystem: "Web",
         url: site,
         description:
-          "Local prospecting plus outreach workflows: Google Places territory search, opportunity signals, HOT/WARM/COLD scoring, pipeline stages with next actions and follow-up tracking, organized call-sheet style lists, and branded PDF invoices — one workspace instead of disconnected tools.",
+          "Local prospecting plus outreach workflows: Google Places territory search, opportunity signals, HOT/WARM/COLD scoring, CRM pipeline, branded invoices with SMS share links, and Pro Stripe Connect payments so clients can Pay now — one workspace instead of disconnected tools.",
         screenshot: pageHeroImage,
         offers: {
           "@type": "Offer",
           price: "0",
           priceCurrency: "USD",
-          description: "Free tier with optional Pro subscription for advanced limits and billing",
+          description: "Free tier with optional Pro subscription for advanced limits, billing, and invoice payments",
           url: `${site}/register`,
         },
         featureList: [
@@ -63,7 +63,8 @@ export function homeJsonLd() {
           "Opportunity signals: no website, low reviews, weak SEO, social-only, weak online presence, stale or outdated sites",
           "Lead scoring with HOT WARM COLD tiers",
           "CRM pipeline with stages, next actions, follow-up tracking, and notes",
-          "Branded PDF invoice generation from lead records",
+          "Branded PDF invoices with SMS and shareable view links",
+          "Pro: connect your Stripe and collect Pay now on shared invoices",
           "Deal value and revenue tracking for local B2B sales",
         ],
       },
@@ -74,7 +75,7 @@ export function homeJsonLd() {
           { "@type": "ListItem", position: 1, name: "Automated local territory prospecting" },
           { "@type": "ListItem", position: 2, name: "Faster qualification vs manual Google Maps research" },
           { "@type": "ListItem", position: 3, name: "CRM and outreach organization in one dashboard" },
-          { "@type": "ListItem", position: 4, name: "Branded PDF invoicing without a separate tool" },
+          { "@type": "ListItem", position: 4, name: "Text invoices and collect payment via connected Stripe" },
         ],
       },
       {
@@ -84,7 +85,7 @@ export function homeJsonLd() {
         url: site,
         logo: { "@type": "ImageObject", url: brandLogo },
         description:
-          "LocalLeadster builds web software for local B2B prospecting — lead generation, pipeline management, and invoicing for agencies, freelancers, and sales teams.",
+          "LocalLeadster builds web software for local B2B prospecting — lead generation, pipeline management, invoicing, and client payments for agencies, freelancers, and sales teams.",
       },
     ],
   } as const;
@@ -115,7 +116,7 @@ export const homeMetadata: Metadata = {
     template: "%s | LocalLeadster",
   },
   description:
-    "Find high-intent local businesses in minutes. Automate Google Places territory prospecting, qualify with opportunity signals, organize outreach in a CRM, and send branded PDF invoices — for freelancers, web designers, SEO agencies, marketers, consultants, appointment setters, sales teams, and realtors.",
+    "Find high-intent local businesses in minutes. Automate Google Places prospecting, organize outreach, text branded invoices, and collect Pay now via your Stripe — for freelancers, agencies, marketers, consultants, setters, sales teams, and realtors.",
   authors: [{ name: "LocalLeadster", url: site }],
   creator: "LocalLeadster",
   publisher: "LocalLeadster",
@@ -132,13 +133,16 @@ export const homeMetadata: Metadata = {
     "appointment setter tools",
     "realtor b2b partnerships",
     "branded pdf invoice generator",
+    "sms invoice link",
+    "stripe connect invoice payments",
+    "get paid on invoice link",
     "local sales pipeline",
     "reduce manual prospecting",
   ],
   openGraph: {
-    title: "LocalLeadster — Automate local prospecting. Close more deals.",
+    title: "LocalLeadster — Automate local prospecting. Get paid on invoices.",
     description:
-      "Stop wasting hours on Google Maps and spreadsheets. Prospect, qualify, manage, and invoice local leads from one workspace.",
+      "Prospect, qualify, manage, text invoices, and collect payment through your Stripe — from one workspace.",
     type: "website",
     url: "/",
     siteName: "LocalLeadster",
@@ -148,7 +152,7 @@ export const homeMetadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "LocalLeadster — local B2B prospecting, CRM pipeline, and invoicing",
+        alt: "LocalLeadster — local B2B prospecting, CRM, invoices, and payments",
       },
     ],
   },
@@ -156,7 +160,7 @@ export const homeMetadata: Metadata = {
     card: "summary_large_image",
     title: "LocalLeadster — Local lead gen without the busywork",
     description:
-      "Territory search, signals, CRM, and invoices — one workflow for agencies, freelancers, and sales teams.",
+      "Territory search, CRM, SMS invoices, and Stripe Pay now — one workflow for agencies and freelancers.",
     images: ["/opengraph-image"],
   },
   robots: { index: true, follow: true },

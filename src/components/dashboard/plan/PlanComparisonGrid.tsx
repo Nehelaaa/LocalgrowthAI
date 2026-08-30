@@ -25,8 +25,8 @@ const proBullets = [
   "Unlimited leads (fair use)",
   `${PRO_SEARCHES_PER_DAY} discovery searches per day`,
   "Full Pro feature access",
-  "Higher limits for growth workflows",
   "Unlimited invoice PDF generation",
+  "Connect Stripe — clients Pay on shared invoices",
 ];
 
 export function PlanComparisonGrid({ isPro, hasStripeSub, proPriceLabel }: Props) {

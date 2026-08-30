@@ -54,6 +54,9 @@ export function MarketingShell({
             <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#how-it-works">
               How it works
             </Link>
+            <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#invoice-payments">
+              Get paid
+            </Link>
             <Link className="rounded-lg px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="/#features">
               Features
             </Link>

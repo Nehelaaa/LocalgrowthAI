@@ -16,6 +16,7 @@ import { PricingSection } from "@/components/marketing/PricingSection";
 import { ProductMockup } from "@/components/marketing/ProductMockup";
 import { SolutionsSection } from "@/components/marketing/SolutionsSection";
 import { StatsStrip } from "@/components/marketing/StatsStrip";
+import { MarketingInvoicePaymentsSection } from "@/components/marketing/MarketingInvoicePaymentsSection";
 import { marketingFaqs } from "@/lib/marketing/faq";
 import { faqJsonLd, homeJsonLd, homeMetadata } from "@/lib/seo/jsonld";
 
@@ -43,14 +44,14 @@ const FEATURE_CARDS = [
     icon: "📋",
   },
   {
-    t: "Branded PDF invoices",
-    d: "Generate client-ready invoices from the same row — no extra export step.",
-    icon: "📄",
+    t: "Text & share invoices",
+    d: "Branded PDFs plus a private view link — open Messages with a prefilled SMS so clients can open the invoice instantly.",
+    icon: "💬",
   },
   {
-    t: "Close & revenue view",
-    d: "Deal value and outcomes visible where you manage outreach — fewer surprises end of month.",
-    icon: "💰",
+    t: "Get paid on the same link",
+    d: "Pro: connect your Stripe. Clients tap Pay on the shared invoice — funds go to your Stripe account.",
+    icon: "💳",
   },
 ] as const;
 
@@ -72,12 +73,12 @@ export default function HomePage() {
         >
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-              Local prospecting · demo websites · CRM
+              Local prospecting · invoices · get paid
             </p>
             <HeroHeadlines />
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
-              Search any city, get local businesses ranked by opportunity, and generate a live
-              demo of their new website in one click. Free to start.
+              Search any city, rank local businesses, generate a live demo site, and send invoices
+              clients can open — and pay — from one workspace. Free to start.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
@@ -87,10 +88,10 @@ export default function HomePage() {
                 Start free — no card required
               </Link>
               <a
-                href="#demo-websites"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-slate-200/90 bg-white/80 px-6 py-3.5 text-base font-medium text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50/80 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:border-indigo-500/40"
+                href="#invoice-payments"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-slate-200/90 bg-white/80 px-6 py-3.5 text-base font-medium text-slate-800 transition hover:border-teal-300 hover:bg-teal-50/80 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:border-teal-500/40"
               >
-                See demo websites
+                See invoice payments
               </a>
             </div>
             <p className="mt-6 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -130,6 +131,8 @@ export default function HomePage() {
         <MarketingOpportunitySignalsSection />
 
         <MarketingDemoWebsiteSection />
+
+        <MarketingInvoicePaymentsSection />
 
         <MarketingReveal>
           <HowItWorksSection />

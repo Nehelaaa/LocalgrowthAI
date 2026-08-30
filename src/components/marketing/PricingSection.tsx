@@ -47,7 +47,7 @@ export function PricingSection() {
             <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
               <strong className="font-semibold text-slate-900 dark:text-white">{FREE_LEAD_LIMIT} leads for life</strong>
               {" "}on your account. Each new business you add to the CRM uses one slot. Deleting a lead does{" "}
-              <em>not</em> bring a slot back — upgrade to Pro for unlimited saves.
+              <em>not</em> bring a slot back — upgrade to Pro for unlimited saves and invoice Pay now.
             </p>
             <ul className="mt-8 flex-1 space-y-3.5 text-sm text-slate-700 dark:text-slate-300">
               <li className="flex gap-3">
@@ -69,7 +69,7 @@ export function PricingSection() {
                 <CheckIcon />
                 <span>
                   <strong className="text-slate-900 dark:text-white">{FREE_INVOICE_PDF_LIMIT}</strong> branded invoice
-                  PDFs (lifetime) — templates, logo &amp; colors from the CRM
+                  PDFs (lifetime) — templates, logo, colors, and SMS / view-link share
                 </span>
               </li>
               <li className="flex gap-3">
@@ -119,7 +119,14 @@ export function PricingSection() {
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
-                <span>Everything in Free, including invoice builder &amp; search presets</span>
+                <span>Everything in Free, including invoice builder, SMS share links &amp; search presets</span>
+              </li>
+              <li className="flex gap-3">
+                <CheckIcon />
+                <span>
+                  <strong className="text-slate-900 dark:text-white">Get paid:</strong> connect your
+                  Stripe — clients tap Pay on shared invoices
+                </span>
               </li>
               <li className="flex gap-3">
                 <CheckIcon />

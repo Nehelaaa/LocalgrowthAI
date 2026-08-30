@@ -1,4 +1,4 @@
-const steps = ["Search territory", "Qualify leads", "Organize outreach", "Close deals"] as const;
+const steps = ["Search territory", "Qualify leads", "Invoice & get paid", "Close deals"] as const;
 
 /** Minimal conversion-focused strip directly under the hero. */
 export function HeroWorkflowStrip() {
@@ -22,7 +22,7 @@ export function HeroWorkflowStrip() {
           ))}
         </ol>
         <p className="mt-3 text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400 sm:text-[13px]">
-          Most users can find qualified local opportunities in minutes.
+          From local list to paid invoice — without juggling five tools.
         </p>
       </div>
     </div>
