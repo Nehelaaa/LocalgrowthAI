@@ -59,7 +59,7 @@ export function applyServerInvoiceSenderTemplate(
   template: InvoiceSenderTemplate
 ): void {
   const local = loadInvoiceSenderTemplate();
-  const merged = mergeSenderTemplates(template, local);
+  const merged = mergeInvoiceSenderTemplates(template, local);
   lastKnownRemoteLogo = merged.logoDataUrl;
   saveInvoiceSenderTemplate(merged);
   // If account is missing the logo but this device still has it, push once.
@@ -74,7 +74,8 @@ export function applyServerInvoiceSenderTemplate(
   }
 }
 
-function mergeSenderTemplates(
+/** Prefer primary fields; fill missing logo/name from fallback (cross-device repair). */
+export function mergeInvoiceSenderTemplates(
   primary: InvoiceSenderTemplate,
   fallback: InvoiceSenderTemplate
 ): InvoiceSenderTemplate {
@@ -90,6 +91,21 @@ function mergeSenderTemplates(
   };
 }
 
+/**
+ * When auto-saving, never replace a known account logo with null unless the user cleared it.
+ */
+export function protectInvoiceSenderLogo(
+  template: InvoiceSenderTemplate,
+  lastKnownLogo: string | null,
+  opts?: { allowClearLogo?: boolean }
+): InvoiceSenderTemplate {
+  if (opts?.allowClearLogo) return template;
+  if (!template.logoDataUrl && lastKnownLogo) {
+    return { ...template, logoDataUrl: lastKnownLogo };
+  }
+  return template;
+}
+
 /** Debounced account sync (keeps mobile/desktop logos in sync). */
 export function scheduleInvoiceSenderTemplateRemoteSave(
   template: InvoiceSenderTemplate,
@@ -100,10 +116,7 @@ export function scheduleInvoiceSenderTemplateRemoteSave(
   if (remoteSaveTimer) clearTimeout(remoteSaveTimer);
   remoteSaveTimer = setTimeout(() => {
     remoteSaveTimer = null;
-    let next = template;
-    if (!opts?.allowClearLogo && !next.logoDataUrl && lastKnownRemoteLogo) {
-      next = { ...next, logoDataUrl: lastKnownRemoteLogo };
-    }
+    const next = protectInvoiceSenderLogo(template, lastKnownRemoteLogo, opts);
     void apiPutInvoiceSenderTemplate(next)
       .then((saved) => {
         lastKnownRemoteLogo = saved.logoDataUrl;
@@ -145,7 +158,7 @@ export async function hydrateInvoiceSenderTemplate(): Promise<InvoiceSenderTempl
         const local = loadInvoiceSenderTemplate();
 
         if (remote) {
-          const merged = mergeSenderTemplates(remote, local);
+          const merged = mergeInvoiceSenderTemplates(remote, local);
           lastKnownRemoteLogo = merged.logoDataUrl;
           // Account missing logo but this browser still has one → push it up.
           if (!remote.logoDataUrl && local.logoDataUrl) {
