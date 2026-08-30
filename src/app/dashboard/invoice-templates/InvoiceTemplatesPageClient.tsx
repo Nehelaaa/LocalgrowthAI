@@ -8,10 +8,12 @@ import { InvoiceTemplateThumbFrame } from "@/components/invoices/InvoiceTemplate
 import {
   defaultInvoiceSenderTemplate,
   fileToInvoiceLogoDataUrl,
-  loadInvoiceSenderTemplate,
-  saveInvoiceSenderTemplate,
   type InvoiceSenderTemplate,
 } from "@/lib/invoice-sender-template";
+import {
+  hydrateInvoiceSenderTemplate,
+  persistInvoiceSenderTemplateEverywhere,
+} from "@/lib/invoice-sender-sync";
 import {
   INVOICE_ACCENT_PRESETS,
   INVOICE_TEMPLATES,
@@ -56,7 +58,7 @@ export function InvoiceTemplatesPageClient() {
   const scheduleSave = useCallback((next: InvoiceSenderTemplate) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveInvoiceSenderTemplate(next);
+      persistInvoiceSenderTemplateEverywhere(next);
       setSavedFlash(true);
       window.setTimeout(() => setSavedFlash(false), 1600);
     }, 350);
@@ -74,10 +76,13 @@ export function InvoiceTemplatesPageClient() {
   );
 
   useEffect(() => {
-    // Client-only: read saved template from localStorage after mount (SSR-safe default above).
-    queueMicrotask(() => {
-      setT(loadInvoiceSenderTemplate());
+    let cancelled = false;
+    void hydrateInvoiceSenderTemplate().then((tpl) => {
+      if (!cancelled) setT(tpl);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const closePreviewOverlay = useCallback(() => {

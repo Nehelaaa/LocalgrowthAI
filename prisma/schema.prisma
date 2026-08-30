@@ -60,6 +60,8 @@ model User {
   lifetimeGoogleSearches Int @default(0)
   /// CRM branded invoice PDF downloads (Free plan lifetime cap; Pro unlimited).
   lifetimeInvoicePdfsGenerated Int @default(0)
+  /// Saved invoice branding (business name, logo data URL, template, accent, copy). Syncs across devices.
+  invoiceSenderTemplate Json?
   /// web_agency | real_estate | trades | sales | freelance | agency | other
   profession     String?
   accounts      Account[]

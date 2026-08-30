@@ -21,8 +21,11 @@ import { formatInvoicePlainText } from "@/lib/invoice-plain-text";
 import {
   fileToInvoiceLogoDataUrl,
   loadInvoiceSenderTemplate,
-  saveInvoiceSenderTemplate,
 } from "@/lib/invoice-sender-template";
+import {
+  hydrateInvoiceSenderTemplate,
+  persistInvoiceSenderTemplateEverywhere,
+} from "@/lib/invoice-sender-sync";
 import {
   getInvoiceTemplate,
   normalizeHexColor,
@@ -296,9 +299,28 @@ export function InvoiceBuilderModal({
 
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
+    void hydrateInvoiceSenderTemplate().then((sender) => {
+      if (cancelled) return;
+      const tid = normalizeInvoiceTemplateId(sender.templateId);
+      setSenderBusinessName(sender.businessName);
+      setSenderLogoDataUrl(sender.logoDataUrl);
+      setInvoiceTemplateId(tid);
+      setInvoiceAccentHex(
+        normalizeHexColor(sender.accentHex, getInvoiceTemplate(tid).defaultAccentHex)
+      );
+      setInvoiceLayoutDensity(sender.density === "compact" ? "compact" : "comfortable");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const id = window.setTimeout(() => {
       const cur = loadInvoiceSenderTemplate();
-      saveInvoiceSenderTemplate({
+      persistInvoiceSenderTemplateEverywhere({
         ...cur,
         businessName: senderBusinessName,
         logoDataUrl: senderLogoDataUrl,
@@ -326,6 +348,8 @@ export function InvoiceBuilderModal({
       if (document.visibilityState !== "visible") return;
       const sender = loadInvoiceSenderTemplate();
       const tid = normalizeInvoiceTemplateId(sender.templateId);
+      setSenderBusinessName(sender.businessName);
+      setSenderLogoDataUrl(sender.logoDataUrl);
       setInvoiceTemplateId(tid);
       setInvoiceAccentHex(
         normalizeHexColor(sender.accentHex, getInvoiceTemplate(tid).defaultAccentHex)

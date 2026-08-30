@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { StarterLimitOverlay } from "@/components/dashboard/StarterLimitOverlay";
+import { InvoiceSenderHydrator } from "@/components/invoices/InvoiceSenderHydrator";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session-user";
 import { canCreateMoreLeads, FREE_LEAD_LIMIT, hasProEntitlement } from "@/lib/entitlements";
@@ -45,6 +46,7 @@ export default async function DashboardLayout({
   const usage = await getSearchUsageState(user);
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[#f6f7f9] dark:bg-slate-950">
+      <InvoiceSenderHydrator />
       <DashboardNav
         user={{
           email: user.email,

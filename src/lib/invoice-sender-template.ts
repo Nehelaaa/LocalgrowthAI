@@ -33,48 +33,80 @@ export function defaultInvoiceSenderTemplate(): InvoiceSenderTemplate {
   };
 }
 
+function safeLogoDataUrl(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw.startsWith("data:image/")) return null;
+  if (raw.length > 900_000) return null;
+  if (!/^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(raw)) return null;
+  return raw;
+}
+
+/** Normalize unknown JSON (localStorage or DB) into a template. */
+export function parseInvoiceSenderTemplate(raw: unknown): InvoiceSenderTemplate {
+  const base = defaultInvoiceSenderTemplate();
+  if (!raw || typeof raw !== "object") return base;
+  const o = raw as Record<string, unknown>;
+  const rawTitle = typeof o.documentTitle === "string" ? o.documentTitle : base.documentTitle;
+  const rawFooter = typeof o.footerPhrase === "string" ? o.footerPhrase : base.footerPhrase;
+  return {
+    businessName: typeof o.businessName === "string" ? o.businessName : base.businessName,
+    logoDataUrl: safeLogoDataUrl(o.logoDataUrl) ?? base.logoDataUrl,
+    templateId: typeof o.templateId === "string" ? o.templateId : base.templateId,
+    accentHex: typeof o.accentHex === "string" ? o.accentHex : base.accentHex,
+    density: o.density === "compact" || o.density === "comfortable" ? o.density : base.density,
+    documentTitle: sanitizeInvoiceDocumentTitle(rawTitle),
+    footerPhrase: sanitizeInvoiceFooterPhrase(rawFooter),
+  };
+}
+
+export function invoiceSenderTemplateHasUserContent(t: InvoiceSenderTemplate): boolean {
+  return Boolean(
+    t.businessName.trim() ||
+      t.logoDataUrl ||
+      (t.templateId && t.templateId !== defaultInvoiceSenderTemplate().templateId) ||
+      t.documentTitle !== INVOICE_DOCUMENT_TITLE_OPTIONS[0].value ||
+      t.footerPhrase !== INVOICE_FOOTER_PHRASE_OPTIONS[0].value
+  );
+}
+
 export function loadInvoiceSenderTemplate(): InvoiceSenderTemplate {
   if (typeof window === "undefined") {
     return defaultInvoiceSenderTemplate();
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return defaultInvoiceSenderTemplate();
-    }
-    const p = JSON.parse(raw) as unknown;
-    if (!p || typeof p !== "object") {
-      return defaultInvoiceSenderTemplate();
-    }
-    const o = p as Record<string, unknown>;
-    const base = defaultInvoiceSenderTemplate();
-    const rawTitle = typeof o.documentTitle === "string" ? o.documentTitle : base.documentTitle;
-    const rawFooter = typeof o.footerPhrase === "string" ? o.footerPhrase : base.footerPhrase;
-    return {
-      businessName: typeof o.businessName === "string" ? o.businessName : base.businessName,
-      logoDataUrl: typeof o.logoDataUrl === "string" ? o.logoDataUrl : base.logoDataUrl,
-      templateId: typeof o.templateId === "string" ? o.templateId : base.templateId,
-      accentHex: typeof o.accentHex === "string" ? o.accentHex : base.accentHex,
-      density: o.density === "compact" || o.density === "comfortable" ? o.density : base.density,
-      documentTitle: sanitizeInvoiceDocumentTitle(rawTitle),
-      footerPhrase: sanitizeInvoiceFooterPhrase(rawFooter),
-    };
+    if (!raw) return defaultInvoiceSenderTemplate();
+    return parseInvoiceSenderTemplate(JSON.parse(raw) as unknown);
   } catch {
     return defaultInvoiceSenderTemplate();
   }
 }
 
-export function saveInvoiceSenderTemplate(t: InvoiceSenderTemplate): void {
-  if (typeof window === "undefined") return;
+export type SaveInvoiceSenderResult = "ok" | "partial" | "failed";
+
+/**
+ * Persist branding locally. If the logo blows the storage quota (common on mobile),
+ * still save the rest of the template without the logo.
+ */
+export function saveInvoiceSenderTemplate(t: InvoiceSenderTemplate): SaveInvoiceSenderResult {
+  if (typeof window === "undefined") return "failed";
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(t));
+    return "ok";
   } catch {
-    /* quota or private mode */
+    try {
+      const withoutLogo: InvoiceSenderTemplate = { ...t, logoDataUrl: null };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(withoutLogo));
+      return "partial";
+    } catch {
+      return "failed";
+    }
   }
 }
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
-const MAX_CANVAS_WIDTH = 480;
+/** Keep logos small so they sync + fit mobile localStorage caches. */
+const MAX_CANVAS_WIDTH = 320;
+const JPEG_QUALITY = 0.72;
 
 function readFileAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -99,12 +131,12 @@ function readFileAsDataURL(file: File): Promise<string> {
 function isProbablyImage(file: File): boolean {
   if (file.type && file.type.startsWith("image/")) return true;
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-  return ["jpg", "jpeg", "png", "webp", "gif", "pjpeg", "jfif"].includes(ext);
+  return ["jpg", "jpeg", "png", "webp", "gif", "pjpeg", "jfif", "heic", "heif"].includes(ext);
 }
 
 /**
- * Resize to a JPEG data URL for localStorage + jsPDF.
- * Prefers createImageBitmap; falls back to FileReader + Image (avoids blob-URL decode issues on some browsers).
+ * Resize to a JPEG data URL for account sync + jsPDF.
+ * Prefers createImageBitmap; falls back to FileReader + Image.
  */
 export async function fileToInvoiceLogoDataUrl(file: File): Promise<string> {
   if (!isProbablyImage(file)) {
@@ -135,7 +167,12 @@ export async function fileToInvoiceLogoDataUrl(file: File): Promise<string> {
     drawSource = await new Promise<HTMLImageElement>((res, rej) => {
       const img = new Image();
       img.onload = () => res(img);
-      img.onerror = () => rej(new Error("Could not decode image. Try PNG or JPEG."));
+      img.onerror = () =>
+        rej(
+          new Error(
+            "Could not decode image. On iPhone, try exporting as JPEG or PNG (HEIC may not work)."
+          )
+        );
       img.src = dataUrl;
     });
     bmpW = drawSource.naturalWidth;
@@ -162,5 +199,5 @@ export async function fileToInvoiceLogoDataUrl(file: File): Promise<string> {
   ctx.drawImage(drawSource, 0, 0, w, h);
   bitmap?.close();
 
-  return canvas.toDataURL("image/jpeg", 0.88);
+  return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
 }
