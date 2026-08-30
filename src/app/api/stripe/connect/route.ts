@@ -67,8 +67,12 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await requireUserForAction();
-    const body = (await request.json().catch(() => ({}))) as { action?: string };
+    const body = (await request.json().catch(() => ({}))) as {
+      action?: string;
+      returnTo?: string;
+    };
     const action = body.action ?? "onboard";
+    const returnToOnboarding = body.returnTo === "onboarding";
 
     if (action === "disconnect") {
       await disconnectConnectAccount(user.id);
@@ -101,10 +105,11 @@ export async function POST(request: NextRequest) {
     const u = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
     const accountId = await ensureConnectExpressAccount(u);
     const origin = appOrigin(request);
+    const basePath = returnToOnboarding ? "/onboarding" : "/dashboard/payments";
     const url = await createConnectAccountOnboardingLink({
       accountId,
-      refreshUrl: `${origin}/dashboard/payments?connect=refresh`,
-      returnUrl: `${origin}/dashboard/payments?connect=return`,
+      refreshUrl: `${origin}${basePath}?connect=refresh`,
+      returnUrl: `${origin}${basePath}?connect=return`,
     });
     return NextResponse.json({ ok: true, url });
   } catch (e) {
