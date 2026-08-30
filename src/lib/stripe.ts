@@ -79,3 +79,16 @@ export function stripeWebhookSecretResolved(): string | undefined {
     process.env.STRIPE_WEBHOOK_SECRET_LIVE?.trim()
   );
 }
+
+/**
+ * Signing secrets for `/api/stripe/webhook`.
+ * Platform and Connect destinations each have their own `whsec_…` even on the same URL.
+ */
+export function stripeWebhookSecretsResolved(): string[] {
+  const secrets = [
+    stripeWebhookSecretResolved(),
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET?.trim(),
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET_LIVE?.trim(),
+  ].filter((s): s is string => Boolean(s));
+  return [...new Set(secrets)];
+}

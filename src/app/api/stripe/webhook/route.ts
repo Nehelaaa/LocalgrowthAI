@@ -12,7 +12,7 @@ import {
   subscriptionCanceledTitle,
   type SubPrev,
 } from "@/lib/owner-billing-alert-titles";
-import { getStripe, isStripeConfigured, stripeWebhookSecretResolved } from "@/lib/stripe";
+import { getStripe, isStripeConfigured, stripeWebhookSecretsResolved } from "@/lib/stripe";
 import { subscriptionToUserData, syncUserSubscriptionFromStripe } from "@/lib/stripe-subscription-sync";
 import type Stripe from "stripe";
 
@@ -20,6 +20,21 @@ export const runtime = "nodejs";
 
 const CANCELED = "canceled";
 
+function constructStripeEvent(stripe: Stripe, body: string, sig: string): Stripe.Event {
+  const secrets = stripeWebhookSecretsResolved();
+  if (secrets.length === 0) {
+    throw new Error("NO_WEBHOOK_SECRET");
+  }
+  let lastErr: unknown;
+  for (const secret of secrets) {
+    try {
+      return stripe.webhooks.constructEvent(body, sig, secret);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("Invalid signature");
+}
 function customerIdFromStripeCustomerField(
   customer: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined
 ): string | null {
@@ -61,8 +76,8 @@ async function resolveStripeCustomerIdForCharge(
 }
 
 export async function POST(request: Request) {
-  const webhookSecret = stripeWebhookSecretResolved();
-  if (!isStripeConfigured() || !webhookSecret) {
+  const secrets = stripeWebhookSecretsResolved();
+  if (!isStripeConfigured() || secrets.length === 0) {
     return NextResponse.json(
       { error: "Stripe webhook is not configured" },
       { status: 500 }
@@ -79,7 +94,7 @@ export async function POST(request: Request) {
   const stripe = getStripe();
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    event = constructStripeEvent(stripe, body, sig);
   } catch (err) {
     console.error("Stripe signature verification failed", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
