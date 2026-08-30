@@ -1,5 +1,6 @@
 import type { ConsumeInvoicePdfSlotResult } from "@/lib/invoice-pdf-quota-core";
 import type { LeadInvoiceDraftV1 } from "@/lib/lead-invoice-draft";
+import type { InvoiceSnapshot } from "@/lib/invoice-types";
 
 async function readApiError(res: Response): Promise<string> {
   const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -54,4 +55,31 @@ export async function apiConsumeInvoicePdfSlot(): Promise<ConsumeInvoicePdfSlotR
     return { ok: false, code: "UNAUTHORIZED" };
   }
   throw new Error(await readApiError(res));
+}
+
+export async function apiCreateInvoiceShare(opts: {
+  leadId?: string;
+  snapshot: InvoiceSnapshot;
+}): Promise<{ token: string; path: string; url: string }> {
+  const res = await fetch("/api/invoices/share", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      leadId: opts.leadId ?? null,
+      snapshot: opts.snapshot,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(await readApiError(res));
+  }
+  const data = (await res.json()) as {
+    token?: string;
+    path?: string;
+  };
+  if (!data.token || !data.path) {
+    throw new Error("Could not create a share link.");
+  }
+  const url = `${window.location.origin}${data.path}`;
+  return { token: data.token, path: data.path, url };
 }

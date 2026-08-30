@@ -1,0 +1,50 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { PublicInvoiceView } from "@/components/invoices/PublicInvoiceView";
+import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
+import { getValidInvoiceShareByToken } from "@/lib/invoice-share";
+import { sanitizeInvoiceDocumentTitle } from "@/lib/invoice-wording";
+
+type Props = { params: Promise<{ token: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params;
+  const share = await getValidInvoiceShareByToken(token);
+  if (!share) {
+    return { title: "Invoice not found", robots: { index: false, follow: false } };
+  }
+  const title = sanitizeInvoiceDocumentTitle(
+    share.snapshot.invoiceDocumentTitle
+  );
+  const company =
+    share.snapshot.senderBusinessName?.trim() || defaultInvoiceCompanyName();
+  return {
+    title: `${title} ${share.snapshot.invoiceNumber} · ${company}`,
+    robots: { index: false, follow: false },
+  };
+}
+
+export default async function PublicInvoicePage({ params }: Props) {
+  const { token } = await params;
+  const share = await getValidInvoiceShareByToken(token);
+  if (!share) notFound();
+
+  return (
+    <div className="min-h-[100dvh] bg-gradient-to-b from-slate-100 via-slate-50 to-white px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto mb-6 max-w-2xl text-center">
+        <p className="text-sm text-slate-500">Shared invoice</p>
+      </div>
+      <PublicInvoiceView snapshot={share.snapshot} />
+      <p className="mx-auto mt-10 max-w-2xl text-center text-xs text-slate-400">
+        Powered by{" "}
+        <Link
+          href="/"
+          className="font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+        >
+          LocalLeadster
+        </Link>
+      </p>
+    </div>
+  );
+}

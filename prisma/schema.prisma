@@ -73,6 +73,23 @@ model User {
   featureFlagOverrides FeatureFlagOverride[]
   ownerBillingEvents OwnerBillingEvent[]
   passwordResetTokens PasswordResetToken[]
+  invoiceShares InvoiceShare[]
+}
+
+/// Public shareable invoice snapshot (unguessable token → /i/[token]).
+model InvoiceShare {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadId    String?
+  /// Frozen InvoiceSnapshot JSON at share time.
+  snapshot  Json
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 /// One-time email/password reset tokens (credentials users only).

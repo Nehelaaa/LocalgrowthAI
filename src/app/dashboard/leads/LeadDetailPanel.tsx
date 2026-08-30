@@ -290,6 +290,7 @@ export function LeadDetailPanel({
         }}
         initialClientName={lead.business.name}
         initialClientAddress={lead.business.address ?? ""}
+        initialClientPhone={pocPhone}
         initialWebsitePriceText={websiteQuote}
         initialInvoiceNotes=""
       />

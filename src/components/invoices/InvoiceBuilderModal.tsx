@@ -6,8 +6,13 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   apiClearLeadInvoiceDraft,
   apiConsumeInvoicePdfSlot,
+  apiCreateInvoiceShare,
   apiSaveLeadInvoiceDraft,
 } from "@/lib/invoice-api-client";
+import {
+  buildInvoiceSmsBody,
+  buildInvoiceSmsHref,
+} from "@/lib/invoice-sms";
 import { FREE_INVOICE_PDF_LIMIT } from "@/lib/entitlements";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import { downloadInvoicePdf, generateInvoicePdfBlob } from "@/lib/invoice-pdf";
@@ -51,6 +56,8 @@ type Props = {
   onInvoiceDraftSaved?: (draft: LeadInvoiceDraftV1 | null) => void;
   initialClientName: string;
   initialClientAddress: string;
+  /** Prefills SMS recipient when texting an invoice link (POC phone). */
+  initialClientPhone?: string;
   initialWebsitePriceText: string;
   /** Notes that appear on the invoice for the customer (NOT CRM lead notes). */
   initialInvoiceNotes: string;
@@ -79,6 +86,7 @@ export function InvoiceBuilderModal({
   onInvoiceDraftSaved,
   initialClientName,
   initialClientAddress,
+  initialClientPhone = "",
   initialWebsitePriceText,
   initialInvoiceNotes,
 }: Props) {
@@ -91,7 +99,10 @@ export function InvoiceBuilderModal({
   const [taxPercent, setTaxPercent] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [smsBusy, setSmsBusy] = useState(false);
   const [copyDone, setCopyDone] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [lastShareUrl, setLastShareUrl] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [senderBusinessName, setSenderBusinessName] = useState("");
   const [senderLogoDataUrl, setSenderLogoDataUrl] = useState<string | null>(null);
@@ -124,6 +135,9 @@ export function InvoiceBuilderModal({
 
     setErr(null);
     setCopyDone(false);
+    setLinkCopied(false);
+    setLastShareUrl(null);
+    setSmsBusy(false);
     const sender = loadInvoiceSenderTemplate();
     setSenderBusinessName(sender.businessName);
     setSenderLogoDataUrl(sender.logoDataUrl);
@@ -479,6 +493,73 @@ export function InvoiceBuilderModal({
     }
   }, [snapshot]);
 
+  const handleTextInvoiceLink = useCallback(async () => {
+    setErr(null);
+    if (!clientName.trim()) {
+      setErr("Add a client name before texting.");
+      return;
+    }
+    const hasAmount = lineItems.some((li) => li.description.trim() && li.amount > 0);
+    if (!lineItems.length || !hasAmount) {
+      setErr("Add at least one line item with a description and service price.");
+      return;
+    }
+    setSmsBusy(true);
+    try {
+      const snap = mergeLatestSavedPdfLook(snapshot);
+      const share = await apiCreateInvoiceShare({
+        leadId,
+        snapshot: snap,
+      });
+      setLastShareUrl(share.url);
+      const business =
+        snap.senderBusinessName?.trim() || defaultInvoiceCompanyName();
+      const body = buildInvoiceSmsBody({
+        businessName: business,
+        invoiceNumber: snap.invoiceNumber,
+        viewUrl: share.url,
+      });
+      const href = buildInvoiceSmsHref(initialClientPhone, body);
+      window.location.href = href;
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not create invoice link.");
+    } finally {
+      setSmsBusy(false);
+    }
+  }, [clientName, lineItems, snapshot, leadId, initialClientPhone]);
+
+  const handleCopyShareLink = useCallback(async () => {
+    setErr(null);
+    if (!clientName.trim()) {
+      setErr("Add a client name before sharing.");
+      return;
+    }
+    const hasAmount = lineItems.some((li) => li.description.trim() && li.amount > 0);
+    if (!lineItems.length || !hasAmount) {
+      setErr("Add at least one line item with a description and service price.");
+      return;
+    }
+    setSmsBusy(true);
+    try {
+      let url = lastShareUrl;
+      if (!url) {
+        const share = await apiCreateInvoiceShare({
+          leadId,
+          snapshot: mergeLatestSavedPdfLook(snapshot),
+        });
+        url = share.url;
+        setLastShareUrl(url);
+      }
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not copy invoice link.");
+    } finally {
+      setSmsBusy(false);
+    }
+  }, [clientName, lineItems, snapshot, leadId, lastShareUrl]);
+
   if (!open) return null;
 
   return (
@@ -826,6 +907,22 @@ export function InvoiceBuilderModal({
             </button>
             <button
               type="button"
+              onClick={() => void handleCopyShareLink()}
+              disabled={smsBusy}
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+            >
+              {linkCopied ? "Link copied!" : "Copy view link"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleTextInvoiceLink()}
+              disabled={smsBusy}
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-teal-600/30 bg-teal-50 px-4 text-sm font-semibold text-teal-900 shadow-sm hover:bg-teal-100 disabled:opacity-60 dark:border-teal-500/40 dark:bg-teal-950/50 dark:text-teal-100 dark:hover:bg-teal-900/60"
+            >
+              {smsBusy ? "Preparing…" : "Text invoice link"}
+            </button>
+            <button
+              type="button"
               onClick={() => void handleDownloadPdf()}
               disabled={pdfBusy}
               className="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
@@ -833,6 +930,12 @@ export function InvoiceBuilderModal({
               {pdfBusy ? "Building PDF…" : "Download PDF"}
             </button>
           </div>
+          <p className="mt-2 text-center text-[11px] leading-snug text-slate-500 dark:text-slate-400 sm:text-right">
+            Text opens your phone’s Messages app with a link they can open to view this invoice.
+            {!initialClientPhone.trim()
+              ? " Add a point-of-contact phone on the lead to prefill the recipient."
+              : null}
+          </p>
         </div>
       </div>
     </div>
