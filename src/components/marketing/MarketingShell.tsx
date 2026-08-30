@@ -118,6 +118,9 @@ export function MarketingShell({
             <Link href="/pricing" className="hover:underline">
               Pricing
             </Link>
+            <Link href="/#invoice-payments" className="hover:underline">
+              Invoice payments
+            </Link>
             <Link
               href="/contact"
               className="text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
