@@ -36,6 +36,7 @@ const fakeEvent = {
 vi.mock("@/lib/stripe", () => ({
   isStripeConfigured: () => true,
   stripeWebhookSecretResolved: () => "whsec_test",
+  stripeWebhookSecretsResolved: () => ["whsec_test"],
   getStripe: () => ({
     webhooks: {
       constructEvent: () => fakeEvent,
