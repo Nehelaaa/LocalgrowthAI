@@ -15,6 +15,17 @@ const order = (Object.keys(PROFESSIONS) as ProfessionId[]).sort(
   (a, b) => PROFESSIONS[a].order - PROFESSIONS[b].order
 );
 
+/** Short chip labels — full copy stays in PROFESSIONS for storage/display elsewhere. */
+const PROFESSION_CHIP: Record<ProfessionId, string> = {
+  web_agency: "Web / SEO",
+  real_estate: "Real estate",
+  trades: "Trades",
+  sales: "Sales",
+  freelance: "Freelance",
+  agency: "Agency",
+  other: "Other",
+};
+
 type Step = "profession" | "payments";
 
 export function OnboardingForm({
@@ -33,7 +44,9 @@ export function OnboardingForm({
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [step, setStep] = useState<Step>(
-    connectBanner === "return" || connectBanner === "refresh" ? "payments" : "profession"
+    connectBanner === "return" || connectBanner === "refresh"
+      ? "payments"
+      : "profession"
   );
   const [profession, setProfession] = useState(currentProfession ?? "");
   const [connectBusy, setConnectBusy] = useState(false);
@@ -52,6 +65,15 @@ export function OnboardingForm({
 
   function submitFinish() {
     formRef.current?.requestSubmit();
+  }
+
+  function continueFromProfession() {
+    if (isPro) {
+      setStep("payments");
+      return;
+    }
+    // Free users: finish after profession — get them to first search faster.
+    submitFinish();
   }
 
   async function startStripeConnect() {
@@ -78,12 +100,19 @@ export function OnboardingForm({
     }
   }
 
+  const showPaymentsStep = isPro || Boolean(connectBanner);
+
   return (
     <div className="mt-6">
-      <StepIndicator step={step} />
+      <StepIndicator step={step} showPayments={showPaymentsStep} />
 
-      {/* Always mounted so Finish can submit profession + honeypot */}
-      <form ref={formRef} action={action} className="sr-only" aria-hidden tabIndex={-1}>
+      <form
+        ref={formRef}
+        action={action}
+        className="sr-only"
+        aria-hidden
+        tabIndex={-1}
+      >
         <BotTrapFields />
         <input type="hidden" name="profession" value={profession} readOnly />
         <button type="submit">Finish</button>
@@ -96,31 +125,75 @@ export function OnboardingForm({
               What do you do?
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Optional — helps us understand your use case. You can change this later.
+              Optional — we tailor tips later. Tap one or skip.
             </p>
           </div>
-          <label className="block">
-            <span className="sr-only">Profession</span>
-            <select
-              value={profession}
-              onChange={(e) => setProfession(e.target.value)}
-              className="w-full min-h-[48px] appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Profession"
+          >
+            <button
+              type="button"
+              onClick={() => setProfession("")}
+              className={
+                "min-h-11 rounded-xl border px-3.5 py-2 text-sm font-medium transition touch-manipulation " +
+                (profession === ""
+                  ? "border-indigo-500 bg-indigo-50 text-indigo-900 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/50 dark:text-indigo-100"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500")
+              }
             >
-              <option value="">Skip for now</option>
-              {order.map((id) => (
-                <option key={id} value={id}>
-                  {PROFESSIONS[id].label}
-                </option>
-              ))}
-            </select>
-          </label>
+              Skip for now
+            </button>
+            {order.map((id) => {
+              const selected = profession === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setProfession(id)}
+                  title={PROFESSIONS[id].label}
+                  className={
+                    "min-h-11 rounded-xl border px-3.5 py-2 text-sm font-medium transition touch-manipulation " +
+                    (selected
+                      ? "border-indigo-500 bg-indigo-50 text-indigo-900 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/50 dark:text-indigo-100"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500")
+                  }
+                >
+                  {PROFESSION_CHIP[id]}
+                </button>
+              );
+            })}
+          </div>
+
+          {state?.error ? (
+            <p className="text-sm text-rose-600 dark:text-rose-400">{state.error}</p>
+          ) : null}
+
           <button
             type="button"
-            onClick={() => setStep("payments")}
-            className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-violet-500 hover:to-indigo-500 touch-manipulation"
+            disabled={pending}
+            onClick={continueFromProfession}
+            className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 touch-manipulation"
           >
-            Continue
+            {pending
+              ? "Saving…"
+              : isPro
+                ? "Continue"
+                : "Go to dashboard"}
           </button>
+
+          {!isPro ? (
+            <p className="text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              Next up: find local businesses. Invoice Pay now is on Pro — connect
+              Stripe anytime under Invoice payments after you upgrade.
+            </p>
+          ) : (
+            <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+              Next: optional Stripe Connect so clients can pay invoices.
+            </p>
+          )}
         </div>
       ) : (
         <div className="mt-6 space-y-5">
@@ -128,12 +201,13 @@ export function OnboardingForm({
             <p className="rounded-xl border border-teal-200 bg-teal-50 px-3.5 py-2.5 text-sm text-teal-900 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-100">
               {connectReady
                 ? "Stripe is connected — you’re ready to get paid on invoices."
-                : "Thanks — you can finish any remaining Stripe steps later under Invoice payments."}
+                : "Thanks — finish any remaining Stripe steps later under Invoice payments."}
             </p>
           ) : null}
           {connectBanner === "refresh" ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
-              That Stripe link expired. Try Connect again, or skip and set it up later.
+              That Stripe link expired. Try Connect again, or skip and set it up
+              later.
             </p>
           ) : null}
 
@@ -145,29 +219,28 @@ export function OnboardingForm({
               Get paid on invoices?
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-              Text a branded invoice from your CRM. On Pro, clients tap{" "}
-              <strong className="font-semibold text-slate-800 dark:text-slate-200">Pay</strong> on
-              the link — money goes to your Stripe account.
+              Share a branded invoice from a lead. Clients tap{" "}
+              <strong className="font-semibold text-slate-800 dark:text-slate-200">
+                Pay
+              </strong>{" "}
+              — funds go to your Stripe.
             </p>
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 to-white dark:border-slate-700 dark:from-slate-800/80 dark:to-slate-900">
-            <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-700/80">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                How it works
-              </p>
-            </div>
             <ul className="divide-y divide-slate-100 text-sm dark:divide-slate-800">
               {[
-                "Connect your Stripe (one-time setup)",
-                "Share or text an invoice from a lead",
-                "Client pays on the page — funds to you",
+                "Connect Stripe once",
+                "Text or share an invoice link",
+                "Client pays — money to you",
               ].map((label, i) => (
                 <li key={label} className="flex gap-3 px-4 py-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-xs font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-200">
                     {i + 1}
                   </span>
-                  <span className="text-slate-700 dark:text-slate-300">{label}</span>
+                  <span className="self-center text-slate-700 dark:text-slate-300">
+                    {label}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -196,7 +269,7 @@ export function OnboardingForm({
                   type="button"
                   disabled={connectBusy || pending}
                   onClick={() => void startStripeConnect()}
-                  className="w-full min-h-[48px] rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 touch-manipulation"
+                  className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 touch-manipulation"
                 >
                   {connectBusy ? "Opening Stripe…" : "Connect Stripe"}
                 </button>
@@ -210,24 +283,14 @@ export function OnboardingForm({
                 </button>
               </>
             ) : (
-              <>
-                <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-xs leading-relaxed text-slate-600 dark:bg-slate-800/60 dark:text-slate-400">
-                  <strong className="font-semibold text-slate-800 dark:text-slate-200">Pro</strong>{" "}
-                  unlocks Stripe Connect so clients can pay your invoices online. Connect anytime
-                  from Invoice payments after you upgrade.
-                </p>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={submitFinish}
-                  className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 touch-manipulation"
-                >
-                  {pending ? "Saving…" : "Continue to dashboard"}
-                </button>
-                <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-                  You can upgrade under Plan &amp; billing whenever you’re ready.
-                </p>
-              </>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={submitFinish}
+                className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 touch-manipulation"
+              >
+                {pending ? "Saving…" : "Continue to dashboard"}
+              </button>
             )}
           </div>
 
@@ -244,7 +307,23 @@ export function OnboardingForm({
   );
 }
 
-function StepIndicator({ step }: { step: Step }) {
+function StepIndicator({
+  step,
+  showPayments,
+}: {
+  step: Step;
+  showPayments: boolean;
+}) {
+  if (!showPayments) {
+    return (
+      <div className="flex items-center gap-2" aria-label="Onboarding progress">
+        <span className="flex h-8 flex-1 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white shadow-sm">
+          Welcome
+        </span>
+      </div>
+    );
+  }
+
   const onPayments = step === "payments";
   return (
     <div className="flex items-center gap-2" aria-label="Onboarding progress">

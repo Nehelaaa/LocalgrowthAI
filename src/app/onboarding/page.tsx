@@ -54,17 +54,20 @@ export default async function OnboardingPage({ searchParams }: Props) {
           Welcome to LocalLeadster
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-[15px] dark:text-slate-400">
-          Free includes{" "}
-          <span className="font-medium text-slate-800 dark:text-slate-200">{FREE_LEAD_LIMIT}</span>{" "}
-          lifetime leads and{" "}
+          Find local businesses, build a pipeline, and send invoices — free to
+          start.{" "}
           <span className="font-medium text-slate-800 dark:text-slate-200">
-            {FREE_SEARCHES_LIFETIME}
+            {FREE_LEAD_LIMIT} leads
           </span>{" "}
-          live searches. Pro adds unlimited leads,{" "}
+          and{" "}
           <span className="font-medium text-slate-800 dark:text-slate-200">
-            {PRO_SEARCHES_PER_DAY}
-          </span>
-          /day searches, and invoice Pay now via your Stripe.
+            {FREE_SEARCHES_LIFETIME} searches
+          </span>{" "}
+          included. Pro unlocks unlimited leads,{" "}
+          <span className="font-medium text-slate-800 dark:text-slate-200">
+            {PRO_SEARCHES_PER_DAY}/day
+          </span>{" "}
+          searches, and invoice Pay now.
         </p>
         <OnboardingForm
           currentProfession={fresh.profession}

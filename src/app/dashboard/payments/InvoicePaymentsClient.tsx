@@ -155,7 +155,7 @@ export function InvoicePaymentsClient({
           {status === "not_pro" ? (
             <Link
               href="/dashboard/plan"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white hover:bg-indigo-500"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:from-violet-500 hover:to-indigo-500"
             >
               Upgrade to Pro
             </Link>
@@ -165,7 +165,7 @@ export function InvoicePaymentsClient({
                 type="button"
                 disabled={Boolean(busy) || data?.configured === false}
                 onClick={() => void postAction("onboard")}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 text-sm font-semibold text-white shadow-sm hover:from-violet-500 hover:to-indigo-500 disabled:opacity-60"
               >
                 {busy === "onboard"
                   ? "Opening Stripe…"
@@ -176,14 +176,22 @@ export function InvoicePaymentsClient({
                       : "Continue Stripe setup"}
               </button>
               {ready ? (
-                <button
-                  type="button"
-                  disabled={Boolean(busy)}
-                  onClick={() => void postAction("dashboard")}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                >
-                  {busy === "dashboard" ? "Opening…" : "Open Stripe payouts"}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    disabled={Boolean(busy)}
+                    onClick={() => void postAction("dashboard")}
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  >
+                    {busy === "dashboard" ? "Opening…" : "Open Stripe payouts"}
+                  </button>
+                  <Link
+                    href="/dashboard/leads"
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-teal-200 bg-teal-50 px-5 text-sm font-semibold text-teal-900 hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-100 dark:hover:bg-teal-950/60"
+                  >
+                    Share an invoice from a lead
+                  </Link>
+                </>
               ) : null}
               {data?.status && data.status !== "not_connected" ? (
                 <button
@@ -206,6 +214,13 @@ export function InvoicePaymentsClient({
             </>
           )}
         </div>
+
+        {ready ? (
+          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+            Tip: open a lead → create invoice → Text link / Copy view link. Pay appears when
+            the share is payable.
+          </p>
+        ) : null}
 
         {data?.configured === false ? (
           <p className="mt-4 text-sm text-amber-700 dark:text-amber-300">

@@ -250,8 +250,16 @@ function RecentLeadsTable({ leads }: { leads: DashboardLeadRow[] }) {
       </div>
 
       {leads.length === 0 ? (
-        <div className="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-          No active leads yet. Search for local businesses to get started.
+        <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            No active leads yet — search your city to fill the pipeline.
+          </p>
+          <Link
+            href="/dashboard/search"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 dark:bg-violet-500 dark:hover:bg-violet-400"
+          >
+            Find businesses
+          </Link>
         </div>
       ) : (
         <>
@@ -393,9 +401,17 @@ function TodaysFollowUps({ items }: { items: DashboardMetrics["todayFollowUps"] 
   return (
     <SidebarPanel title="Today's follow-ups" subtitle="Due today">
       {items.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nothing scheduled for today. Set follow-up dates on your leads.
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Nothing due today. Set a follow-up date on a lead when you call.
+          </p>
+          <Link
+            href="/dashboard/leads"
+            className="inline-flex text-xs font-semibold text-violet-600 hover:text-violet-500 dark:text-violet-400"
+          >
+            Open pipeline →
+          </Link>
+        </div>
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
@@ -404,10 +420,8 @@ function TodaysFollowUps({ items }: { items: DashboardMetrics["todayFollowUps"] 
                 href={`/dashboard/leads?search=${encodeURIComponent(item.businessName)}`}
                 className="flex items-start gap-2.5 rounded-lg px-2 py-2 transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
               >
-                <input
-                  type="checkbox"
-                  readOnly
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600"
+                <span
+                  className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-violet-500"
                   aria-hidden
                 />
                 <span className="min-w-0 flex-1">
@@ -586,6 +600,93 @@ function QuickLinks({ metrics }: { metrics: DashboardMetrics }) {
   );
 }
 
+function GettingStarted({
+  userName,
+}: {
+  userName: string;
+}) {
+  const steps = [
+    {
+      n: "1",
+      title: "Find local businesses",
+      body: "Search a city and trade — ranked leads with scores and signals.",
+      href: "/dashboard/search",
+      cta: "Open search",
+      primary: true,
+    },
+    {
+      n: "2",
+      title: "Save leads to your pipeline",
+      body: "Add from search or create one manually when you already know the name.",
+      href: "/dashboard/leads",
+      cta: "View pipeline",
+      primary: false,
+    },
+    {
+      n: "3",
+      title: "Invoice branding (optional)",
+      body: "Logo and sender details for PDFs and share links.",
+      href: "/dashboard/invoice-templates",
+      cta: "Set branding",
+      primary: false,
+    },
+  ] as const;
+
+  return (
+    <section
+      className={`${panel} overflow-hidden lg-dashboard-card-in`}
+      aria-labelledby="getting-started-heading"
+    >
+      <div className="relative border-b border-slate-100 bg-gradient-to-br from-violet-50/90 via-white to-indigo-50/60 px-5 py-6 dark:border-slate-800 dark:from-violet-950/40 dark:via-slate-900 dark:to-indigo-950/30 sm:px-6">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-700 dark:text-violet-300">
+          Getting started
+        </p>
+        <h2
+          id="getting-started-heading"
+          className="mt-1.5 text-lg font-semibold tracking-tight text-slate-900 dark:text-white sm:text-xl"
+        >
+          {greeting()}, {userName} — let’s find your first leads
+        </h2>
+        <p className="mt-1.5 max-w-xl text-sm text-slate-600 dark:text-slate-400">
+          Three quick steps. Start with search — everything else builds from there.
+        </p>
+      </div>
+      <ol className="divide-y divide-slate-100 dark:divide-slate-800">
+        {steps.map((s) => (
+          <li
+            key={s.n}
+            className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+          >
+            <div className="flex min-w-0 gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-xs font-bold text-violet-800 dark:bg-violet-950 dark:text-violet-200">
+                {s.n}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {s.title}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  {s.body}
+                </p>
+              </div>
+            </div>
+            <Link
+              href={s.href}
+              className={
+                s.primary
+                  ? "inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 dark:bg-violet-500 dark:hover:bg-violet-400"
+                  : "inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              }
+            >
+              {s.cta}
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function DashboardOverview({
   userName,
   metrics,
@@ -593,54 +694,69 @@ export function DashboardOverview({
   userName: string;
   metrics: DashboardMetrics;
 }) {
+  const isFirstRun = metrics.activeLeads === 0;
+
   return (
-    <div className="w-full min-w-0 max-w-7xl space-y-6 overflow-x-hidden pb-8">
-      {/* Header */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-xl">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.75rem] dark:text-white">
-            {greeting()}, {userName}
-          </h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            Here&apos;s what needs attention in your pipeline today.
-          </p>
-        </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
-          <Link
-            href="/dashboard/search"
-            className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 sm:w-auto dark:bg-violet-500 dark:hover:bg-violet-400"
-          >
-            Find New Businesses
-          </Link>
-          <AddManualLeadDialog
-            variant="secondary"
-            triggerLabel="Add Lead"
-            triggerClassName="min-h-[44px] w-full sm:w-auto"
+    <div className="w-full min-w-0 max-w-7xl space-y-6 overflow-x-hidden pb-8 lg-dashboard-fade-in">
+      {isFirstRun ? (
+        <>
+          <GettingStarted userName={userName} />
+          <div className="flex flex-wrap gap-2">
+            <AddManualLeadDialog
+              variant="secondary"
+              triggerLabel="Add a lead manually"
+              triggerClassName="min-h-[44px]"
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="max-w-xl">
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.75rem] dark:text-white">
+                {greeting()}, {userName}
+              </h1>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                Here&apos;s what needs attention in your pipeline today.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+              <Link
+                href="/dashboard/search"
+                className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-500 sm:w-auto dark:bg-violet-500 dark:hover:bg-violet-400"
+              >
+                Find New Businesses
+              </Link>
+              <AddManualLeadDialog
+                variant="secondary"
+                triggerLabel="Add Lead"
+                triggerClassName="min-h-[44px] w-full sm:w-auto"
+              />
+            </div>
+          </header>
+
+          <SummaryStrip metrics={metrics} />
+          <QuickLinks metrics={metrics} />
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="min-w-0 space-y-6">
+              <LeadFunnel metrics={metrics} />
+              <RecentLeadsTable leads={metrics.recentLeads} />
+            </div>
+            <aside className="min-w-0 space-y-4">
+              <TodaysFollowUps items={metrics.todayFollowUps} />
+              <HotLeadsList leads={metrics.hotLeadsList} />
+              <RecentActivity items={metrics.recentActivity} />
+            </aside>
+          </div>
+
+          <LeadMap
+            cities={metrics.mapCities}
+            cityPins={metrics.mapCityPins}
+            mapStats={metrics.mapStats}
           />
-        </div>
-      </header>
-
-      {/* Summary strip */}
-      <SummaryStrip metrics={metrics} />
-
-      {/* Quick links — preserve secondary metrics access */}
-      <QuickLinks metrics={metrics} />
-
-      {/* Main 2-column layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="min-w-0 space-y-6">
-          <LeadFunnel metrics={metrics} />
-          <RecentLeadsTable leads={metrics.recentLeads} />
-        </div>
-        <aside className="min-w-0 space-y-4">
-          <TodaysFollowUps items={metrics.todayFollowUps} />
-          <HotLeadsList leads={metrics.hotLeadsList} />
-          <RecentActivity items={metrics.recentActivity} />
-        </aside>
-      </div>
-
-      {/* Lead map */}
-      <LeadMap cities={metrics.mapCities} cityPins={metrics.mapCityPins} mapStats={metrics.mapStats} />
+        </>
+      )}
     </div>
   );
 }

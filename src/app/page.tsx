@@ -17,6 +17,14 @@ import { ProductMockup } from "@/components/marketing/ProductMockup";
 import { SolutionsSection } from "@/components/marketing/SolutionsSection";
 import { StatsStrip } from "@/components/marketing/StatsStrip";
 import { MarketingInvoicePaymentsSection } from "@/components/marketing/MarketingInvoicePaymentsSection";
+import {
+  IconBolt,
+  IconGlobe,
+  IconPhone,
+  IconSpark,
+  IconStack,
+  IconTarget,
+} from "@/components/marketing/MarketingSectionIcons";
 import { marketingFaqs } from "@/lib/marketing/faq";
 import { faqJsonLd, homeJsonLd, homeMetadata } from "@/lib/seo/jsonld";
 
@@ -26,32 +34,32 @@ const FEATURE_CARDS = [
   {
     t: "Places-powered territory runs",
     d: "City, radius, and trade — a ranked local list without another night of Map tabs.",
-    icon: "🗺️",
+    Icon: IconTarget,
   },
   {
     t: "Signals & smart filters",
     d: "Stack rules and presets so qualification isn’t guesswork.",
-    icon: "🎯",
+    Icon: IconBolt,
   },
   {
     t: "One-click demo websites",
     d: "Generate a niche-matched live mockup from a saved lead and share the URL in your pitch.",
-    icon: "🌐",
+    Icon: IconGlobe,
   },
   {
     t: "Outreach-ready pipeline",
     d: "Pipeline stages, clear next actions, and follow-up dates on each lead — your call sheet stays current in one workspace.",
-    icon: "📋",
+    Icon: IconStack,
   },
   {
     t: "Text & share invoices",
     d: "Branded PDFs plus a private view link — open Messages with a prefilled SMS so clients can open the invoice instantly.",
-    icon: "💬",
+    Icon: IconPhone,
   },
   {
     t: "Get paid on the same link",
     d: "Pro: connect your Stripe. Clients tap Pay on the shared invoice — funds go to your Stripe account.",
-    icon: "💳",
+    Icon: IconSpark,
   },
 ] as const;
 
@@ -165,13 +173,15 @@ export default function HomePage() {
               {FEATURE_CARDS.map((f) => (
                 <li
                   key={f.t}
-                  className="group flex flex-col rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800/80 dark:bg-slate-900/50"
+                  className="group flex flex-col rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200/80 hover:shadow-md dark:border-slate-800/80 dark:bg-slate-900/50 dark:hover:border-indigo-500/30"
                 >
-                  <span className="text-2xl" role="img" aria-hidden>
-                    {f.icon}
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 transition group-hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:group-hover:bg-indigo-950">
+                    <f.Icon className="h-5 w-5" />
                   </span>
-                  <strong className="mt-2 text-slate-900 dark:text-white">{f.t}</strong>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{f.d}</p>
+                  <strong className="mt-4 text-slate-900 dark:text-white">{f.t}</strong>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                    {f.d}
+                  </p>
                 </li>
               ))}
             </ul>
