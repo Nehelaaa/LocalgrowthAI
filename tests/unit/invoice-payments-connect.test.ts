@@ -116,6 +116,25 @@ describe("stripe connect entitlements", () => {
   });
 });
 
+describe("Managed Risk account flag", () => {
+  it("defaults off so production stays on classic Express", async () => {
+    const prev = process.env.STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS;
+    delete process.env.STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS;
+    const { connectManagedRiskAccountsEnabled } = await import(
+      "@/lib/stripe-connect-managed-risk"
+    );
+    expect(connectManagedRiskAccountsEnabled()).toBe(false);
+    process.env.STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS = "1";
+    expect(connectManagedRiskAccountsEnabled()).toBe(true);
+    process.env.STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS = "true";
+    expect(connectManagedRiskAccountsEnabled()).toBe(true);
+    process.env.STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS = "0";
+    expect(connectManagedRiskAccountsEnabled()).toBe(false);
+    if (prev === undefined) delete process.env.STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS;
+    else process.env.STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS = prev;
+  });
+});
+
 describe("invoice SMS with payments", () => {
   it("mentions pay when enabled", () => {
     const body = buildInvoiceSmsBody({

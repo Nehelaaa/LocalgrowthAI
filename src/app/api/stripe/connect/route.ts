@@ -11,7 +11,7 @@ import {
   createConnectAccountOnboardingLink,
   createConnectExpressDashboardLink,
   disconnectConnectAccount,
-  ensureConnectExpressAccount,
+  ensureConnectAccountForUser,
   syncConnectAccountFromStripe,
 } from "@/lib/stripe-connect";
 import { stripeIntegrationPublicError } from "@/lib/stripe-integration-error";
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     const u = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
-    const accountId = await ensureConnectExpressAccount(u);
+    const accountId = await ensureConnectAccountForUser(u);
     const origin = appOrigin(request);
     const basePath = returnToOnboarding ? "/onboarding" : "/dashboard/payments";
     const url = await createConnectAccountOnboardingLink({

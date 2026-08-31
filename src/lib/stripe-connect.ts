@@ -11,6 +11,10 @@ import {
   invoiceShareCheckoutMatchesShare,
 } from "@/lib/invoice-checkout-security";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import {
+  STRIPE_CONNECT_MANAGED_RISK_PREVIEW_API_VERSION,
+  connectManagedRiskAccountsEnabled,
+} from "@/lib/stripe-connect-managed-risk";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceSnapshotShareSchema, toPublicInvoiceSnapshot } from "@/lib/invoice-share";
@@ -19,6 +23,11 @@ export {
   invoiceShareCheckoutLooksPaid,
   invoiceShareCheckoutMatchesShare,
 } from "@/lib/invoice-checkout-security";
+
+export {
+  STRIPE_CONNECT_MANAGED_RISK_PREVIEW_API_VERSION,
+  connectManagedRiskAccountsEnabled,
+} from "@/lib/stripe-connect-managed-risk";
 
 export function connectCountryCode(): string {
   const c = process.env.STRIPE_CONNECT_DEFAULT_COUNTRY?.trim().toUpperCase();
@@ -103,6 +112,76 @@ export async function ensureConnectExpressAccount(user: User): Promise<string> {
   const flags = flagsFromStripeAccount(account);
   await persistConnectAccountFlags(user.id, account.id, flags);
   return account.id;
+}
+
+/**
+ * Create a new Express-dashboard connected account with Stripe-borne liability
+ * (Managed Risk). Does not migrate existing accounts — callers must only use this
+ * when the user has no stripeConnectAccountId yet.
+ */
+export async function ensureConnectExpressAccountV2(user: User): Promise<string> {
+  if (!canUseStripeConnect(user)) {
+    throw new Error("PRO_REQUIRED");
+  }
+  if (!isStripeConfigured()) {
+    throw new Error("STRIPE_NOT_CONFIGURED");
+  }
+  if (user.stripeConnectAccountId) {
+    return user.stripeConnectAccountId;
+  }
+
+  const stripe = getStripe();
+  // Managed Risk + Express Dashboard is public preview — pin preview API on this
+  // create only (do not change the app-wide Stripe client / webhook version).
+  // https://docs.stripe.com/connect/risk-management/managed-risk
+  // Before enabling STRIPE_CONNECT_MANAGED_RISK_ACCOUNTS in production, re-check
+  // that page: if Express+Stripe-losses graduated to a stable API version, update
+  // STRIPE_CONNECT_MANAGED_RISK_PREVIEW_API_VERSION (or drop the override).
+  const account = await stripe.accounts.create(
+    {
+      country: connectCountryCode(),
+      email: user.email,
+      controller: {
+        stripe_dashboard: { type: "express" },
+        losses: { payments: "stripe" },
+        requirement_collection: "stripe",
+        fees: { payer: "application" },
+      },
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      business_type: "individual",
+      metadata: {
+        platformUserId: user.id,
+        connectAccountCreation: "managed_risk_v2",
+      },
+    },
+    {
+      apiVersion: STRIPE_CONNECT_MANAGED_RISK_PREVIEW_API_VERSION,
+    }
+  );
+
+  const losses = account.controller?.losses?.payments;
+  if (losses !== "stripe") {
+    console.error(
+      "[stripe-connect] Managed Risk create returned unexpected losses.payments",
+      { accountId: account.id, losses }
+    );
+    throw new Error("MANAGED_RISK_LOSSES_NOT_STRIPE");
+  }
+
+  const flags = flagsFromStripeAccount(account);
+  await persistConnectAccountFlags(user.id, account.id, flags);
+  return account.id;
+}
+
+/** Pick classic Express vs Managed Risk V2 based on env flag (default classic). */
+export async function ensureConnectAccountForUser(user: User): Promise<string> {
+  if (connectManagedRiskAccountsEnabled()) {
+    return ensureConnectExpressAccountV2(user);
+  }
+  return ensureConnectExpressAccount(user);
 }
 
 export async function createConnectAccountOnboardingLink(opts: {
