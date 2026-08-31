@@ -47,7 +47,8 @@ export function PublicInvoicePayPanel({
     }
   }
 
-  if (status === "paid" || queryPaid) {
+  // Only trust DB status for "Paid" — ?paid=1 alone must not spoof a payment.
+  if (status === "paid") {
     return (
       <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-center dark:border-emerald-800/60 dark:bg-emerald-950/40">
         <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
@@ -55,6 +56,19 @@ export function PublicInvoicePayPanel({
         </p>
         <p className="mt-1 text-xs text-emerald-800/80 dark:text-emerald-200/80">
           Thank you — this invoice has been marked paid.
+        </p>
+      </div>
+    );
+  }
+
+  if (queryPaid && status === "unpaid") {
+    return (
+      <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center dark:border-slate-700 dark:bg-slate-900">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+          Confirming payment…
+        </p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Refresh in a moment if this doesn’t update automatically.
         </p>
       </div>
     );

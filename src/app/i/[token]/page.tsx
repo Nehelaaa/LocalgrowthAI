@@ -37,6 +37,7 @@ export default async function PublicInvoicePage({ params, searchParams }: Props)
   const sp = await searchParams;
 
   // After Checkout return, confirm payment even if the webhook is slightly late.
+  // Bind session metadata to this URL token — never mark paid from ?paid=1 alone.
   if (sp.paid === "1" && sp.session_id && isStripeConfigured()) {
     try {
       const shareRow = await prisma.invoiceShare.findUnique({
@@ -52,9 +53,7 @@ export default async function PublicInvoicePage({ params, searchParams }: Props)
         const session = await stripe.checkout.sessions.retrieve(sp.session_id, undefined, {
           stripeAccount: accountId,
         });
-        if (session.payment_status === "paid" || session.status === "complete") {
-          await markInvoiceSharePaidFromCheckout(session);
-        }
+        await markInvoiceSharePaidFromCheckout(session, { expectedToken: token });
       }
     } catch (e) {
       console.error("[public invoice] confirm paid session", e);

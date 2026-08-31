@@ -6,10 +6,19 @@ import {
   canUseStripeConnect,
 } from "@/lib/stripe-connect-entitlements";
 import { connectApplicationFeeCents, canOfferInvoiceCheckout } from "@/lib/invoice-payment-money";
+import {
+  invoiceShareCheckoutLooksPaid,
+  invoiceShareCheckoutMatchesShare,
+} from "@/lib/invoice-checkout-security";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { defaultInvoiceCompanyName } from "@/lib/invoice-branding";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
 import { invoiceSnapshotShareSchema, toPublicInvoiceSnapshot } from "@/lib/invoice-share";
+
+export {
+  invoiceShareCheckoutLooksPaid,
+  invoiceShareCheckoutMatchesShare,
+} from "@/lib/invoice-checkout-security";
 
 export function connectCountryCode(): string {
   const c = process.env.STRIPE_CONNECT_DEFAULT_COUNTRY?.trim().toUpperCase();
@@ -275,15 +284,18 @@ export async function createInvoiceShareCheckoutSession(opts: {
 }
 
 export async function markInvoiceSharePaidFromCheckout(
-  session: Stripe.Checkout.Session
+  session: Stripe.Checkout.Session,
+  opts?: { expectedToken?: string }
 ): Promise<{ shareId: string; userId: string } | null> {
+  if (!invoiceShareCheckoutLooksPaid(session)) return null;
+
   const token = session.metadata?.invoiceShareToken?.trim();
   const shareId = session.metadata?.invoiceShareId?.trim();
-  const kind = session.metadata?.kind;
+  const kind = session.metadata?.kind?.trim();
 
-  if (kind !== "invoice_share_payment" && !token && !shareId) {
-    return null;
-  }
+  if (kind && kind !== "invoice_share_payment") return null;
+  if (!token && !shareId) return null;
+  if (opts?.expectedToken && token !== opts.expectedToken) return null;
 
   const share = shareId
     ? await prisma.invoiceShare.findUnique({ where: { id: shareId } })
@@ -292,6 +304,15 @@ export async function markInvoiceSharePaidFromCheckout(
       : null;
 
   if (!share) return null;
+  if (!invoiceShareCheckoutMatchesShare(session, share, opts)) return null;
+
+  // Already paid — idempotent success.
+  if (share.paymentStatus === "paid") {
+    return { shareId: share.id, userId: share.userId };
+  }
+  // Do not resurrect refunded invoices from a stale checkout return.
+  if (share.paymentStatus === "refunded") return null;
+  if (share.paymentStatus !== "unpaid") return null;
 
   const pi =
     typeof session.payment_intent === "string"

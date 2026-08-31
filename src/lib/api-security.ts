@@ -1,65 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
-
-function parseExtraOrigins(raw: string | undefined): string[] {
-  if (!raw?.trim()) return [];
-  return raw.split(",").map((s) => s.trim()).filter(Boolean);
-}
-
-/** Apex and www are treated as the same site for CSRF checks (common production mismatch). */
-function wwwHostnameVariants(hostname: string): string[] {
-  if (hostname === "localhost" || hostname === "127.0.0.1") return [hostname];
-  if (/^[0-9.]+$/.test(hostname) || hostname.includes(":")) return [hostname];
-  if (hostname.startsWith("www.")) return [hostname, hostname.slice(4)];
-  return [hostname, `www.${hostname}`];
-}
-
-function originsFromBase(origin: string): string[] {
-  try {
-    const u = new URL(origin);
-    const out = new Set<string>();
-    for (const h of wwwHostnameVariants(u.hostname)) {
-      const nu = new URL(origin);
-      nu.hostname = h;
-      out.add(nu.origin);
-    }
-    return [...out];
-  } catch {
-    return [];
-  }
-}
-
-function tryParseOrigin(raw: string): string | null {
-  const s = raw.trim();
-  if (!s) return null;
-  try {
-    return new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`).origin;
-  } catch {
-    return null;
-  }
-}
+import { collectAllowedOrigins, decideSameOrigin } from "@/lib/same-origin";
 
 /**
  * Origins allowed to POST to same-origin JSON APIs (checkout, portal, etc.).
  * Includes the host this request hit, AUTH_URL, optional ALLOWED_ORIGINS, and www/apex pairs.
  */
 export function allowedRequestOrigins(request: NextRequest): Set<string> {
-  const allowed = new Set<string>();
-  const add = (base: string) => {
-    for (const o of originsFromBase(base)) allowed.add(o);
-  };
-  add(request.nextUrl.origin);
-  const auth = process.env.AUTH_URL?.trim();
-  if (auth) {
-    const o = tryParseOrigin(auth);
-    if (o) add(o);
-  }
-  for (const extra of parseExtraOrigins(process.env.ALLOWED_ORIGINS)) {
-    const o = tryParseOrigin(extra);
-    if (o) add(o);
-  }
-  return allowed;
+  return collectAllowedOrigins({
+    requestOrigin: request.nextUrl.origin,
+    authUrl: process.env.AUTH_URL,
+    allowedOriginsEnv: process.env.ALLOWED_ORIGINS,
+  });
 }
 
 export function rateLimitOr429(request: Request, scope: string) {
@@ -84,13 +37,22 @@ export async function requireSessionOr401() {
 
 /**
  * Basic CSRF protection for same-origin JSON POST routes.
- * - Skips if no Origin header is present (some server-to-server clients).
+ * - Allows when Origin is an allowed app origin.
+ * - Rejects cross-site Sec-Fetch-Site when Origin is absent.
+ * - Falls back to Referer origin when Origin is absent (older clients).
+ * - Still allows Origin+Referer-less requests (curl/server) so local scripts work.
  * - Stripe webhooks should not call this.
  */
 export function enforceSameOrigin(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  if (!origin) return null;
-  if (!allowedRequestOrigins(request).has(origin)) {
+  const decision = decideSameOrigin({
+    requestOrigin: request.nextUrl.origin,
+    originHeader: request.headers.get("origin"),
+    refererHeader: request.headers.get("referer"),
+    secFetchSite: request.headers.get("sec-fetch-site"),
+    authUrl: process.env.AUTH_URL,
+    allowedOriginsEnv: process.env.ALLOWED_ORIGINS,
+  });
+  if (decision === "deny") {
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   }
   return null;
@@ -99,4 +61,3 @@ export function enforceSameOrigin(request: NextRequest) {
 export function safeErrorMessage(): string {
   return "Request failed";
 }
-

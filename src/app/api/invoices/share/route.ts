@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { enforceSameOrigin, safeErrorMessage } from "@/lib/api-security";
+import {
+  enforceSameOrigin,
+  rateLimitOr429,
+  safeErrorMessage,
+} from "@/lib/api-security";
 import {
   createInvoiceShareForUser,
   invoiceSnapshotShareSchema,
@@ -16,6 +20,8 @@ export async function POST(request: NextRequest) {
   try {
     const originErr = enforceSameOrigin(request);
     if (originErr) return originErr;
+    const rl = rateLimitOr429(request, "invoice_share");
+    if (rl) return rl;
 
     const user = await requireUserForAction();
     const json = await request.json().catch(() => null);

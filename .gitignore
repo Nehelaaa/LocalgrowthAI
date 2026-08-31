@@ -49,3 +49,7 @@ next-env.d.ts
 test-results/
 playwright-report/
 
+# local scratch / generated previews
+.tmp-*
+.tmp-demo-preview.html
+
