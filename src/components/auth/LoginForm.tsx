@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   loginWithCredentials,
   type LoginCredentialsState,
 } from "@/actions/login-credentials";
+import { INVALID_CREDENTIALS } from "@/lib/auth-messages";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { GoogleSetupHint } from "./GoogleSetupHint";
 
@@ -49,6 +50,12 @@ export function LoginForm({
   );
   const router = useRouter();
   const searchParams = useSearchParams();
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  // A rejected attempt should land the cursor on the field they need to retype.
+  useEffect(() => {
+    if (state?.error) passwordRef.current?.focus();
+  }, [state]);
 
   const oauthMsg = oauthUrlErrorMessage(authError);
 
@@ -83,13 +90,46 @@ export function LoginForm({
       <form className="space-y-4" action={formAction}>
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
         {state?.error && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {state.error === "Invalid email or password."
-              ? hasGoogle
-                ? "Check email and password, or use Continue with Google below if that’s how you signed up."
-                : "Check your email and password. To use Google, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file."
-              : state.error}
-          </p>
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="flex gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 dark:border-rose-900/60 dark:bg-rose-950/40"
+          >
+            <svg
+              className="mt-0.5 h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-11a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 7Zm0 7.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div className="text-sm text-rose-800 dark:text-rose-200">
+              {state.error === INVALID_CREDENTIALS ? (
+                <>
+                  <p className="font-semibold">Incorrect email or password</p>
+                  <p className="mt-0.5 leading-relaxed">
+                    Double-check both and try again
+                    {hasGoogle
+                      ? ", or use Continue with Google if that’s how you signed up."
+                      : "."}{" "}
+                    <Link
+                      href="/forgot-password"
+                      className="font-medium underline underline-offset-2"
+                    >
+                      Reset your password
+                    </Link>
+                    .
+                  </p>
+                </>
+              ) : (
+                <p>{state.error}</p>
+              )}
+            </div>
+          </div>
         )}
         <div>
           <label
@@ -108,6 +148,9 @@ export function LoginForm({
             spellCheck={false}
             inputMode="email"
             required
+            defaultValue={state?.email ?? ""}
+            key={state?.email ?? "empty"}
+            aria-invalid={state?.error ? true : undefined}
             className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />
         </div>
@@ -132,13 +175,15 @@ export function LoginForm({
             type="password"
             autoComplete="current-password"
             required
+            ref={passwordRef}
+            aria-invalid={state?.error ? true : undefined}
             className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
           />
         </div>
         <button
           type="submit"
           disabled={pending}
-          className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2.5 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50"
+          className="lg-btn lg-btn-primary w-full"
         >
           {pending ? "Signing in…" : "Sign in with email"}
         </button>

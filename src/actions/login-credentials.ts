@@ -1,10 +1,16 @@
 "use server";
 
+import { AuthError } from "next-auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
+import { INVALID_CREDENTIALS, SIGN_IN_FAILED } from "@/lib/auth-messages";
 
-export type LoginCredentialsState = { error?: string };
+export type LoginCredentialsState = {
+  error?: string;
+  /** Echoed back so a failed attempt doesn't make the user retype their email. */
+  email?: string;
+};
 
 async function requestOrigin(): Promise<string> {
   const h = await headers();
@@ -45,30 +51,43 @@ export async function loginWithCredentials(
       ? rawCb
       : "/auth/continue?next=" + encodeURIComponent("/dashboard");
 
-  const nextUrl = await signIn("credentials", {
-    email,
-    password,
-    redirectTo,
-    redirect: false,
-  });
+  let nextUrl: unknown;
+  try {
+    nextUrl = await signIn("credentials", {
+      email,
+      password,
+      redirectTo,
+      redirect: false,
+    });
+  } catch (e) {
+    // Auth.js throws CredentialsSignin when `authorize` returns null. Uncaught, it
+    // escapes the Server Action and Next renders a 500 error page instead of the
+    // form — so a wrong password looked like the site had crashed.
+    if (e instanceof AuthError) {
+      return e.type === "CredentialsSignin"
+        ? { error: INVALID_CREDENTIALS, email }
+        : { error: SIGN_IN_FAILED, email };
+    }
+    throw e;
+  }
 
   if (typeof nextUrl !== "string") {
-    return { error: "Sign-in failed." };
+    return { error: SIGN_IN_FAILED, email };
   }
 
   const origin = await requestOrigin();
   const path = pathWithQueryFromUrl(nextUrl, origin);
   if (!path) {
-    return { error: "Sign-in failed." };
+    return { error: SIGN_IN_FAILED, email };
   }
 
   try {
     const u = new URL(path, origin);
     if (u.searchParams.get("error")) {
-      return { error: "Invalid email or password." };
+      return { error: INVALID_CREDENTIALS, email };
     }
   } catch {
-    return { error: "Sign-in failed." };
+    return { error: SIGN_IN_FAILED, email };
   }
 
   redirect(path);
