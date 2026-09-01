@@ -119,6 +119,13 @@ export function PricingSection() {
               </li>
               <li className="flex gap-3">
                 <CheckIcon />
+                <span>
+                  <strong className="text-slate-900 dark:text-white">Demo websites:</strong> one
+                  click on a lead builds a live, niche-matched mockup site you can text them
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <CheckIcon />
                 <span>Everything in Free, including invoice builder, SMS share links &amp; search presets</span>
               </li>
               <li className="flex gap-3">

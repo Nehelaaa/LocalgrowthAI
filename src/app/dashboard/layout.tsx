@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
 import { StarterLimitOverlay } from "@/components/dashboard/StarterLimitOverlay";
+import { SupportBubble } from "@/components/dashboard/SupportBubble";
 import { InvoiceSenderHydrator } from "@/components/invoices/InvoiceSenderHydrator";
 import { prisma } from "@/lib/db";
 import { parseInvoiceSenderTemplate } from "@/lib/invoice-sender-template";
@@ -80,6 +81,7 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
+      <SupportBubble />
     </div>
   );
 }

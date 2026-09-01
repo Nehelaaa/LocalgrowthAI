@@ -76,6 +76,22 @@ export function expandTemplateBrandPhrases(templateBrandName: string): string[] 
     phrases.add(`${words.slice(0, 2).join(" ")} Shop`);
   }
 
+  // Any contiguous run of the brand name is still the brand ("Amora Leah" from
+  // "Amora Leah Salon"). Without these, replacing only the first word leaves a
+  // hybrid like "Bella Hair Leah" — and words parked in GENERIC_BRAND_WORDS to
+  // stop over-eager single-word swaps would never be cleaned up at all.
+  // Only prefixes of the brand name: "Amora Leah" from "Amora Leah Salon".
+  // Trailing runs like "Salon & Spa" are ordinary copy on a salon page and
+  // must never be swapped for the lead's name.
+  if (!isGenericBrandWord(first)) {
+    for (let end = 2; end < words.length; end++) {
+      const run = words.slice(0, end);
+      if (run.every((w) => /[a-z]/i.test(w))) {
+        phrases.add(run.join(" "));
+      }
+    }
+  }
+
   if (first.length >= 4 && !isGenericBrandWord(first)) {
     phrases.add(first);
     const possessive = first.endsWith("s") ? `${first}'` : `${first}'s`;
@@ -368,5 +384,129 @@ export function personalizeTemplateBranding(
   out = personalizeHeroHeading(out, name, templateBrandName);
   out = personalizeSvgWordmarks(out, name, templateBrandName);
   out = replaceTemplateBrandPhrases(out, templateBrandName, name, short);
+  // Last: contact details, so brand-phrase swaps can't reintroduce a source address.
+  out = replaceSourceContactDetails(out, vars);
   return out;
+}
+
+/**
+ * Contact details baked into the source templates as literals rather than
+ * `{{placeholders}}`. Without this pass a demo built for an Austin salon still
+ * shows the source studio's Massachusetts address, phone and socials — the
+ * single most damaging thing to leave on a page a user texts to a prospect.
+ *
+ * Ordered longest-first so a full address is consumed before its street half.
+ */
+const SOURCE_CONTACT_LITERALS: { find: string; replaceWith: keyof DemoTemplateVars }[] = [
+  { find: "931 Worcester Rd, Framingham Center, MA 01701", replaceWith: "address" },
+  { find: "Framingham Center, MA 01701", replaceWith: "location" },
+  { find: "931 Worcester Rd", replaceWith: "street" },
+  { find: "Framingham Center", replaceWith: "city" },
+  { find: "Framingham, Massachusetts", replaceWith: "location" },
+  { find: "Framingham", replaceWith: "city" },
+  { find: "Worcester Rd", replaceWith: "street" },
+  { find: "MetroWest", replaceWith: "city" },
+  { find: "Massachusetts", replaceWith: "state" },
+  { find: "Leominster, MA", replaceWith: "location" },
+  { find: "Leominster", replaceWith: "city" },
+  { find: "(508) 000-0000", replaceWith: "phone_display" },
+  { find: "508-000-0000", replaceWith: "phone_display" },
+  { find: "(978) 401-1428", replaceWith: "phone_display" },
+  { find: "978-401-1428", replaceWith: "phone_display" },
+  { find: "9784011428", replaceWith: "phone_display" },
+];
+
+/** Social handles from the source businesses — replaced with the lead's own handle-ish slug. */
+const SOURCE_SOCIAL_HANDLES = [
+  "amoraleahbeautysalon",
+  "mnandisalon",
+];
+
+/**
+ * Real inboxes belonging to the source businesses. These are live personal
+ * addresses, so they must never ship on a demo page built for someone else.
+ */
+const SOURCE_EMAILS = [
+  "mnandixthandi@gmail.com",
+  "franklintireautoinfo@gmail.com",
+];
+
+/** `Bella Hair Studio` → `bellahairstudio`, for stand-in social handles. */
+function socialSlug(businessName: string): string {
+  const slug = businessName.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return slug || "yourbusiness";
+}
+
+/**
+ * Swap source-template contact details for the lead's real ones.
+ * Runs after brand-name personalization so name swaps never re-introduce them.
+ */
+export function replaceSourceContactDetails(
+  html: string,
+  vars: DemoTemplateVars
+): string {
+  let out = html;
+
+  for (const { find, replaceWith } of SOURCE_CONTACT_LITERALS) {
+    const value = (vars[replaceWith] ?? "").toString().trim();
+    // An empty lead value would blank the page's contact block — leave the
+    // template text alone rather than render an empty address line.
+    if (!value) continue;
+    out = out.split(find).join(value);
+    // Map embeds and share links carry the same address percent-encoded.
+    const encodedFind = encodeURIComponent(find);
+    if (encodedFind !== find) {
+      out = out.split(encodedFind).join(encodeURIComponent(value));
+    }
+  }
+
+  const handle = socialSlug(vars.business_name);
+  for (const source of SOURCE_SOCIAL_HANDLES) {
+    out = out.split(source).join(handle);
+  }
+
+  const standInEmail = `hello@${handle}.com`;
+  for (const source of SOURCE_EMAILS) {
+    out = out.split(source).join(standInEmail);
+  }
+
+  return out;
+}
+
+/**
+ * Contact-detail leaks the brand-name audit cannot see: a source address,
+ * phone or social handle that survived personalization.
+ */
+export function findContactDetailLeaks(
+  html: string,
+  vars: DemoTemplateVars
+): string[] {
+  const visible = html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "");
+  const issues: string[] = [];
+
+  for (const { find, replaceWith } of SOURCE_CONTACT_LITERALS) {
+    // Only a literal we would actually have replaced counts as a leak.
+    if (!(vars[replaceWith] ?? "").toString().trim()) continue;
+    if (visible.includes(find)) issues.push(`"${find}"`);
+    const encodedFind = encodeURIComponent(find);
+    if (encodedFind !== find && html.includes(encodedFind)) {
+      issues.push(`"${find}" (url-encoded)`);
+    }
+  }
+  for (const source of SOURCE_SOCIAL_HANDLES) {
+    // Match the handle as a whole slug only: a lead whose own slug happens to
+    // contain it (e.g. "acmetestmnandisalon") has already been personalized.
+    const pattern = new RegExp(
+      `(?<![a-z0-9])${source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z0-9])`,
+      "i"
+    );
+    if (pattern.test(html)) issues.push(`"@${source}"`);
+  }
+  for (const source of SOURCE_EMAILS) {
+    if (html.includes(source)) issues.push(`"${source}"`);
+  }
+
+  return [...new Set(issues)];
 }

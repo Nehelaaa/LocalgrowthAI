@@ -32,7 +32,13 @@ const BADGE_COLORS: Record<LeadBadge, string> = {
   COLD: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300",
 };
 
-export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
+export function LeadsTable({
+  leads,
+  isPro = false,
+}: {
+  leads: LeadWithBusiness[];
+  isPro?: boolean;
+}) {
   const [localLeads, setLocalLeads] = useState(leads);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -340,6 +346,7 @@ export function LeadsTable({ leads }: { leads: LeadWithBusiness[] }) {
       </div>
       {selectedId && selectedLead ? (
         <LeadDetailPanel
+          isPro={isPro}
           leadId={selectedId}
           initialLead={selectedLead}
           onClose={() => setSelectedId(null)}

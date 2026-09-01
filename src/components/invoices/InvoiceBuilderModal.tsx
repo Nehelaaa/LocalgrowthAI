@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { InvoiceLivePreview } from "@/components/invoices/InvoiceLivePreview";
 import {
   apiClearLeadInvoiceDraft,
   apiConsumeInvoicePdfSlot,
@@ -107,6 +108,11 @@ export function InvoiceBuilderModal({
   const [linkCopied, setLinkCopied] = useState(false);
   const [lastShareUrl, setLastShareUrl] = useState<string | null>(null);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  /** Desktop-only live preview; off by default on narrow screens. */
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
   const [brandingReady, setBrandingReady] = useState(false);
   const shareMenuRef = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -353,6 +359,29 @@ export function InvoiceBuilderModal({
     invoiceAccentHex,
     invoiceLayoutDensity,
   ]);
+
+  // Header overflow menu: same dismiss rules as the share menu.
+  useEffect(() => {
+    if (!headerMenuOpen) return;
+    const onPointer = (e: MouseEvent | TouchEvent) => {
+      const el = headerMenuRef.current;
+      if (!el) return;
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setHeaderMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setHeaderMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [headerMenuOpen]);
 
   useEffect(() => {
     if (!shareMenuOpen) return;
@@ -638,55 +667,92 @@ export function InvoiceBuilderModal({
       }}
     >
       <div
-        className="flex max-h-[100dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:max-h-[min(92dvh,900px)] sm:rounded-2xl"
+        className={
+          "relative flex max-h-[100dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:max-h-[min(92dvh,900px)] sm:rounded-2xl " +
+          (previewOpen ? "max-w-3xl lg:max-w-6xl" : "max-w-3xl")
+        }
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-6 dark:border-slate-800">
-          <div>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3.5 sm:px-6 dark:border-slate-800">
+          <div className="flex min-w-0 items-center gap-2.5">
             <h2
               id="invoice-builder-title"
-              className="text-lg font-bold text-slate-900 dark:text-white sm:text-xl"
+              className="truncate text-lg font-bold text-slate-900 dark:text-white sm:text-xl"
             >
               Invoice builder
             </h2>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Edit details, then download a PDF or copy plain text.
-            </p>
-            {leadId ? (
-              <p className="mt-2 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                Client block, line items, tax, discount, and notes auto-save for this lead and
-                open pre-filled next time. Invoice # and date start fresh each visit.{" "}
-                {draftSaveState === "saving" ? (
-                  <span className="font-medium text-slate-500 dark:text-slate-400">
-                    Saving…
-                  </span>
-                ) : draftSaveState === "saved" ? (
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                    Draft saved
-                  </span>
-                ) : null}{" "}
-                <button
-                  type="button"
-                  onClick={() => void handleClearSavedInvoice()}
-                  className="font-semibold text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
-                >
-                  Clear saved invoice
-                </button>
-              </p>
+            {/* Status belongs somewhere stable and glanceable, not mid-sentence. */}
+            {leadId && draftSaveState !== "idle" ? (
+              <span
+                aria-live="polite"
+                className={
+                  "hidden shrink-0 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold sm:inline " +
+                  (draftSaveState === "saved"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                    : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400")
+                }
+              >
+                {draftSaveState === "saved" ? "Saved" : "Saving…"}
+              </span>
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={() => void requestClose()}
-            className="min-h-11 min-w-11 shrink-0 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-            aria-label="Close invoice builder"
-          >
-            <svg className="mx-auto h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
+
+          <div className="flex shrink-0 items-center gap-1">
+            {leadId ? (
+              <div className="relative" ref={headerMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setHeaderMenuOpen((v) => !v)}
+                  aria-expanded={headerMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="More invoice options"
+                  className="min-h-11 min-w-11 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                >
+                  <svg className="mx-auto h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                    <path d="M10 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm0 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm0 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z" />
+                  </svg>
+                </button>
+                {headerMenuOpen ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-[calc(100%+0.4rem)] z-30 w-[min(100vw-2rem,19rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-600 dark:bg-slate-800"
+                  >
+                    <p className="px-3 py-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                      Client, line items, tax and notes save to this lead automatically.
+                      Invoice&nbsp;# and date start fresh each time.
+                    </p>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setHeaderMenuOpen(false);
+                        setConfirmClearOpen(true);
+                      }}
+                      className="mt-0.5 flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                    >
+                      <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                      </svg>
+                      Clear saved invoice
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void requestClose()}
+              className="min-h-11 min-w-11 shrink-0 rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              aria-label="Close invoice builder"
+            >
+              <svg className="mx-auto h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
+        <div className="flex min-h-0 flex-1">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-6 sm:py-5">
           {err ? (
             <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
@@ -704,12 +770,11 @@ export function InvoiceBuilderModal({
                 Invoice templates →
               </Link>
             </div>
-            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-              Logo and name save here; layout and colors follow{" "}
-              <strong className="font-semibold text-slate-800 dark:text-slate-200">
+            <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+              <span>Style</span>
+              <span className="rounded-md bg-white px-1.5 py-0.5 font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600">
                 {getInvoiceTemplate(normalizeInvoiceTemplateId(invoiceTemplateId)).name}
-              </strong>{" "}
-              from Invoice templates (PDF uses the latest saved look when you download).
+              </span>
             </p>
             <label className="mt-3 block text-sm">
               <span className="mb-1 block font-medium text-slate-700 dark:text-slate-300">Business name</span>
@@ -966,8 +1031,29 @@ export function InvoiceBuilderModal({
           <div className="h-6 shrink-0 sm:h-8" aria-hidden />
         </div>
 
+        {/* Preview rides alongside the form on wide screens only: an inline PDF
+            frame is unreliable on mobile browsers, and the form needs the width. */}
+        {previewOpen ? (
+          <aside className="hidden min-h-0 w-[22rem] shrink-0 flex-col border-l border-slate-200 bg-slate-50 p-4 lg:flex xl:w-[26rem] dark:border-slate-800 dark:bg-slate-950/40">
+            <InvoiceLivePreview snapshot={snapshot} active={open && previewOpen} className="min-h-0 flex-1" />
+          </aside>
+        ) : null}
+        </div>
+
         <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-900 sm:px-6">
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPreviewOpen((v) => !v)}
+              aria-pressed={previewOpen}
+              className="hidden min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 lg:inline-flex dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              {previewOpen ? "Hide preview" : "Preview"}
+            </button>
             <div className="relative min-w-0 flex-1 sm:flex-none" ref={shareMenuRef}>
               <button
                 type="button"
@@ -1057,10 +1143,14 @@ export function InvoiceBuilderModal({
                       </span>
                     </span>
                   </button>
-                  <div className="border-t border-slate-100 px-3.5 py-2 dark:border-slate-700">
+                  {/* Not a share action — labelled so it doesn't read as a fourth one. */}
+                  <div className="border-t border-slate-100 bg-slate-50/80 px-3.5 py-2.5 dark:border-slate-700 dark:bg-slate-900/50">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                      Get paid
+                    </p>
                     <Link
                       href="/dashboard/payments"
-                      className="text-xs font-medium text-teal-700 hover:underline dark:text-teal-300"
+                      className="mt-0.5 inline-block text-xs font-medium text-teal-700 hover:underline dark:text-teal-300"
                       onClick={() => setShareMenuOpen(false)}
                     >
                       Enable Pay now with Stripe →
@@ -1079,6 +1169,51 @@ export function InvoiceBuilderModal({
             </button>
           </div>
         </div>
+
+        {/* Clearing throws away saved work, so it asks first. */}
+        {confirmClearOpen ? (
+          <div
+            className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4"
+            role="dialog"
+            aria-modal
+            aria-labelledby="confirm-clear-title"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setConfirmClearOpen(false);
+            }}
+          >
+            <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+              <h3
+                id="confirm-clear-title"
+                className="text-base font-semibold text-slate-900 dark:text-white"
+              >
+                Clear saved invoice?
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                This removes the client details, line items, tax, discount and notes saved
+                for this lead. It cannot be undone.
+              </p>
+              <div className="mt-5 flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setConfirmClearOpen(false)}
+                  className="lg-btn lg-btn-secondary flex-1"
+                >
+                  Keep it
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmClearOpen(false);
+                    void handleClearSavedInvoice();
+                  }}
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-500"
+                >
+                  Clear invoice
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

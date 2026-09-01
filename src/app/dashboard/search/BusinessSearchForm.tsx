@@ -2,25 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import { SearchableCityState } from "./SearchableCityState";
+import { BUSINESS_TYPES } from "@/lib/business-types";
 
 const RADII = [5, 10, 15, 25, 50];
-const BUSINESS_TYPES = [
-  "auto repair",
-  "restaurant",
-  "dentist",
-  "contractor",
-  "plumber",
-  "hair salon",
-  "lawyer",
-  "accountant",
-  "gym",
-  "real estate agent",
-  "bakery",
-  "pizza",
-  "roofer",
-  "electrician",
-  "landscaping",
-];
 
 type Props = {
   onSearch: (params: {

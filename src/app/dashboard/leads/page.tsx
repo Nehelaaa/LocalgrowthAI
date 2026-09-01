@@ -56,7 +56,8 @@ export default async function LeadsPage({
     ),
     prisma.lead.count({ where: { userId: user.id } }),
   ]);
-  const canExportCsv = hasProEntitlement(user);
+  const isPro = hasProEntitlement(user);
+  const canExportCsv = isPro;
 
   const extPrefill =
     params.ext === "1"
@@ -102,7 +103,7 @@ export default async function LeadsPage({
         totalPages={leadsResult.totalPages}
         truncated={leadsResult.truncated}
       />
-      <LeadsTable leads={leadsResult.leads} />
+      <LeadsTable leads={leadsResult.leads} isPro={isPro} />
       <LeadsPaginationFooter
         total={leadsResult.total}
         page={leadsResult.page}

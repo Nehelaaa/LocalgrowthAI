@@ -1,10 +1,11 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { BRAND_WORDMARK_LG } from "@/lib/brand-wordmark";
 import {
   FREE_LEAD_LIMIT,
   FREE_SEARCHES_LIFETIME,
   hasProEntitlement,
-  PRO_SEARCHES_PER_DAY,
 } from "@/lib/entitlements";
 import { isStripeConfigured } from "@/lib/stripe";
 import { syncConnectAccountFromStripe } from "@/lib/stripe-connect";
@@ -38,47 +39,62 @@ export default async function OnboardingPage({ searchParams }: Props) {
   const { prisma } = await import("@/lib/db");
   const fresh =
     (await prisma.user.findUnique({ where: { id: user.id } })) ?? user;
+  const isPro = hasProEntitlement(fresh);
 
   return (
-    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-slate-100/90 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:bg-slate-950">
+    <div className="relative flex min-h-[100dvh] items-center justify-center bg-slate-100 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:bg-slate-950">
       <div
-        className="pointer-events-none absolute -left-24 top-10 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-500/10"
+        className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_-20%,rgba(79,70,229,0.14),transparent)]"
         aria-hidden
       />
-      <div
-        className="pointer-events-none absolute -right-16 bottom-20 h-56 w-56 rounded-full bg-teal-400/15 blur-3xl dark:bg-teal-500/10"
-        aria-hidden
-      />
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-xl backdrop-blur-sm sm:p-8 dark:border-slate-800/80 dark:bg-slate-900/95">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Welcome to LocalLeadster
+
+      <main className="lg-card relative z-10 w-full max-w-xl p-6 sm:p-8">
+        <div className="flex items-center gap-2.5">
+          <Image
+            src="/favicon.svg"
+            alt=""
+            width={34}
+            height={34}
+            className="h-[34px] w-[34px] rounded-lg shadow-sm"
+            priority
+          />
+          <span className={BRAND_WORDMARK_LG}>LocalLeadster</span>
+        </div>
+
+        <h1 className="mt-6 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.7rem] dark:text-white">
+          Let&apos;s set up your workspace
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-600 sm:text-[15px] dark:text-slate-400">
-          Find local businesses, build a pipeline, and send invoices — free to
-          start.{" "}
-          <span className="font-medium text-slate-800 dark:text-slate-200">
-            {FREE_LEAD_LIMIT} leads
-          </span>{" "}
-          and{" "}
-          <span className="font-medium text-slate-800 dark:text-slate-200">
-            {FREE_SEARCHES_LIFETIME} searches
-          </span>{" "}
-          included. Pro unlocks unlimited leads,{" "}
-          <span className="font-medium text-slate-800 dark:text-slate-200">
-            {PRO_SEARCHES_PER_DAY}/day
-          </span>{" "}
-          searches, and invoice Pay now.
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          {isPro ? (
+            <>Three short steps and you&apos;re prospecting.</>
+          ) : (
+            <>
+              Two short steps and you&apos;re prospecting. Your free plan includes{" "}
+              <strong className="font-semibold text-slate-800 dark:text-slate-200">
+                {FREE_LEAD_LIMIT} saved leads
+              </strong>{" "}
+              and{" "}
+              <strong className="font-semibold text-slate-800 dark:text-slate-200">
+                {FREE_SEARCHES_LIFETIME} live searches
+              </strong>
+              .
+            </>
+          )}
         </p>
+
         <OnboardingForm
           currentProfession={fresh.profession}
-          isPro={hasProEntitlement(fresh)}
+          currentCity={fresh.targetCity}
+          currentState={fresh.targetState}
+          currentBusinessType={fresh.targetBusinessType}
+          isPro={isPro}
           stripeConfigured={isStripeConfigured()}
           connectReady={Boolean(
             fresh.stripeConnectAccountId && fresh.stripeConnectChargesEnabled
           )}
           connectBanner={connectBanner}
         />
-      </div>
+      </main>
     </div>
   );
 }
