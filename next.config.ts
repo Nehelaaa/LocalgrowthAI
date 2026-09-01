@@ -40,7 +40,8 @@ const nextConfig: NextConfig = {
       scriptSrc,
       "style-src 'self' 'unsafe-inline' https:",
       "connect-src 'self' https://api.stripe.com https://*.stripe.com https://places.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com https://*.posthog.com https://us.i.posthog.com https://eu.i.posthog.com",
-      "frame-src https://js.stripe.com https://accounts.google.com",
+      // blob: lets the invoice builder frame its own generated PDF preview.
+      "frame-src 'self' blob: https://js.stripe.com https://accounts.google.com",
       ...(isProd ? ["upgrade-insecure-requests"] : []),
     ].join("; ");
 
