@@ -13,13 +13,11 @@ import { BRAND_WORDMARK_NAV } from "@/lib/brand-wordmark";
 const nav: {
   href: string;
   label: string;
-  shortLabel: string;
   icon: FC<{ className?: string }>;
 }[] = [
   {
     href: "/dashboard",
     label: "Overview",
-    shortLabel: "Home",
     icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
@@ -29,7 +27,6 @@ const nav: {
   {
     href: "/dashboard/plan",
     label: "Plan & billing",
-    shortLabel: "Plan",
     icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
         <path
@@ -43,7 +40,6 @@ const nav: {
   {
     href: "/dashboard/search",
     label: "Find Businesses",
-    shortLabel: "Search",
     icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -53,7 +49,6 @@ const nav: {
   {
     href: "/dashboard/leads",
     label: "CRM Leads",
-    shortLabel: "Leads",
     icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
@@ -63,7 +58,6 @@ const nav: {
   {
     href: "/dashboard/invoice-templates",
     label: "Invoice templates",
-    shortLabel: "Invoices",
     icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
         <path
@@ -77,7 +71,6 @@ const nav: {
   {
     href: "/dashboard/payments",
     label: "Invoice payments",
-    shortLabel: "Payments",
     icon: ({ className }) => (
       <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
         <path
@@ -93,7 +86,6 @@ const nav: {
 const tradesItem: (typeof nav)[0] = {
   href: "/dashboard/trades",
   label: "Trades (field service)",
-  shortLabel: "Trades",
   icon: ({ className }) => (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.163-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
@@ -104,7 +96,6 @@ const tradesItem: (typeof nav)[0] = {
 const ownerItem: (typeof nav)[0] = {
   href: "/owner",
   label: "Owner",
-  shortLabel: "Owner",
   icon: ({ className }) => (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.75l2.25 4.5 4.97.72-3.6 3.5.85 4.96L12 15.9l-4.47 2.35.85-4.96-3.6-3.5 4.97-.72L12 3.75Z" />
@@ -112,40 +103,36 @@ const ownerItem: (typeof nav)[0] = {
   ),
 };
 
-const supportNavItem: (typeof nav)[0] = {
-  href: "/dashboard/support",
-  label: "Contact support",
-  shortLabel: "Support",
-  icon: ({ className }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
-      />
-    </svg>
-  ),
-};
+type NavItem = (typeof nav)[0];
+type NavSection = { label?: string; items: NavItem[] };
 
-function buildNavItems(showTrades: boolean, showOwner: boolean) {
-  const out = [...nav];
-  if (showTrades) {
-    // Insert after Overview (for agencies + trades users who do both).
-    out.splice(1, 0, tradesItem);
-  }
-  if (showOwner) {
-    // Put Owner at top so it’s easy to find.
-    out.splice(1, 0, ownerItem);
-  }
-  // Always keep billing last, regardless of optional items.
-  const billingIdx = out.findIndex((i) => i.href === "/dashboard/plan");
-  if (billingIdx >= 0) {
-    const [billing] = out.splice(billingIdx, 1);
-    out.push(billing);
-  }
-  out.push(supportNavItem);
-  if (!showTrades && !showOwner) return out;
-  return out;
+function pick(href: string): NavItem {
+  const found = nav.find((i) => i.href === href);
+  if (!found) throw new Error(`Unknown nav item: ${href}`);
+  return found;
+}
+
+/**
+ * Grouped so the sidebar reads as three short lists instead of one long one,
+ * and fits a laptop screen without scrolling. Support is deliberately absent —
+ * it lives in the corner bubble (see SupportBubble).
+ */
+function buildNavSections(showTrades: boolean, showOwner: boolean): NavSection[] {
+  const home: NavItem[] = [pick("/dashboard")];
+  if (showOwner) home.push(ownerItem);
+
+  const prospect: NavItem[] = [pick("/dashboard/search"), pick("/dashboard/leads")];
+  if (showTrades) prospect.push(tradesItem);
+
+  return [
+    { items: home },
+    { label: "Prospect", items: prospect },
+    {
+      label: "Get paid",
+      items: [pick("/dashboard/invoice-templates"), pick("/dashboard/payments")],
+    },
+    { label: "Account", items: [pick("/dashboard/plan")] },
+  ];
 }
 
 function MenuIcon({ className }: { className?: string }) {
@@ -167,56 +154,70 @@ function XIcon({ className }: { className?: string }) {
 function NavList({
   pathname,
   onNavigate,
-  compact,
-  items,
+  sections,
 }: {
   pathname: string;
   onNavigate?: () => void;
-  compact?: boolean;
-  items: typeof nav;
+  sections: NavSection[];
 }) {
   return (
-    <nav className="space-y-1.5 p-3" aria-label="Dashboard">
-      {items.map((item) => {
-        const isOwner = item.href === "/owner";
-        const active =
-          item.href === "/dashboard"
-            ? pathname === "/dashboard"
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            className={
-              "group flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 touch-manipulation " +
-              (active
-                ? "bg-indigo-50 text-indigo-800 shadow-sm ring-1 ring-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-200 dark:ring-indigo-500/30"
-                : "text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 active:bg-slate-200/80 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white")
-            }
-          >
-            <span
-              className={
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors " +
-                (active
-                  ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"
-                  : "bg-slate-100/80 text-slate-500 group-hover:bg-slate-200/80 group-hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 group-hover:dark:bg-slate-700 group-hover:dark:text-slate-200")
-              }
-            >
-              <Icon className="h-5 w-5" />
-            </span>
-            <span className="min-w-0 truncate">
-              {compact ? item.shortLabel : item.label}
-            </span>
-            {isOwner && (
-              <span className="ml-auto rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                owner
-              </span>
-            )}
-          </Link>
-        );
-      })}
+    <nav className="px-2.5 py-3" aria-label="Dashboard">
+      {sections.map((section, i) => (
+        <div key={section.label ?? `section-${i}`} className={i > 0 ? "mt-4" : ""}>
+          {section.label ? (
+            <p className="px-2.5 pb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.13em] text-slate-400 dark:text-slate-500">
+              {section.label}
+            </p>
+          ) : null}
+          <div className="space-y-0.5">
+            {section.items.map((item) => {
+              const isOwner = item.href === "/owner";
+              const active =
+                item.href === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className={
+                    // Dropping the 36px icon well for a plain 18px glyph is what
+                    // buys back the vertical space the menu was overflowing by.
+                    "group relative flex min-h-[40px] items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors touch-manipulation " +
+                    (active
+                      ? "bg-indigo-50 font-semibold text-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-100"
+                      : "font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100")
+                  }
+                >
+                  {active ? (
+                    <span
+                      className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-500"
+                      aria-hidden
+                    />
+                  ) : null}
+                  <Icon
+                    className={
+                      "h-[18px] w-[18px] shrink-0 transition-colors " +
+                      (active
+                        ? "text-indigo-600 dark:text-indigo-300"
+                        : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300")
+                    }
+                  />
+                  <span className="min-w-0 truncate">{item.label}</span>
+                  {isOwner && (
+                    <span className="ml-auto rounded bg-amber-100 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                      owner
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }
@@ -256,62 +257,80 @@ function BrandBlock({ small }: { small?: boolean }) {
   );
 }
 
+function initialsOf(user: { email: string; name?: string | null }): string {
+  const source = user.name?.trim() || user.email;
+  const parts = source.split(/[\s@._-]+/).filter(Boolean);
+  const letters = parts.slice(0, 2).map((p) => p[0]).join("");
+  return (letters || source[0] || "?").toUpperCase();
+}
+
+/**
+ * Compact account block. The theme toggle used to own a full row of its own;
+ * as an icon button beside the name it costs nothing.
+ */
 function FooterHome({
   user,
 }: {
   user?: { email: string; name?: string | null; isPro: boolean };
 }) {
   return (
-    <div className="sticky bottom-0 z-10 shrink-0 border-t border-slate-200/80 bg-white/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/60">
-      <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-slate-700/50 dark:bg-slate-900/70">
-        <div className="px-4 py-3">
-          <ThemeToggle embed className="gap-2" />
-        </div>
-        {user ? (
-          <>
-            <div className="h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
-            <div className="px-4 py-3.5">
-              <p className="truncate text-sm font-semibold leading-tight text-slate-900 dark:text-slate-50">
+    <div className="shrink-0 border-t border-slate-200/80 p-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] dark:border-slate-800/80">
+      {user ? (
+        <>
+          <div className="flex items-center gap-2.5 px-1.5 py-1.5">
+            <span
+              aria-hidden
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200"
+            >
+              {initialsOf(user)}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold leading-tight text-slate-900 dark:text-slate-50">
                 {user.name || user.email}
-              </p>
-              <p
+              </span>
+              <span
                 className={
-                  "mt-1 text-[10px] font-bold uppercase tracking-wider " +
+                  "block text-[0.65rem] font-bold uppercase tracking-wider " +
                   (user.isPro
                     ? "text-indigo-600 dark:text-indigo-400"
                     : "text-slate-500 dark:text-slate-400")
                 }
               >
                 {user.isPro ? "Pro" : "Free plan"}
-              </p>
-              {!user.isPro ? (
-                <UpgradeButton className="mt-3 w-full" label="Upgrade to Pro" />
-              ) : (
-                <ManageBillingButton className="mt-3 w-full" label="Manage billing" />
-              )}
-            </div>
-          </>
-        ) : null}
-        <div className="h-px bg-slate-100 dark:bg-slate-700/50" aria-hidden />
-        <Link
-          href="/sign-out"
-          prefetch={false}
-          className="group flex min-h-[44px] w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500/30 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+              </span>
+            </span>
+            {/* Labelled pill: a bare switch here gave no clue what it toggled. */}
+            <ThemeToggle hideCaption compact className="shrink-0" />
+          </div>
+
+          <div className="mt-1.5">
+            {!user.isPro ? (
+              <UpgradeButton className="w-full" label="Upgrade to Pro" />
+            ) : (
+              <ManageBillingButton className="w-full" label="Manage billing" />
+            )}
+          </div>
+        </>
+      ) : null}
+
+      <Link
+        href="/sign-out"
+        prefetch={false}
+        className="group mt-1 flex min-h-[38px] w-full items-center gap-2 rounded-lg px-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100"
+      >
+        <svg
+          className="h-[18px] w-[18px] shrink-0 text-slate-400 dark:text-slate-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          aria-hidden
         >
-          <span>Sign out</span>
-          <svg
-            className="h-4 w-4 text-slate-400 transition-colors group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.75}
-            aria-hidden
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9l3 3-3 3m3-3H8.25" />
-          </svg>
-        </Link>
-      </div>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9l3 3-3 3m3-3H8.25" />
+        </svg>
+        Sign out
+      </Link>
     </div>
   );
 }
@@ -329,7 +348,7 @@ export function DashboardNav({
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navItems = buildNavItems(Boolean(user?.showTrades), Boolean(user?.showOwner));
+  const navSections = buildNavSections(Boolean(user?.showTrades), Boolean(user?.showOwner));
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -388,7 +407,7 @@ export function DashboardNav({
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
-              <NavList pathname={pathname} onNavigate={close} compact items={navItems} />
+              <NavList pathname={pathname} onNavigate={close} sections={navSections} />
             </div>
             <FooterHome user={user} />
           </aside>
@@ -396,11 +415,11 @@ export function DashboardNav({
       )}
 
       <aside className="hidden h-screen min-h-0 w-64 min-w-0 border-r border-slate-200/80 bg-gradient-to-b from-slate-50 to-white shadow-[4px_0_32px_-8px_rgba(15,23,42,0.12)] dark:border-slate-800/80 dark:from-slate-950 dark:to-slate-900 dark:shadow-[4px_0_32px_-8px_rgba(0,0,0,0.45)] lg:sticky lg:top-0 lg:flex lg:flex-col">
-        <div className="border-b border-slate-200/80 px-5 py-6 dark:border-slate-800/80">
+        <div className="border-b border-slate-200/80 px-4 py-4 dark:border-slate-800/80">
           <BrandBlock />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <NavList pathname={pathname} items={navItems} />
+          <NavList pathname={pathname} sections={navSections} />
         </div>
         <FooterHome user={user} />
       </aside>
