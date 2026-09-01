@@ -12,6 +12,21 @@ import type { ContactStatus } from "@prisma/client";
 const panel =
   "rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/90";
 
+/** Territory captured during onboarding (see `User.targetCity` / `targetState`). */
+export type Territory = {
+  city?: string | null;
+  state?: string | null;
+  businessType?: string | null;
+};
+
+/** "Austin, TX" when both halves are present — otherwise nothing worth showing. */
+function territoryPlace(t: Territory): string | null {
+  const city = t.city?.trim();
+  const state = t.state?.trim();
+  if (!city || !state) return null;
+  return `${city}, ${state.toUpperCase()}`;
+}
+
 function greeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -602,32 +617,41 @@ function QuickLinks({ metrics }: { metrics: DashboardMetrics }) {
 
 function GettingStarted({
   userName,
+  territory,
 }: {
   userName: string;
+  territory: Territory;
 }) {
+  const place = territoryPlace(territory);
+  const trade = territory.businessType?.trim() || null;
+
   const steps = [
     {
       n: "1",
-      title: "Find local businesses",
-      body: "Search a city and trade — ranked leads with scores and signals.",
+      title: place
+        ? `Find ${trade ? `${trade} leads` : "businesses"} in ${place}`
+        : "Find local businesses",
+      body: place
+        ? "Your search is already filled in from setup — run it and the ranked list comes back."
+        : "Search a city and trade — ranked leads with scores and signals.",
       href: "/dashboard/search",
-      cta: "Open search",
+      cta: place ? "Run my search" : "Open search",
       primary: true,
     },
     {
       n: "2",
-      title: "Save leads to your pipeline",
-      body: "Add from search or create one manually when you already know the name.",
+      title: "Save the best ones to your pipeline",
+      body: "Businesses with no website score highest — those are your easiest pitches.",
       href: "/dashboard/leads",
       cta: "View pipeline",
       primary: false,
     },
     {
       n: "3",
-      title: "Invoice branding (optional)",
-      body: "Logo and sender details for PDFs and share links.",
-      href: "/dashboard/invoice-templates",
-      cta: "Set branding",
+      title: "Generate a demo website for a lead",
+      body: "One click builds a live mockup site you can text to the prospect. Pro feature.",
+      href: "/dashboard/plan",
+      cta: "See Pro",
       primary: false,
     },
   ] as const;
@@ -648,7 +672,9 @@ function GettingStarted({
           {greeting()}, {userName} — let’s find your first leads
         </h2>
         <p className="mt-1.5 max-w-xl text-sm text-slate-600 dark:text-slate-400">
-          Three quick steps. Start with search — everything else builds from there.
+          {place
+            ? `Your territory is set to ${place}. Three quick steps from here.`
+            : "Three quick steps. Start with search — everything else builds from there."}
         </p>
       </div>
       <ol className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -690,9 +716,11 @@ function GettingStarted({
 export function DashboardOverview({
   userName,
   metrics,
+  territory = {},
 }: {
   userName: string;
   metrics: DashboardMetrics;
+  territory?: Territory;
 }) {
   const isFirstRun = metrics.activeLeads === 0;
 
@@ -700,7 +728,7 @@ export function DashboardOverview({
     <div className="w-full min-w-0 max-w-7xl space-y-6 overflow-x-hidden pb-8 lg-dashboard-fade-in">
       {isFirstRun ? (
         <>
-          <GettingStarted userName={userName} />
+          <GettingStarted userName={userName} territory={territory} />
           <div className="flex flex-wrap gap-2">
             <AddManualLeadDialog
               variant="secondary"

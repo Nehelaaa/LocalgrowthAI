@@ -62,3 +62,10 @@ export function filterStates(query: string): { code: string; name: string }[] {
       s.name.toLowerCase().includes(q)
   );
 }
+
+const STATE_CODES = new Set(US_STATES.map((s) => s.code));
+
+/** True for a valid two-letter US state code (case-insensitive). */
+export function isUsStateCode(code: string): boolean {
+  return STATE_CODES.has(code.trim().toUpperCase());
+}

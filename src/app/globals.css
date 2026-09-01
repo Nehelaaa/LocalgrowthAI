@@ -194,3 +194,220 @@ body {
     transform-origin: top center;
   }
 }
+
+/* ============================================================
+   Design primitives
+   Shared surface / control / focus language so screens stop
+   re-deriving the same 40-character Tailwind strings.
+   ============================================================ */
+
+:root {
+  /* Brand ramp — one accent, used deliberately. */
+  --lg-accent: #4f46e5;
+  --lg-accent-hover: #4338ca;
+  --lg-accent-fg: #ffffff;
+  --lg-accent-ring: rgba(79, 70, 229, 0.45);
+  --lg-accent-tint: rgba(79, 70, 229, 0.08);
+
+  /* Surfaces */
+  --lg-surface: #ffffff;
+  --lg-surface-sunken: #f6f7f9;
+  --lg-border: rgba(15, 23, 42, 0.09);
+  --lg-border-strong: rgba(15, 23, 42, 0.16);
+
+  /* Elevation — layered and low-opacity reads as depth, not drop shadow. */
+  --lg-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --lg-shadow-md: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+  --lg-shadow-lg: 0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 32px -8px rgba(15, 23, 42, 0.14);
+}
+
+html.dark {
+  --lg-accent: #6366f1;
+  --lg-accent-hover: #818cf8;
+  --lg-accent-fg: #ffffff;
+  --lg-accent-ring: rgba(129, 140, 248, 0.5);
+  --lg-accent-tint: rgba(129, 140, 248, 0.12);
+
+  --lg-surface: #0f172a;
+  --lg-surface-sunken: #0b1120;
+  --lg-border: rgba(148, 163, 184, 0.16);
+  --lg-border-strong: rgba(148, 163, 184, 0.28);
+
+  --lg-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --lg-shadow-md: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+  --lg-shadow-lg: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* Numerals line up in every table, metric and money field. */
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--lg-accent-tint);
+}
+
+/* One focus treatment everywhere, instead of per-component guesses. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* ---- Controls ---- */
+
+.lg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.15rem;
+  border-radius: 0.7rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.006em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+.lg-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lg-btn:not(:disabled):active {
+  transform: translateY(0.5px);
+}
+
+.lg-btn-primary {
+  background: var(--lg-accent);
+  color: var(--lg-accent-fg);
+  border: 1px solid transparent;
+  /* Inner top highlight — the detail that separates a button from a rectangle. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    var(--lg-shadow-md);
+}
+
+.lg-btn-primary:not(:disabled):hover {
+  background: var(--lg-accent-hover);
+}
+
+.lg-btn-secondary {
+  background: var(--lg-surface);
+  color: inherit;
+  border: 1px solid var(--lg-border-strong);
+  box-shadow: var(--lg-shadow-sm);
+}
+
+.lg-btn-secondary:not(:disabled):hover {
+  background: var(--lg-surface-sunken);
+  border-color: var(--lg-accent);
+}
+
+.lg-btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.lg-btn-ghost:not(:disabled):hover {
+  background: var(--lg-surface-sunken);
+}
+
+/* ---- Selectable option (onboarding choices, filter chips) ---- */
+
+.lg-option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  text-align: left;
+  border-radius: 0.75rem;
+  border: 1px solid var(--lg-border-strong);
+  background: var(--lg-surface);
+  box-shadow: var(--lg-shadow-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+
+.lg-option:hover {
+  border-color: var(--lg-accent);
+}
+
+.lg-option[aria-pressed="true"],
+.lg-option[data-selected="true"] {
+  border-color: var(--lg-accent);
+  background: var(--lg-accent-tint);
+  box-shadow:
+    0 0 0 1px var(--lg-accent),
+    var(--lg-shadow-sm);
+}
+
+/* ---- Surfaces ---- */
+
+.lg-card {
+  background: var(--lg-surface);
+  border: 1px solid var(--lg-border);
+  border-radius: 1rem;
+  box-shadow: var(--lg-shadow-lg);
+}
+
+/* ---- Progress rail (onboarding) ---- */
+
+.lg-rail {
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--lg-border);
+  overflow: hidden;
+}
+
+.lg-rail-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lg-accent);
+  transition: width 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-rail-fill,
+  .lg-btn,
+  .lg-option {
+    transition: none;
+  }
+}
+
+/* ---- Step transition ---- */
+
+@keyframes lgStepIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lg-step-in {
+    animation: lgStepIn 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}

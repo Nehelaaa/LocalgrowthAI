@@ -70,6 +70,10 @@ model User {
   stripeConnectOnboardedAt DateTime?
   /// web_agency | real_estate | trades | sales | freelance | agency | other
   profession     String?
+  /// Territory captured during onboarding; prefills the first Places search.
+  targetCity         String?
+  targetState        String?
+  targetBusinessType String?
   accounts      Account[]
   sessions      Session[]
   activityLogs  ActivityLog[]

@@ -20,6 +20,11 @@ export default async function DashboardPage() {
     <DashboardOverview
       userName={firstName(user.name, user.email)}
       metrics={data}
+      territory={{
+        city: user.targetCity,
+        state: user.targetState,
+        businessType: user.targetBusinessType,
+      }}
     />
   );
 }

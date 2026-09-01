@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { ContactStatusPicker } from "@/components/ContactStatusPicker";
 import { DeleteLeadDialog, TrashIconButton } from "@/components/DeleteLeadDialog";
@@ -35,12 +36,15 @@ export type LeadDetailPanelPatch = Partial<
 export function LeadDetailPanel({
   leadId,
   initialLead,
+  isPro = false,
   onClose,
   onLeadUpdated,
   onLeadRemoved,
 }: {
   leadId: string;
   initialLead?: LeadWithRelations;
+  /** Gates the demo-website generator; the server action re-checks entitlement. */
+  isPro?: boolean;
   onClose: () => void;
   onLeadUpdated?: (leadId: string, patch: LeadDetailPanelPatch) => void;
   onLeadRemoved?: (leadId: string) => void;
@@ -60,6 +64,8 @@ export function LeadDetailPanel({
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [demoGenerating, setDemoGenerating] = useState(false);
   const [demoStatus, setDemoStatus] = useState<string | null>(null);
+  const [demoUrl, setDemoUrl] = useState<string | null>(null);
+  const [demoLocked, setDemoLocked] = useState(false);
 
   useEffect(() => {
     if (initialLead?.id === leadId) {
@@ -243,20 +249,32 @@ export function LeadDetailPanel({
   });
 
   const handleGenerateWebsite = async () => {
+    // Free users never reach the server action — show the upgrade path instead of an error.
+    if (!isPro) {
+      setDemoUrl(null);
+      setDemoStatus(null);
+      setDemoLocked(true);
+      return;
+    }
     setDemoGenerating(true);
     setDemoStatus(null);
+    setDemoUrl(null);
+    setDemoLocked(false);
     try {
       const result = await generateDemoPage(leadId);
+      const url = `/demo/${result.slug}`;
+      setDemoUrl(url);
       setDemoStatus(
         result.templateName
-          ? `Opened ${result.nicheLabel} mockup (${result.templateName})`
-          : "Website mockup opened in a new tab"
+          ? `Built a ${result.nicheLabel} mockup (${result.templateName}).`
+          : "Website mockup is ready."
       );
-      window.open(`/demo/${result.slug}`, "_blank", "noopener,noreferrer");
+      // Popup blockers can swallow this, so the link above stays on screen either way.
+      window.open(url, "_blank", "noopener,noreferrer");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Could not generate website mockup.";
       if (msg === "PRO_REQUIRED") {
-        setDemoStatus("Upgrade to Pro to generate website mockups.");
+        setDemoLocked(true);
       } else {
         setDemoStatus(msg);
       }
@@ -357,11 +375,40 @@ export function LeadDetailPanel({
                 />
               </svg>
               {demoGenerating ? "Building…" : "Generate website"}
+              {!isPro ? (
+                <span className="rounded bg-violet-200/70 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-violet-900 dark:bg-violet-400/20 dark:text-violet-100">
+                  Pro
+                </span>
+              ) : null}
             </button>
           </div>
+          {demoLocked ? (
+            <div className="mt-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2.5 dark:border-violet-500/30 dark:bg-violet-950/40">
+              <p className="text-xs leading-relaxed text-violet-900 dark:text-violet-100">
+                Build a personalised mockup site for {lead.business.name} and text
+                them the link. Available on Pro.
+              </p>
+              <Link
+                href="/dashboard/plan"
+                className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg bg-violet-600 px-3.5 text-xs font-semibold text-white transition hover:bg-violet-500"
+              >
+                See Pro plans
+              </Link>
+            </div>
+          ) : null}
           {demoStatus ? (
             <p className="mt-2 text-xs leading-relaxed text-violet-700 dark:text-violet-300">
-              {demoStatus}
+              {demoStatus}{" "}
+              {demoUrl ? (
+                <a
+                  href={demoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold underline underline-offset-2"
+                >
+                  Open the demo site
+                </a>
+              ) : null}
             </p>
           ) : null}
         </div>
