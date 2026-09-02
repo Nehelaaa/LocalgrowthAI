@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { generateInvoicePdfBlob } from "@/lib/invoice-pdf";
 import type { InvoiceSnapshot } from "@/lib/invoice-types";
 
@@ -38,10 +38,6 @@ export function InvoiceLivePreview({ snapshot, active, className = "" }: Props) 
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
-  // Object URLs must outlive the render that shows them, so revoke the previous
-  // one only once its replacement is on screen.
-  const urlRef = useRef<string | null>(null);
-
   useEffect(() => {
     if (!active || !wideEnough) return;
 
@@ -53,10 +49,7 @@ export function InvoiceLivePreview({ snapshot, active, className = "" }: Props) 
         try {
           const blob = await generateInvoicePdfBlob(snapshot);
           if (cancelled) return;
-          const next = URL.createObjectURL(blob);
-          if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-          urlRef.current = next;
-          setUrl(next);
+          setUrl(URL.createObjectURL(blob));
           setFailed(false);
         } catch {
           if (!cancelled) setFailed(true);
@@ -72,15 +65,16 @@ export function InvoiceLivePreview({ snapshot, active, className = "" }: Props) 
     };
   }, [snapshot, active, wideEnough]);
 
-  // Release the last object URL when the pane goes away.
+  /**
+   * Revoke a blob URL only once its replacement has rendered. React runs this
+   * cleanup after the next commit, so the frame is never pointed at a URL that
+   * has already been released — doing it eagerly showed a blocked-content page
+   * whenever a rebuild landed (e.g. when the saved logo hydrates after open).
+   */
   useEffect(() => {
-    return () => {
-      if (urlRef.current) {
-        URL.revokeObjectURL(urlRef.current);
-        urlRef.current = null;
-      }
-    };
-  }, []);
+    if (!url) return;
+    return () => URL.revokeObjectURL(url);
+  }, [url]);
 
   return (
     <div className={`relative flex min-h-0 flex-col ${className}`}>
@@ -88,11 +82,26 @@ export function InvoiceLivePreview({ snapshot, active, className = "" }: Props) 
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
           Preview
         </p>
-        <span
-          className="text-xs text-slate-400 dark:text-slate-500"
-          aria-live="polite"
-        >
-          {building ? "Updating…" : url ? "Matches your PDF" : ""}
+        <span className="flex items-center gap-2.5">
+          <span
+            className="text-xs text-slate-400 dark:text-slate-500"
+            aria-live="polite"
+          >
+            {building ? "Updating…" : url ? "Matches your PDF" : ""}
+          </span>
+          {/* Escape hatch: some browsers refuse to render PDFs inline (Edge's
+              "always download" setting, extensions, mobile). The frame then
+              shows a blocked placeholder, so always offer a way out. */}
+          {url && !failed ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Open in new tab
+            </a>
+          ) : null}
         </span>
       </div>
 
